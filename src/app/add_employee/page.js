@@ -1,38 +1,42 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { calculateTotalSalary } from "@/utils/employeeUtils";
 
+const defaultEmployee = {
+  employeeName: "",
+  mobile: "",
+  email: "",
+  dob: "",
+  etNo: "",
+  iqamaNo: "",
+  iqamaExpDate: "",
+  bankAccount: "",
+  nationality: "",
+  passportNo: "",
+  passportExpDate: "",
+  profession: "",
+  clientNo: "",
+  clientName: "",
+  contractStartDate: "",
+  contractEndDate: "",
+  basicSalary: "",
+  hraType: "provided",
+  hra: "",
+  traType: "provided",
+  tra: "",
+  foodAllowance: "",
+  otherAllowance: "",
+  totalSalary: "00.00",
+  medical: "",
+  employeeStatus: "Active",
+};
+
 export default function AddEmployee() {
-  const [employee, setEmployee] = useState({
-    employeeName: "",
-    mobile: "",
-    email: "",
-    dob: "",
-    etNo: "",
-    iqamaNo: "",
-    iqamaExpDate: "",
-    bankAccount: "",
-    nationality: "",
-    passportNo: "",
-    passportExpDate: "",
-    profession: "",
-    clientNo: "",
-    clientName: "",
-    contractStartDate: "",
-    contractEndDate: "",
-    basicSalary: "",
-    hraType: "",
-    hra: "",
-    traType: "",
-    tra: "",
-    foodAllowance: "",
-    otherAllowance: "",
-    totalSalary: "00.00",
-    medical: "",
-    employeeStatus: "Active",
-  });
+  const [employee, setEmployee] = useState(defaultEmployee);
   const [message, setMessage] = useState("");
+  const [isModified, setIsModified] = useState(false);
+  const messageTimer = useRef(null);
   const allowances = [
     { key: "hra", label: "HRA", percentage: 0.25 },
     { key: "tra", label: "TRA", percentage: 0.1 },
@@ -59,32 +63,36 @@ export default function AddEmployee() {
     ) {
       return;
     }
-
-    if (
-      name === "contractEndDate" &&
-      new Date(value) < new Date(employee.contractStartDate)
-    ) {
-      alert("Contract End Date must be greater than Contract Start Date");
-      return;
-    }
-
     setEmployee((prev) => ({
       ...prev,
       [name]: name === "medical" ? value.toUpperCase() : value,
     }));
+
+    setIsModified(true);
   };
 
   useEffect(() => {
-    setEmployee((prev) => ({
-      ...prev,
-      totalSalary: calculateTotalSalary(prev),
-    }));
+    setEmployee((prev) => {
+      const basicSalary = parseFloat(prev.basicSalary) || 0;
+
+      const updatedValues = {
+        totalSalary: calculateTotalSalary(prev),
+      };
+
+      if (prev.hraType === "percent") {
+        updatedValues.hra = (basicSalary * 0.25).toFixed(2);
+      }
+
+      if (prev.traType === "percent") {
+        updatedValues.tra = (basicSalary * 0.1).toFixed(2);
+      }
+
+      return { ...prev, ...updatedValues };
+    });
   }, [
     employee.basicSalary,
     employee.hraType,
-    employee.hra,
     employee.traType,
-    employee.tra,
     employee.foodAllowance,
     employee.otherAllowance,
   ]);
@@ -97,6 +105,12 @@ export default function AddEmployee() {
       setMessage("Invalid email format");
       return;
     }
+    if (
+      new Date(employee.contractEndDate) < new Date(employee.contractStartDate)
+    ) {
+      setMessage("Check Contract Date");
+      return;
+    }
     try {
       const res = await fetch("http://localhost:3000/api/employees", {
         method: "POST",
@@ -107,6 +121,7 @@ export default function AddEmployee() {
       });
       if (res.ok) {
         setMessage("Employee added successfully!");
+        setTimeout(() => setMessage(""), 3000);
       } else {
         setMessage("Failed to add employee.");
       }
@@ -115,26 +130,35 @@ export default function AddEmployee() {
     }
   };
 
+  const handleReset = () => {
+    setEmployee(defaultEmployee);
+    setIsModified(false);
+    setMessage("Employee form is reset now");
+    // Clear any existing timer before setting a new one
+    if (messageTimer.current) clearTimeout(messageTimer.current);
+    messageTimer.current = setTimeout(() => setMessage(""), 2000);
+  };
+
   const fields = Object.keys(employee);
   const table12 = [fields.slice(0, 8), fields.slice(8, 16)];
 
   return (
     <div className="flex justify-center items-center max-h-screen bg-gray-100 p-4 overflow-hidden">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-7xl">
+      <div className="bg-white p-6 rounded-lg shadow-lg w-260 max-w-7xl">
         <h2 className="text-2xl font-bold text-center text-gray-700 mb-6">
-          Add New Employee
+          New Employee Form
         </h2>
         {message && (
           <p className="text-center text-sm text-green-600 mb-4">{message}</p>
         )}
 
-        <form onSubmit={handleSubmit} className="w-full space-y-4">
-          <div className="flex flex-col ">
-            <div className="grid grid-cols-3 gap-4">
+        <form onSubmit={handleSubmit} className="w-250 space-y-4">
+          <div className="flex flex-col">
+            <div className="grid grid-cols-3 gap-2">
               {table12.map((group1, index) => (
                 <table
                   key={index}
-                  className="w-full border border-gray-300 rounded-lg text-sm"
+                  className="w-80 border border-gray-300 rounded-lg text-sm"
                 >
                   <tbody>
                     {group1.map((key1, i) => (
@@ -185,7 +209,7 @@ export default function AddEmployee() {
                   </tbody>
                 </table>
               ))}
-              <table className="w-full border border-gray-300 rounded-lg text-sm">
+              <table className="w-80 border border-gray-300 rounded-lg text-sm">
                 <tbody>
                   {/* Basic Salary */}
                   <tr className="border-b border-gray-200">
@@ -353,9 +377,21 @@ export default function AddEmployee() {
           </div>
           <button
             type="submit"
-            className="w-3xs bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 rounded-lg transition-all cursor-pointer"
+            className="w-40 bg-blue-400 hover:bg-blue-500 text-white font-medium py-2 rounded-lg transition-all cursor-pointer"
           >
             Add Employee
+          </button>
+          <button
+            type="button"
+            onClick={handleReset}
+            disabled={!isModified}
+            className={`w-40 ${
+              isModified
+                ? "bg-blue-500 hover:bg-blue-600"
+                : "bg-gray-300 cursor-not-allowed"
+            } text-white font-medium ml-4 py-2 rounded-lg transition-all`}
+          >
+            Reset
           </button>
         </form>
       </div>

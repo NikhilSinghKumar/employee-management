@@ -1,40 +1,64 @@
+// Register/page.js
+
 "use client";
 
 import { useState } from "react";
 import Link from "next/link";
 
 export default function RegisterForm() {
-  // const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  // const [mobile, setMobile] = useState("");
-  // const [organization, setOrganization] = useState("");
+  const [message, setMessage] = useState({ text: "", type: "" });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // if (!/^[a-zA-Z\s]+$/.test(name)) {
-    //   alert("Please enter a valid name");
-    //   return;
-    // }
+
+    // Clear previous messages
+    setMessage({ text: "", type: "" });
+
+    // Email Validation
     if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) {
-      alert("Please enter a valid email");
+      setMessage({ text: "Please enter a valid email.", type: "error" });
       return;
     }
-    // if (!/^\d{10}$/.test(mobile)) {
-    //   alert("Please enter a valid 10-digit mobile number");
-    //   return;
-    // }
+
+    // Password Match Validation
     if (password !== confirmPassword) {
-      alert("Passwords do not match");
+      setMessage({ text: "Passwords do not match.", type: "error" });
       return;
     }
-    // console.log("Name:", name);
-    console.log("Email:", email);
-    console.log("Password:", password);
-    // console.log("Mobile:", mobile);
-    // console.log("Organization:", organization);
-    // Handle registration logic here
+
+    // API Call for Registration
+    try {
+      const res = await fetch("http://localhost:3000/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setMessage({
+          text: "Registration successful! Please log in.",
+          type: "success",
+        });
+        setEmail("");
+        setPassword("");
+        setConfirmPassword("");
+      } else {
+        setMessage({
+          text: data.message || "Registration failed.",
+          type: "error",
+        });
+      }
+    } catch (error) {
+      setMessage({
+        text: "Server error. Please try again later.",
+        type: "error",
+      });
+    }
   };
 
   return (
@@ -44,74 +68,74 @@ export default function RegisterForm() {
         className="bg-white p-6 rounded-lg shadow-md w-96"
       >
         <h2 className="text-xl font-semibold mb-4">Register</h2>
-        {/* <div className="mb-4">
-          <label className="block text-gray-700">Name</label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
-            required
-          />
-        </div> */}
+
+        {/* Display Message */}
+        {message.text && (
+          <div
+            className={`p-2 mb-4 rounded-lg text-white ${
+              message.type === "success" ? "bg-green-500" : "bg-red-500"
+            }`}
+          >
+            {message.text}
+          </div>
+        )}
+
+        {/* Email Field */}
         <div className="mb-4">
           <label className="block text-gray-700">Email</label>
           <input
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              setMessage({ text: "", type: "" }); // Clear message on change
+            }}
             className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
             required
           />
         </div>
+
+        {/* Password Field */}
         <div className="mb-4">
           <label className="block text-gray-700">Set Password</label>
           <input
             type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              setMessage({ text: "", type: "" }); // Clear message on change
+            }}
             className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
             required
           />
         </div>
+
+        {/* Confirm Password Field */}
         <div className="mb-4">
           <label className="block text-gray-700">Confirm Password</label>
           <input
             type="password"
             value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
+            onChange={(e) => {
+              setConfirmPassword(e.target.value);
+              setMessage({ text: "", type: "" }); // Clear message on change
+            }}
             className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
             required
           />
         </div>
-        {/* <div className="mb-4">
-          <label className="block text-gray-700">Mobile Number</label>
-          <input
-            type="text"
-            value={mobile}
-            onChange={(e) => setMobile(e.target.value)}
-            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
-            required
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700">Organization</label>
-          <input
-            type="text"
-            value={organization}
-            onChange={(e) => setOrganization(e.target.value)}
-            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
-            required
-          />
-        </div> */}
+
+        {/* Submit Button */}
         <button
           type="submit"
-          className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600"
+          className="w-40 bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 cursor-pointer"
         >
           Submit
         </button>
+
+        {/* Login Link */}
         <p className="py-2">
-          Already have account? Please{" "}
+          Already have an account? Please{" "}
           <Link href="/" className="text-blue-500 hover:text-blue-600">
             Login
           </Link>

@@ -1,7 +1,12 @@
 import { createConnection } from "../../../utils/db";
 import { NextResponse } from "next/server";
+import { authenticateToken } from "@/middleware/auth";
 
-export async function GET() {
+export async function GET(req) {
+  const authResult = authenticateToken(req);
+  if (!authResult.success) {
+    return NextResponse.json(authResult, { status: 401 });
+  }
   let db;
   try {
     db = await createConnection();
@@ -25,13 +30,16 @@ export async function GET() {
       },
       { status: 500 }
     );
-  } finally {
-    if (db) await db.end(); // Close the connection
   }
 }
 
-export async function POST(request) {
-  let payload = await request.json();
+export async function POST(req) {
+  const authResult = authenticateToken(req);
+  if (!authResult.success) {
+    return NextResponse.json(authResult, { status: 401 });
+  }
+
+  let payload = await req.json();
 
   // Required Fields
   const requiredFields = [
