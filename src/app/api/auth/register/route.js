@@ -9,12 +9,12 @@ const dbConfig = {
 };
 
 export async function POST(req) {
-  const { email, password } = await req.json();
+  const { firstName, lastName, email, password } = await req.json();
 
-  if (!email || !password) {
+  if (!firstName || !lastName || !email || !password) {
     return Response.json({
       success: false,
-      message: "Email and password are required.",
+      message: "All fields are required.",
     });
   }
 
@@ -23,8 +23,8 @@ export async function POST(req) {
   const connection = await mysql.createConnection(dbConfig);
   try {
     await connection.execute(
-      "INSERT INTO users (email, password) VALUES (?, ?)",
-      [email, hashedPassword]
+      "INSERT INTO users (first_name, last_name, email, password) VALUES (?, ?, ?, ?)",
+      [firstName, lastName, email, hashedPassword]
     );
     return Response.json({
       success: true,

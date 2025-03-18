@@ -6,6 +6,8 @@ import { useState } from "react";
 import Link from "next/link";
 
 export default function RegisterForm() {
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -34,7 +36,7 @@ export default function RegisterForm() {
       const res = await fetch("http://localhost:3000/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ firstName, lastName, email, password }),
       });
 
       const data = await res.json();
@@ -44,6 +46,8 @@ export default function RegisterForm() {
           text: "Registration successful! Please log in.",
           type: "success",
         });
+        setFirstName("");
+        setLastName("");
         setEmail("");
         setPassword("");
         setConfirmPassword("");
@@ -65,14 +69,14 @@ export default function RegisterForm() {
     <div className="flex justify-center items-center h-screen">
       <form
         onSubmit={handleSubmit}
-        className="bg-white p-6 rounded-lg shadow-md w-96"
+        className="bg-white mt-5 rounded-lg shadow-md w-96"
       >
-        <h2 className="text-xl font-semibold mb-4">Register</h2>
+        <h2 className="text-xl font-semibold mb-4">New User!</h2>
 
         {/* Display Message */}
         {message.text && (
           <div
-            className={`p-2 mb-4 rounded-lg text-white ${
+            className={`p-1 mb-2 text-[14px] rounded-lg text-white ${
               message.type === "success" ? "bg-green-500" : "bg-red-500"
             }`}
           >
@@ -80,9 +84,39 @@ export default function RegisterForm() {
           </div>
         )}
 
+        {/* FirstName Field */}
+        <div className="mb-4">
+          <label className="block text-gray-700 text-[14px]">First Name</label>
+          <input
+            type="text"
+            value={firstName}
+            onChange={(e) => {
+              setFirstName(e.target.value);
+              setMessage({ text: "", type: "" }); // Clear message on change
+            }}
+            className="w-full px-3 py-1 border rounded-lg text-[14px] focus:outline-none focus:ring focus:ring-blue-300"
+            required
+          />
+        </div>
+
+        {/* LastName Field */}
+        <div className="mb-4">
+          <label className="block text-gray-700 text-[14px]">Last Name</label>
+          <input
+            type="text"
+            value={lastName}
+            onChange={(e) => {
+              setLastName(e.target.value);
+              setMessage({ text: "", type: "" }); // Clear message on change
+            }}
+            className="w-full px-3 py-1 border rounded-lg text-[14px] focus:outline-none focus:ring focus:ring-blue-300"
+            required
+          />
+        </div>
+
         {/* Email Field */}
         <div className="mb-4">
-          <label className="block text-gray-700">Email</label>
+          <label className="block text-gray-700 text-[14px]">Email</label>
           <input
             type="email"
             value={email}
@@ -90,14 +124,16 @@ export default function RegisterForm() {
               setEmail(e.target.value);
               setMessage({ text: "", type: "" }); // Clear message on change
             }}
-            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+            className="w-full px-3 py-1 border rounded-lg text-[14px] focus:outline-none focus:ring focus:ring-blue-300"
             required
           />
         </div>
 
         {/* Password Field */}
         <div className="mb-4">
-          <label className="block text-gray-700">Set Password</label>
+          <label className="block text-gray-700 text-[14px]">
+            Set Password
+          </label>
           <input
             type="password"
             value={password}
@@ -105,14 +141,16 @@ export default function RegisterForm() {
               setPassword(e.target.value);
               setMessage({ text: "", type: "" }); // Clear message on change
             }}
-            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+            className="w-full px-3 py-1 border rounded-lg text-[14px] focus:outline-none focus:ring focus:ring-blue-300"
             required
           />
         </div>
 
         {/* Confirm Password Field */}
         <div className="mb-4">
-          <label className="block text-gray-700">Confirm Password</label>
+          <label className="block text-gray-700 text-[14px]">
+            Confirm Password
+          </label>
           <input
             type="password"
             value={confirmPassword}
@@ -120,7 +158,7 @@ export default function RegisterForm() {
               setConfirmPassword(e.target.value);
               setMessage({ text: "", type: "" }); // Clear message on change
             }}
-            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+            className="w-full px-3 py-1 border rounded-lg text-[14px] focus:outline-none focus:ring focus:ring-blue-300"
             required
           />
         </div>
@@ -128,15 +166,18 @@ export default function RegisterForm() {
         {/* Submit Button */}
         <button
           type="submit"
-          className="w-40 bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 cursor-pointer"
+          className="w-35 bg-blue-500 text-white py-1 mb-3 rounded-lg hover:bg-blue-600 cursor-pointer"
         >
-          Submit
+          Register
         </button>
 
         {/* Login Link */}
-        <p className="py-2">
+        <p className="py-1 text-[14px]">
           Already have an account? Please{" "}
-          <Link href="/" className="text-blue-500 hover:text-blue-600">
+          <Link
+            href="/"
+            className="text-blue-500 text-[14px] hover:text-blue-600"
+          >
             Login
           </Link>
         </p>

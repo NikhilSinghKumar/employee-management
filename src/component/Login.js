@@ -37,7 +37,7 @@ export default function LoginForm() {
           text: "Login successful! Redirecting...",
           type: "success",
         });
-        setTimeout(() => router.push("/dashboard"), 2000); // Redirect on success
+        setTimeout(() => router.push("/dashboard"), 1500); // Redirect on success
       } else {
         setMessage({
           text: data.message || "Invalid credentials.",
