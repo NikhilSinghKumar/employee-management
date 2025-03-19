@@ -9,11 +9,25 @@ export default function EmployeeList() {
 
   useEffect(() => {
     const fetchEmployees = async () => {
+      const token = localStorage.getItem("token");
+      console.log("Token from localStorage:", token);
+      if (!token) {
+        setError("Unauthorized: No token found. Please log in.");
+        setLoading(false);
+        return;
+      }
       try {
-        const response = await fetch("http://localhost:3000/api/employees");
-        if (!response.ok) throw new Error("Failed to fetch employees");
-
+        const response = await fetch("http://localhost:3000/api/employees", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`, // Include token here
+            "Content-Type": "application/json",
+          },
+        });
         const data = await response.json();
+        if (!response.ok)
+          throw new Error(data.message || "Failed to fetch employees");
+
         setEmployees(data.data || []);
       } catch (err) {
         setError(err.message);
@@ -24,8 +38,9 @@ export default function EmployeeList() {
 
     fetchEmployees();
   }, []);
-  if (loading) return <p className="text-center text-lg">Loading...</p>;
-  if (error) return <p className="text-center text-red-500">Error: {error}</p>;
+  if (loading) return <p className="text-center text-lg mt-6">Loading...</p>;
+  if (error)
+    return <p className="text-center text-red-500 mt-6">Error: {error}</p>;
 
   return (
     <>

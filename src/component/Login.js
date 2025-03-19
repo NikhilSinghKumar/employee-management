@@ -33,16 +33,20 @@ export default function LoginForm() {
       const data = await res.json();
 
       if (res.ok) {
-        setMessage({
-          text: "Login successful! Redirecting...",
-          type: "success",
-        });
-        setTimeout(() => router.push("/dashboard"), 1500); // Redirect on success
-      } else {
-        setMessage({
-          text: data.message || "Invalid credentials.",
-          type: "error",
-        });
+        const token = data.token;
+        if (token) {
+          localStorage.setItem("token", token); // Store the token correctly
+          setMessage({
+            text: "Login successful! Redirecting...",
+            type: "success",
+          });
+          router.push("/services");
+        } else {
+          setMessage({
+            text: data.message || "Invalid credentials.",
+            type: "error",
+          });
+        }
       }
     } catch (error) {
       console.error("Login error:", error);

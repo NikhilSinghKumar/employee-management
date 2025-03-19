@@ -101,6 +101,11 @@ export default function AddEmployee() {
     console.log("Employee Details: ", employee);
     e.preventDefault();
     setMessage("");
+    const token = localStorage.getItem("token"); // Retrieve the token
+    if (!token) {
+      setMessage("Authorization token is missing. Please log in again.");
+      return;
+    }
     if (!/^[a-zA-Z0-9._]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(employee.email)) {
       setMessage("Invalid email format");
       return;
@@ -114,7 +119,10 @@ export default function AddEmployee() {
     try {
       const res = await fetch("http://localhost:3000/api/employees", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
           ...employee,
         }),
