@@ -103,7 +103,7 @@ export default function AddEmployee() {
     setMessage("");
     const token = localStorage.getItem("token"); // Retrieve the token
     if (!token) {
-      setMessage("Authorization token is missing. Please log in again.");
+      setMessage("Please login first.");
       return;
     }
     if (!/^[a-zA-Z0-9._]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(employee.email)) {
@@ -129,7 +129,7 @@ export default function AddEmployee() {
       });
       if (res.ok) {
         setMessage("Employee added successfully!");
-        setTimeout(() => setMessage(""), 3000);
+        setTimeout(() => setMessage(""), 5000);
       } else {
         setMessage("Failed to add employee.");
       }
@@ -399,7 +399,7 @@ export default function AddEmployee() {
                 : "bg-gray-300 cursor-not-allowed"
             } text-white font-medium ml-4 py-2 rounded-lg transition-all`}
           >
-            Reset
+            Reset Form
           </button>
         </form>
       </div>

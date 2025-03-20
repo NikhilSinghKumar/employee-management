@@ -1,21 +1,28 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ChevronDownIcon } from "@heroicons/react/24/solid";
 
 export function Navbar() {
   const [isOperationsOpen, setIsOperationsOpen] = useState(false);
+  const router = useRouter();
+
+  const handleLogout = () => {
+    localStorage.clear();
+    router.push("/");
+  };
 
   return (
     <nav className="bg-blue-600 text-white p-4 flex justify-between items-center">
       <div className="flex gap-6">
-        <Link href="/sales" className="hover:underline">
+        <Link href="" className="hover:underline">
           Sales
         </Link>
-        <Link href="/finance" className="hover:underline">
+        <Link href="" className="hover:underline">
           Finance
         </Link>
-        <Link href="/hr" className="hover:underline">
+        <Link href="" className="hover:underline">
           HR
         </Link>
         <div className="relative">
@@ -64,12 +71,12 @@ export function Navbar() {
       </div>
 
       <div className="flex gap-6">
-        <Link href="/profile" className="hover:underline">
+        <Link href="" className="hover:underline">
           Profile
         </Link>
-        <Link href="/logout" className="hover:underline">
+        <button onClick={handleLogout} className="hover:underline">
           Logout
-        </Link>
+        </button>
       </div>
     </nav>
   );

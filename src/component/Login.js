@@ -31,27 +31,28 @@ export default function LoginForm() {
       });
 
       const data = await res.json();
-
+      if (!res.ok) {
+        throw new Error(data.message || "Invalid credentials.");
+      }
+      const token = data.token;
       if (res.ok) {
-        const token = data.token;
         if (token) {
           localStorage.setItem("token", token); // Store the token correctly
           setMessage({
             text: "Login successful! Redirecting...",
             type: "success",
           });
-          router.push("/services");
+          setTimeout(() => {
+            router.push("/services");
+          }, 500);
         } else {
-          setMessage({
-            text: data.message || "Invalid credentials.",
-            type: "error",
-          });
+          setMessage({ text: "Invalid credentials.", type: "error" });
         }
       }
     } catch (error) {
       console.error("Login error:", error);
       setMessage({
-        text: "Server error. Please try again later.",
+        text: error.message || "Server error. Please try again later.",
         type: "error",
       });
     } finally {

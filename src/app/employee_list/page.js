@@ -12,7 +12,7 @@ export default function EmployeeList() {
       const token = localStorage.getItem("token");
       console.log("Token from localStorage:", token);
       if (!token) {
-        setError("Unauthorized: No token found. Please log in.");
+        setError("Unauthorized Access: Please login first.");
         setLoading(false);
         return;
       }
@@ -20,7 +20,7 @@ export default function EmployeeList() {
         const response = await fetch("http://localhost:3000/api/employees", {
           method: "GET",
           headers: {
-            Authorization: `Bearer ${token}`, // Include token here
+            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         });
@@ -45,9 +45,9 @@ export default function EmployeeList() {
   return (
     <>
       <div className="container mx-auto p-4">
-        <h2 className="text-2xl font-bold mb-4">Employee List</h2>
-        <div className="overflow-x-auto">
-          <table className="table-auto w-full border-collapse border border-gray-200">
+        <h2 className="text-2xl font-bold m-4">Employee List</h2>
+        <div className="overflow-x-auto max-h-[500px]">
+          <table className="table-auto w-max border-collapse border border-gray-200 text-sm">
             <thead>
               <tr className="bg-gray-100">
                 <th className="p-1 border">Sr. No.</th>
@@ -110,14 +110,8 @@ export default function EmployeeList() {
                   </td>
                   <td className="p-1 border">{employee.employee_status}</td>
                   <td className="p-1 border">
-                    <ul>
-                      <li>
-                        <button>Edit</button>
-                      </li>
-                      <li>
-                        <button>Delete</button>
-                      </li>
-                    </ul>
+                    <span className="p-1">Edit</span>
+                    <span className="p-1">Delete</span>
                   </td>
                 </tr>
               ))}
