@@ -8,9 +8,16 @@ export function Navbar() {
   const [isOperationsOpen, setIsOperationsOpen] = useState(false);
   const router = useRouter();
 
-  const handleLogout = () => {
-    localStorage.clear();
-    router.push("/");
+  const handleLogout = async () => {
+    try {
+      await fetch("http://localhost:3000/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+      router.push("/");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
   };
 
   return (

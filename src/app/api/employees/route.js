@@ -1,17 +1,23 @@
-import { createConnection } from "../../../utils/db";
+import { pool } from "../../../utils/db";
 import { NextResponse } from "next/server";
-import { authenticateToken } from "@/middleware/auth";
+import { authenticateToken } from "@/lib/middleware/auth";
+import { cookies } from "next/headers";
+
+let connection;
 
 export async function GET(req) {
-  const authResult = authenticateToken(req);
+  const token = (await cookies()).get("token")?.value; // Read token from cookies
+
+  // Pass token to authentication middleware
+  const authResult = await authenticateToken(token);
   if (!authResult.success) {
     return NextResponse.json(authResult, { status: 401 });
   }
-  let db;
+
   try {
-    db = await createConnection();
+    connection = await pool.getConnection();
     const sql = "SELECT * FROM employees";
-    const [employees] = await db.query(sql);
+    const [employees] = await connection.query(sql);
 
     return NextResponse.json(
       {
@@ -34,7 +40,20 @@ export async function GET(req) {
 }
 
 export async function POST(req) {
-  const authResult = authenticateToken(req);
+  const token = (await cookies()).get("token")?.value; // Read token from cookies
+
+  if (!token) {
+    return new Response(
+      JSON.stringify({ error: "Unauthorized: No token provided" }),
+      {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  }
+
+  // Pass token to authentication middleware
+  const authResult = await authenticateToken(token);
   if (!authResult.success) {
     return NextResponse.json(authResult, { status: 401 });
   }
@@ -87,7 +106,7 @@ export async function POST(req) {
   }
 
   try {
-    const db = await createConnection();
+    connection = await pool.getConnection();
 
     const sql = `
       INSERT INTO employees (
@@ -130,7 +149,7 @@ export async function POST(req) {
       payload.employeeStatus,
     ];
 
-    const [result] = await db.execute(sql, values);
+    const [result] = await connection.execute(sql, values);
 
     return NextResponse.json(
       {
@@ -151,5 +170,7 @@ export async function POST(req) {
       },
       { status: 500 }
     );
+  } finally {
+    if (connection) connection.release(); // Release the connection back to the pool
   }
 }

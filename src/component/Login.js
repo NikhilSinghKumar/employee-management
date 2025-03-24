@@ -28,27 +28,22 @@ export default function LoginForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
+        credentials: "include", // Allows cookies to be sent with the request
       });
 
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.message || "Invalid credentials.");
       }
-      const token = data.token;
-      if (res.ok) {
-        if (token) {
-          localStorage.setItem("token", token); // Store the token correctly
-          setMessage({
-            text: "Login successful! Redirecting...",
-            type: "success",
-          });
-          setTimeout(() => {
-            router.push("/services");
-          }, 500);
-        } else {
-          setMessage({ text: "Invalid credentials.", type: "error" });
-        }
-      }
+
+      setMessage({
+        text: "Login successful! Redirecting...",
+        type: "success",
+      });
+
+      setTimeout(() => {
+        router.push("/services");
+      }, 500);
     } catch (error) {
       console.error("Login error:", error);
       setMessage({

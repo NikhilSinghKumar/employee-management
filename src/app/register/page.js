@@ -69,7 +69,7 @@ export default function RegisterForm() {
     <div className="flex justify-center items-center h-screen">
       <form
         onSubmit={handleSubmit}
-        className="bg-white mt-5 rounded-lg shadow-md w-96"
+        className="bg-white p-6 rounded-lg shadow-md w-96"
       >
         <h2 className="text-xl font-semibold mb-4">New User!</h2>
 

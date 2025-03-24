@@ -11,6 +11,10 @@
   "dependencies": {
     "@heroicons/react": "^2.2.0",
     "bcryptjs": "^3.0.2",
+    "cookie": "^1.0.2",
+    "cookies-next": "^5.1.0",
+    "jose": "^6.0.10",
+    "js-cookie": "^3.0.5",
     "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.13.0",
     "next": "15.2.2",

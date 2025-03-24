@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
-import { createConnection } from "@/utils/db";
+import { pool } from "@/utils/db";
 import { verifyPassword } from "@/utils/auth";
 import jwt from "jsonwebtoken";
+import { serialize } from "cookie"; // Import serialize for secure cookie setting
 
+let connection;
 export async function POST(request) {
   const { email, password } = await request.json();
 
@@ -14,10 +16,11 @@ export async function POST(request) {
   }
 
   try {
-    const db = await createConnection();
-    const [users] = await db.query("SELECT * FROM users WHERE email = ?", [
-      email,
-    ]);
+    connection = await pool.getConnection();
+    const [users] = await connection.query(
+      "SELECT * FROM users WHERE email = ?",
+      [email]
+    );
 
     if (users.length === 0) {
       return NextResponse.json({ message: "User not found." }, { status: 404 });
@@ -33,16 +36,28 @@ export async function POST(request) {
     }
 
     // Generate JWT token
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
-
-    return NextResponse.json(
+    const token = jwt.sign(
+      { userId: user.id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+    // Set token as HTTP-only cookie
+    const response = NextResponse.json(
       { message: "Login successful.", token },
       { status: 200 }
     );
+    response.headers.append(
+      "Set-Cookie",
+      serialize("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production", // Secure in production
+        sameSite: "Strict",
+        path: "/", // Accessible across the entire app
+        maxAge: 60 * 60, // 1 hour expiration
+      })
+    );
+    return response;
   } catch (error) {
-    console.error("Database error:", error);
     return NextResponse.json({ message: "Database error." }, { status: 500 });
   }
 }

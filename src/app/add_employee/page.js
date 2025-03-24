@@ -36,6 +36,7 @@ export default function AddEmployee() {
   const [employee, setEmployee] = useState(defaultEmployee);
   const [message, setMessage] = useState("");
   const [isModified, setIsModified] = useState(false);
+  const [loading, setLoading] = useState(false);
   const messageTimer = useRef(null);
   const allowances = [
     { key: "hra", label: "HRA", percentage: 0.25 },
@@ -98,14 +99,9 @@ export default function AddEmployee() {
   ]);
 
   const handleSubmit = async (e) => {
-    console.log("Employee Details: ", employee);
     e.preventDefault();
+    setLoading(true);
     setMessage("");
-    const token = localStorage.getItem("token"); // Retrieve the token
-    if (!token) {
-      setMessage("Please login first.");
-      return;
-    }
     if (!/^[a-zA-Z0-9._]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(employee.email)) {
       setMessage("Invalid email format");
       return;
@@ -121,11 +117,11 @@ export default function AddEmployee() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           ...employee,
         }),
+        credentials: "include", // Allows cookies to be sent with the request
       });
       if (res.ok) {
         setMessage("Employee added successfully!");
@@ -135,6 +131,8 @@ export default function AddEmployee() {
       }
     } catch (error) {
       setMessage("An error occurred.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -162,7 +160,7 @@ export default function AddEmployee() {
 
         <form onSubmit={handleSubmit} className="w-250 space-y-4">
           <div className="flex flex-col">
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-1">
               {table12.map((group1, index) => (
                 <table
                   key={index}
@@ -385,9 +383,10 @@ export default function AddEmployee() {
           </div>
           <button
             type="submit"
-            className="w-40 bg-blue-400 hover:bg-blue-500 text-white font-medium py-2 rounded-lg transition-all cursor-pointer"
+            disabled={loading}
+            className="w-40 bg-blue-500 hover:bg-blue-500 text-white font-medium py-2 rounded-lg transition-all cursor-pointer"
           >
-            Add Employee
+            {loading ? "Submitting..." : "Submit"}
           </button>
           <button
             type="button"
@@ -395,7 +394,7 @@ export default function AddEmployee() {
             disabled={!isModified}
             className={`w-40 ${
               isModified
-                ? "bg-blue-500 hover:bg-blue-600"
+                ? "bg-orange-500 hover:bg-orange-600"
                 : "bg-gray-300 cursor-not-allowed"
             } text-white font-medium ml-4 py-2 rounded-lg transition-all`}
           >

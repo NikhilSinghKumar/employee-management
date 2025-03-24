@@ -9,18 +9,11 @@ export default function EmployeeList() {
 
   useEffect(() => {
     const fetchEmployees = async () => {
-      const token = localStorage.getItem("token");
-      console.log("Token from localStorage:", token);
-      if (!token) {
-        setError("Unauthorized Access: Please login first.");
-        setLoading(false);
-        return;
-      }
       try {
         const response = await fetch("http://localhost:3000/api/employees", {
           method: "GET",
+          credentials: "include", // Ensures cookies are sent
           headers: {
-            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         });
@@ -35,7 +28,6 @@ export default function EmployeeList() {
         setLoading(false);
       }
     };
-
     fetchEmployees();
   }, []);
   if (loading) return <p className="text-center text-lg mt-6">Loading...</p>;
