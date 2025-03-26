@@ -2,10 +2,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState({ text: "", type: "" });
   const [isLoading, setIsLoading] = useState(false);
 
@@ -88,7 +90,7 @@ export default function LoginForm() {
           />
         </div>
 
-        <div className="mb-4">
+        {/* <div className="mb-4">
           <label className="block text-gray-700">Password</label>
           <input
             type="password"
@@ -100,8 +102,36 @@ export default function LoginForm() {
             className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
             required
           />
-        </div>
+        </div> */}
 
+        {/* Password Field with Show/Hide Button */}
+        <div className="mb-4 relative">
+          <label className="block text-gray-700">Password</label>
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setMessage({ text: "", type: "" });
+              }}
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300 pr-10"
+              required
+            />
+            {/* Toggle Password Visibility */}
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute inset-y-0 right-2 flex items-center px-2 text-gray-600"
+            >
+              {showPassword ? (
+                <EyeIcon className="h-5 w-5" />
+              ) : (
+                <EyeSlashIcon className="h-5 w-5" />
+              )}
+            </button>
+          </div>
+        </div>
         <button
           type="submit"
           className={`w-full py-2 rounded-lg text-white cursor-pointer ${

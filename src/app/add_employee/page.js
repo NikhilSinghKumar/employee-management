@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { calculateTotalSalary } from "@/utils/employeeUtils";
+import ExcelUpload from "@/component/ExcelUpload";
 
 const defaultEmployee = {
   employeeName: "",
@@ -401,6 +402,7 @@ export default function AddEmployee() {
             Reset Form
           </button>
         </form>
+        <ExcelUpload />
       </div>
     </div>
   );

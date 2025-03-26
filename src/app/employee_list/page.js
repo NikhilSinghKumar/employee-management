@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import ExcelDownload from "@/component/ExcelDownload";
 
 export default function EmployeeList() {
   const [employees, setEmployees] = useState([]);
@@ -111,6 +112,7 @@ export default function EmployeeList() {
           </table>
         </div>
       </div>
+      <ExcelDownload />
     </>
   );
 }
