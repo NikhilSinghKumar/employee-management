@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { IoMdCloudDownload } from "react-icons/io";
 
 export default function ExcelDownload() {
   const [loading, setLoading] = useState(false);
@@ -29,12 +30,13 @@ export default function ExcelDownload() {
     <div className="p-6 bg-white shadow-md rounded-lg">
       <button
         onClick={handleDownload}
-        className={`px-4 py-2 rounded text-white ${
-          loading ? "bg-gray-400" : "bg-green-500 hover:bg-green-600"
+        className={`flex items-center gap-2 px-4 py-2 rounded text-white ${
+          loading ? "bg-gray-400" : "bg-green-600 hover:bg-green-700"
         }`}
         disabled={loading}
       >
-        {loading ? "Downloading..." : "Download Employees"}
+        <IoMdCloudDownload className="text-xl" />
+        {loading ? "Downloading..." : "Download"}
       </button>
     </div>
   );

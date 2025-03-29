@@ -73,7 +73,7 @@ export function Navbar() {
                 href="/timesheet_payroll"
                 className="block px-4 py-2 hover:bg-gray-200"
               >
-                Timesheet/Payroll
+                Timesheet/ Payroll
               </Link>
               <Link
                 href="/invoices"

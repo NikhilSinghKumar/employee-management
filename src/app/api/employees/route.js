@@ -174,3 +174,41 @@ export async function POST(req) {
     if (connection) connection.release(); // Release the connection back to the pool
   }
 }
+
+export async function DELETE(req) {
+  try {
+    const { id } = await req.json(); // Extract ID from body instead of URL params
+    if (!id) {
+      return NextResponse.json(
+        { error: "Employee ID is required" },
+        { status: 400 }
+      );
+    }
+
+    connection = await pool.getConnection();
+    const [result] = await connection.execute(
+      "DELETE FROM employees WHERE id = ?",
+      [id]
+    );
+
+    if (result.affectedRows === 0) {
+      return NextResponse.json(
+        { error: "Employee not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(
+      { success: true, message: "Employee deleted successfully" },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Database delete error:", error);
+    return NextResponse.json(
+      { error: "Server error", success: false },
+      { status: 500 }
+    );
+  } finally {
+    if (connection) connection.release();
+  }
+}

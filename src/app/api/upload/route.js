@@ -90,8 +90,8 @@ export async function POST(req) {
       .map((row) => [
         row.name || "Unknown",
         row.mobile || null,
-        formatDate(row.dob) || null,
         row.email || null,
+        formatDate(row.dob) || null,
         row["et no."] || null,
         row["iqama no."] || null,
         formatDate(row["iqama exp date"]) || null,
