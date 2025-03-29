@@ -1,11 +1,14 @@
 "use client";
-import { useState } from "react";
+import { useState, useContext } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronDownIcon } from "@heroicons/react/24/solid";
+import { CgProfile } from "react-icons/cg";
+import { UserContext } from "@/context/UserContext";
 
 export function Navbar() {
   const [isOperationsOpen, setIsOperationsOpen] = useState(false);
+  const { user, fetchUser } = useContext(UserContext);
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -14,12 +17,16 @@ export function Navbar() {
         method: "POST",
         credentials: "include",
       });
+      setTimeout(() => {
+        fetchUser(); // Ensure latest session state
+      }, 500);
       router.push("/");
     } catch (error) {
       console.error("Logout failed:", error);
     }
   };
 
+  console.log("user logged in: ", user);
   return (
     <nav className="bg-blue-600 text-white p-4 flex justify-between items-center">
       <div className="flex gap-6">
@@ -78,9 +85,11 @@ export function Navbar() {
       </div>
 
       <div className="flex gap-6">
-        <Link href="" className="hover:underline">
-          Profile
-        </Link>
+        <div>
+          <CgProfile />
+          <p>Hi {user ? user.first_name : "Guest"} </p>
+        </div>
+
         <button onClick={handleLogout} className="hover:underline">
           Logout
         </button>

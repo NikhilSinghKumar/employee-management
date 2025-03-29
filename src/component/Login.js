@@ -1,7 +1,8 @@
 "use client";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { UserContext } from "@/context/UserContext";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
 
 export default function LoginForm() {
@@ -10,7 +11,7 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState({ text: "", type: "" });
   const [isLoading, setIsLoading] = useState(false);
-
+  const { fetchUser } = useContext(UserContext);
   const router = useRouter();
 
   const handleSubmit = async (e) => {
@@ -42,17 +43,14 @@ export default function LoginForm() {
         text: "Login successful! Redirecting...",
         type: "success",
       });
-
-      setTimeout(() => {
-        router.push("/services");
-      }, 500);
+      await fetchUser(); // Ensure the user data is updated before navigating
+      router.push("/services"); // Navigate immediately after user data is updated
     } catch (error) {
       console.error("Login error:", error);
       setMessage({
         text: error.message || "Server error. Please try again later.",
         type: "error",
       });
-    } finally {
       setIsLoading(false);
     }
   };
@@ -89,20 +87,6 @@ export default function LoginForm() {
             required
           />
         </div>
-
-        {/* <div className="mb-4">
-          <label className="block text-gray-700">Password</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => {
-              setPassword(e.target.value);
-              setMessage({ text: "", type: "" }); // Clear message on change
-            }}
-            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
-            required
-          />
-        </div> */}
 
         {/* Password Field with Show/Hide Button */}
         <div className="mb-4 relative">

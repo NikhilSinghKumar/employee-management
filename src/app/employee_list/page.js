@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import ExcelDownload from "@/component/ExcelDownload";
+
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL + "/api/employees";
 
 export default function EmployeeList() {
   const [employees, setEmployees] = useState([]);
@@ -11,26 +13,51 @@ export default function EmployeeList() {
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const response = await fetch("http://localhost:3000/api/employees", {
+        const response = await fetch(API_URL, {
           method: "GET",
-          credentials: "include", // Ensures cookies are sent
-          headers: {
-            "Content-Type": "application/json",
-          },
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
         });
+
         const data = await response.json();
         if (!response.ok)
           throw new Error(data.message || "Failed to fetch employees");
 
         setEmployees(data.data || []);
       } catch (err) {
-        setError(err.message);
+        setError(
+          err?.message || "Something went wrong while fetching employees"
+        );
       } finally {
         setLoading(false);
       }
     };
+
     fetchEmployees();
   }, []);
+
+  const formatDate = (date) => new Date(date).toLocaleDateString("en-GB");
+
+  const computedEmployees = useMemo(() => {
+    return employees.map((employee) => ({
+      ...employee,
+      totalAllowance: (
+        Number(employee.hra || 0) +
+        Number(employee.tra || 0) +
+        Number(employee.food_allowance || 0) +
+        Number(employee.other_allowance || 0)
+      ).toFixed(2),
+    }));
+  }, [employees]);
+
+  const handleEdit = (id) => {
+    console.log("Edit Employee ID:", id);
+  };
+
+  const handleDelete = (id) => {
+    console.log("Delete Employee ID:", id);
+  };
+
   if (loading) return <p className="text-center text-lg mt-6">Loading...</p>;
   if (error)
     return <p className="text-center text-red-500 mt-6">Error: {error}</p>;
@@ -43,32 +70,38 @@ export default function EmployeeList() {
           <table className="table-auto w-max border-collapse border border-gray-200 text-sm">
             <thead>
               <tr className="bg-gray-100">
-                <th className="p-1 border">Sr. No.</th>
-                <th className="p-1 border">ET No.</th>
-                <th className="p-1 border">IQAMA No</th>
-                <th className="p-1 border">Name</th>
-                <th className="p-1 border">Passport No.</th>
-                <th className="p-1 border">Profession</th>
-                <th className="p-1 border">Nationality</th>
-                <th className="p-1 border">Client No.</th>
-                <th className="p-1 border">Client Name</th>
-                <th className="p-1 border">Mobile</th>
-                <th className="p-1 border">Email</th>
-                <th className="p-1 border">Bank Account</th>
-                <th className="p-1 border">Basic Salary</th>
-                <th className="p-1 border">Allowance</th>
-                <th className="p-1 border">Total Salary</th>
-                <th className="p-1 border">Medical Type</th>
-                <th className="p-1 border">Start Date</th>
-                <th className="p-1 border">End Date</th>
-                <th className="p-1 border">Status</th>
-                <th className="p-1 border">Setting</th>
+                {[
+                  "Sr. No.",
+                  "ET No.",
+                  "IQAMA No",
+                  "Name",
+                  "Passport No.",
+                  "Profession",
+                  "Nationality",
+                  "Client No.",
+                  "Client Name",
+                  "Mobile",
+                  "Email",
+                  "Bank Account",
+                  "Basic Salary",
+                  "Allowance",
+                  "Total Salary",
+                  "Medical Type",
+                  "Start Date",
+                  "End Date",
+                  "Status",
+                  "Actions",
+                ].map((header) => (
+                  <th key={header} className="p-1 border">
+                    {header}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody className="border border-red-500">
-              {employees.map((employee) => (
+              {computedEmployees.map((employee, index) => (
                 <tr key={employee.id} className="odd:bg-white even:bg-gray-50">
-                  <td className="p-1 border">{employee.id}</td>
+                  <td className="p-1 border">{index + 1}</td>
                   <td className="p-1 border">{employee.et_number}</td>
                   <td className="p-1 border">{employee.iqama_number}</td>
                   <td className="p-1 border">{employee.name}</td>
@@ -81,30 +114,29 @@ export default function EmployeeList() {
                   <td className="p-1 border">{employee.email}</td>
                   <td className="p-1 border">{employee.bank_account}</td>
                   <td className="p-1 border">{employee.basic_salary}</td>
-                  <td className="p-1 border">
-                    {(
-                      Number(employee.hra || 0) +
-                      Number(employee.tra || 0) +
-                      Number(employee.food_allowance || 0) +
-                      Number(employee.other_allowance || 0)
-                    ).toFixed(2)}
-                  </td>
+                  <td className="p-1 border">{employee.totalAllowance}</td>
                   <td className="p-1 border">{employee.total_salary}</td>
                   <td className="p-1 border text-center">{employee.medical}</td>
                   <td className="p-1 border">
-                    {new Date(employee.contract_start_date).toLocaleDateString(
-                      "en-GB"
-                    )}
+                    {formatDate(employee.contract_start_date)}
                   </td>
                   <td className="p-1 border">
-                    {new Date(employee.contract_end_date).toLocaleDateString(
-                      "en-GB"
-                    )}
+                    {formatDate(employee.contract_end_date)}
                   </td>
                   <td className="p-1 border">{employee.employee_status}</td>
                   <td className="p-1 border">
-                    <span className="p-1">Edit</span>
-                    <span className="p-1">Delete</span>
+                    <button
+                      className="text-blue-500 hover:underline"
+                      onClick={() => handleEdit(employee.id)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="text-red-500 hover:underline ml-2"
+                      onClick={() => handleDelete(employee.id)}
+                    >
+                      Delete
+                    </button>
                   </td>
                 </tr>
               ))}
