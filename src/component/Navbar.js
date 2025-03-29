@@ -1,10 +1,11 @@
 "use client";
 import { useState, useContext } from "react";
 import Link from "next/link";
+import { UserContext } from "@/context/UserContext";
 import { useRouter } from "next/navigation";
 import { ChevronDownIcon } from "@heroicons/react/24/solid";
 import { CgProfile } from "react-icons/cg";
-import { UserContext } from "@/context/UserContext";
+import { LiaSignOutAltSolid } from "react-icons/lia";
 
 export function Navbar() {
   const [isOperationsOpen, setIsOperationsOpen] = useState(false);
@@ -17,10 +18,11 @@ export function Navbar() {
         method: "POST",
         credentials: "include",
       });
+      router.push("/");
+
       setTimeout(() => {
         fetchUser(); // Ensure latest session state
-      }, 500);
-      router.push("/");
+      }, 2000);
     } catch (error) {
       console.error("Logout failed:", error);
     }
@@ -84,16 +86,20 @@ export function Navbar() {
         </div>
       </div>
 
-      <div className="flex gap-6">
-        <div>
-          <CgProfile />
-          <p>Hi {user ? user.first_name : "Guest"} </p>
+      {user && (
+        <div className="flex gap-6">
+          <div className="flex flex-col items-center gap-1">
+            <CgProfile className="w-6 h-6" />
+            <p>Hi {user.first_name} </p>
+          </div>
+          <div className="flex flex-col items-center gap-1">
+            <LiaSignOutAltSolid className="w-6 h-6 stroke-1" />
+            <button onClick={handleLogout} className="cursor-pointer">
+              Logout
+            </button>
+          </div>
         </div>
-
-        <button onClick={handleLogout} className="hover:underline">
-          Logout
-        </button>
-      </div>
+      )}
     </nav>
   );
 }

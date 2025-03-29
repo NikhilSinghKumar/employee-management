@@ -13,12 +13,16 @@ export function UserProvider({ children }) {
         cache: "no-store", // Ensure latest data
       });
 
-      const data = await res.json();
-      if (res.ok) {
-        setUser(data);
-      } else {
-        setUser(null);
+      if (!res.ok) {
+        if (res.status === 401) {
+          setUser(null); // Clear user state when unauthorized
+          return;
+        }
+        throw new Error("Failed to fetch user");
       }
+
+      const data = await res.json();
+      setUser(data);
     } catch (error) {
       console.error("Failed to fetch user:", error);
       setUser(null);
