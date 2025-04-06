@@ -2,10 +2,17 @@ import { NextResponse } from "next/server";
 import { authenticateToken } from "./lib/middleware/auth";
 
 export async function middleware(request) {
-  const protectedRoutes = ["/services", "/employee_list", "/add_employee"];
+  // Add /edit_employee to protected routes
+  const protectedRoutes = [
+    "/services",
+    "/employee_list",
+    "/add_employee",
+    "/edit_employee",
+  ];
   const authRoutes = ["/", "/register"];
   const pathname = request.nextUrl.pathname;
 
+  // Allow auth routes without checking token
   if (authRoutes.includes(pathname)) {
     return NextResponse.next();
   }
@@ -20,6 +27,7 @@ export async function middleware(request) {
       : { success: false };
     console.log("Auth Result:", authResult); // Debugging
 
+    // Check if the pathname starts with any protected route
     if (
       protectedRoutes.some((route) => pathname.startsWith(route)) &&
       !authResult.success
@@ -34,7 +42,12 @@ export async function middleware(request) {
   return NextResponse.next();
 }
 
-// Apply middleware only to protected routes
+// Update matcher to include /edit_employee/:id
 export const config = {
-  matcher: ["/services", "/employee_list", "/add_employee"],
+  matcher: [
+    "/services/:path*",
+    "/employee_list/:path*",
+    "/add_employee/:path*",
+    "/edit_employee/:path*",
+  ],
 };

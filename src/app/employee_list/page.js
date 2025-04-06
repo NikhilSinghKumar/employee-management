@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import ExcelDownload from "@/component/ExcelDownload";
 import { MdDelete } from "react-icons/md";
 import { FaRegEdit } from "react-icons/fa";
+import Link from "next/link";
 
 const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL + "/api/employees";
 
@@ -11,6 +12,7 @@ export default function EmployeeList() {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const fetchEmployees = async () => {
@@ -23,8 +25,6 @@ export default function EmployeeList() {
         });
 
         const data = await response.json();
-        console.log("API Response:", data);
-
         if (!response.ok)
           throw new Error(data.error || "Failed to fetch employees");
 
@@ -55,9 +55,47 @@ export default function EmployeeList() {
     }));
   }, [employees]);
 
-  const handleEdit = (id) => {
-    console.log("Edit Employee ID:", id);
-  };
+  const filteredEmployees = useMemo(() => {
+    if (!searchQuery) return computedEmployees;
+
+    const query = searchQuery.toLowerCase();
+    return computedEmployees.filter((employee) => {
+      const fields = [
+        employee.name,
+        employee.et_number,
+        employee.iqama_number,
+        employee.passport_number,
+        employee.profession,
+        employee.nationality,
+        employee.client_number,
+        employee.client_name,
+        employee.mobile,
+        employee.email,
+        employee.bank_account,
+      ];
+
+      // Debugging: Log fields to identify non-string values
+      fields.forEach((field, index) => {
+        if (
+          field !== undefined &&
+          field !== null &&
+          typeof field !== "string"
+        ) {
+          console.warn(
+            `Non-string field detected at index ${index}:`,
+            field,
+            typeof field
+          );
+        }
+      });
+
+      return fields.some((field) =>
+        String(field ?? "")
+          .toLowerCase()
+          .includes(query)
+      );
+    });
+  }, [computedEmployees, searchQuery]);
 
   const handleDelete = async (id) => {
     try {
@@ -93,7 +131,16 @@ export default function EmployeeList() {
           </h2>
         ) : (
           <>
-            <h2 className="text-2xl font-bold m-4">Employee List</h2>
+            <h2 className="text-2xl font-bold m-4">All Employee Details</h2>
+            <div className="flex justify-center mb-6">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search employees by Name, ET No., IQAMA, etc."
+                className="w-full max-w-md p-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
             <div className="overflow-x-auto max-h-[500px]">
               <table className="table-auto w-max border-collapse border border-gray-200 text-sm">
                 <thead>
@@ -127,7 +174,7 @@ export default function EmployeeList() {
                   </tr>
                 </thead>
                 <tbody className="border border-red-500">
-                  {computedEmployees.map((employee, index) => (
+                  {filteredEmployees.map((employee, index) => (
                     <tr
                       key={employee.id}
                       className="odd:bg-white even:bg-gray-50"
@@ -136,10 +183,12 @@ export default function EmployeeList() {
                       <td className="p-1 border">{employee.et_number}</td>
                       <td className="p-1 border">{employee.iqama_number}</td>
                       <td className="p-1 border">{employee.name}</td>
-                      <td className="p-1 border items-center">
+                      <td className="p-1 border text-center">
                         {employee.passport_number}
                       </td>
-                      <td className="p-1 border">{employee.profession}</td>
+                      <td className="p-1 border text-center">
+                        {employee.profession}
+                      </td>
                       <td className="p-1 border text-center">
                         {employee.nationality}
                       </td>
@@ -171,16 +220,15 @@ export default function EmployeeList() {
                         {formatDate(employee.contract_end_date)}
                       </td>
                       <td className="p-1 border">{employee.employee_status}</td>
-                      <td className="p-1 border">
-                        <button
-                          className="text-blue-500 ml-2 cursor-pointer hover:text-blue-700 hover:scale-110 transition-transform duration-200"
-                          onClick={() => handleEdit(employee.id)}
+                      <td className="p-1 border flex items-center space-x-2">
+                        <Link
+                          href={`/edit_employee/${employee.id}`}
+                          className="text-blue-500 cursor-pointer hover:text-blue-700 hover:scale-110 transition-transform duration-200"
                         >
                           <FaRegEdit />
-                        </button>
-
+                        </Link>
                         <button
-                          className="text-red-500 ml-2 cursor-pointer hover:text-red-600 hover:scale-110 transition-transform duration-200"
+                          className="text-red-500 cursor-pointer hover:text-red-600 hover:scale-110 transition-transform duration-200"
                           onClick={() => handleDelete(employee.id)}
                         >
                           <MdDelete />

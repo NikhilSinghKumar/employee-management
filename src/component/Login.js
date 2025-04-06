@@ -61,7 +61,7 @@ export default function LoginForm() {
         onSubmit={handleSubmit}
         className="bg-white p-6 rounded-lg shadow-md w-96"
       >
-        <h2 className="text-xl font-semibold mb-4">Login</h2>
+        <h2 className="text-xl font-semibold mb-4">Welcome</h2>
 
         {/* Feedback Message */}
         {message.text && (
@@ -132,6 +132,11 @@ export default function LoginForm() {
           New User? Please{" "}
           <Link href="/register" className="text-blue-500 hover:text-blue-600">
             Register
+          </Link>
+        </p>
+        <p className="py-1">
+          <Link href="/" className="text-blue-500 hover:text-blue-600">
+            Forgot password?
           </Link>
         </p>
       </form>

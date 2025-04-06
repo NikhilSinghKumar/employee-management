@@ -128,7 +128,7 @@ export async function POST(req) {
     const connection = await pool.getConnection();
     const sql = `
       INSERT INTO employees (
-        name, mobile, dob, email, et_number, iqama_number, iqama_expiry_date,
+        name, mobile, email, dob, et_number, iqama_number, iqama_expiry_date,
         bank_account, nationality, passport_number, passport_expiry_date,
         profession, client_number, client_name, contract_start_date,
         contract_end_date, basic_salary, hra_type, hra, tra_type, tra,

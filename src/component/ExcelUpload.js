@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef } from "react";
+import { MdCloudUpload } from "react-icons/md";
 
 export default function ExcelUpload() {
   const [file, setFile] = useState(null);
@@ -66,28 +67,29 @@ export default function ExcelUpload() {
   };
 
   return (
-    <div className="p-6 bg-white shadow-md rounded-lg">
-      <h2 className="text-lg font-semibold mb-4">Upload Employee Data</h2>
-
+    <div className="p-6 bg-white rounded-lg">
       <form onSubmit={handleUpload} className="space-y-4">
-        <input
-          type="file"
-          accept=".xlsx, .xls"
-          onChange={(e) => setFile(e.target.files[0])}
-          className="border p-2 rounded w-full"
-          disabled={loading}
-          ref={fileInputRef} // <-- Attach ref to file input
-        />
+        <div className="flex items-center space-x-2">
+          <input
+            type="file"
+            accept=".xlsx, .xls"
+            onChange={(e) => setFile(e.target.files[0])}
+            className="border p-2 rounded w-[75%] sm:w-[60%]"
+            disabled={loading}
+            ref={fileInputRef}
+          />
 
-        <button
-          type="submit"
-          className={`px-4 py-2 rounded text-white ${
-            loading ? "bg-gray-400" : "bg-blue-500 hover:bg-blue-600"
-          }`}
-          disabled={loading}
-        >
-          {loading ? "Uploading..." : "Upload"}
-        </button>
+          <button
+            type="submit"
+            className={`flex items-center gap-2 px-4 py-2 rounded text-white ${
+              loading ? "bg-gray-400" : "bg-green-600 hover:bg-green-700"
+            }`}
+            disabled={loading}
+          >
+            <MdCloudUpload className="text-xl" />
+            {loading ? "Uploading..." : "Upload"}
+          </button>
+        </div>
       </form>
 
       {message && <p className="mt-3 text-gray-700">{message}</p>}

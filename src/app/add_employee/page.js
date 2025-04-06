@@ -150,7 +150,7 @@ export default function AddEmployee() {
   const table12 = [fields.slice(0, 8), fields.slice(8, 16)];
 
   return (
-    <div className="flex justify-center items-center max-h-screen bg-gray-100 p-4 overflow-hidden">
+    <div className="flex flex-col justify-center items-center min-h-screen bg-gray-100 p-4">
       <div className="bg-white p-6 rounded-lg shadow-lg w-260 max-w-7xl">
         <h2 className="text-2xl font-bold text-center text-gray-700 mb-6">
           New Employee Form
@@ -395,13 +395,15 @@ export default function AddEmployee() {
             disabled={!isModified}
             className={`w-40 ${
               isModified
-                ? "bg-orange-500 hover:bg-orange-600"
+                ? "bg-red-600 hover:bg-red-700"
                 : "bg-gray-300 cursor-not-allowed"
             } text-white font-medium ml-4 py-2 rounded-lg transition-all`}
           >
             Reset Form
           </button>
         </form>
+      </div>
+      <div className="w-5xl m-3  max-w-7xl">
         <ExcelUpload />
       </div>
     </div>
