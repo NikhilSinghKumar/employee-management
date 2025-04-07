@@ -135,7 +135,10 @@ export default function LoginForm() {
           </Link>
         </p>
         <p className="py-1">
-          <Link href="/" className="text-blue-500 hover:text-blue-600">
+          <Link
+            href="/forgot_password"
+            className="text-blue-500 hover:text-blue-600"
+          >
             Forgot password?
           </Link>
         </p>
