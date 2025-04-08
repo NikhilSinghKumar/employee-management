@@ -62,7 +62,7 @@ export async function POST(req) {
       email,
     ]);
 
-    const resetLink = `http://localhost:3000/reset_password?token=${resetToken}`;
+    const resetLink = `/reset_password?token=${resetToken}`;
     await transporter.sendMail({
       from: `"Your App" <${process.env.EMAIL_USER}>`,
       to: email,

@@ -20,15 +20,12 @@ export default function ForgotPassword() {
     setIsLoading(true);
 
     try {
-      const res = await fetch(
-        "http://localhost:3000/api/auth/forgot_password",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
-          credentials: "include",
-        }
-      );
+      const res = await fetch("/api/auth/forgot_password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+        credentials: "include",
+      });
 
       const data = await res.json();
       if (!res.ok) {
