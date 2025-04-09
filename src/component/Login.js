@@ -5,6 +5,8 @@ import Link from "next/link";
 import { UserContext } from "@/context/UserContext";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
 
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -27,11 +29,11 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch(`${API_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
-        credentials: "include", // Allows cookies to be sent with the request
+        credentials: "include",
       });
 
       const data = await res.json();
@@ -43,8 +45,8 @@ export default function LoginForm() {
         text: "Login successful! Redirecting...",
         type: "success",
       });
-      await fetchUser(); // Ensure the user data is updated before navigating
-      router.push("/services"); // Navigate immediately after user data is updated
+      await fetchUser();
+      router.push("/services");
     } catch (error) {
       console.error("Login error:", error);
       setMessage({
@@ -63,7 +65,6 @@ export default function LoginForm() {
       >
         <h2 className="text-xl font-semibold mb-4">Welcome</h2>
 
-        {/* Feedback Message */}
         {message.text && (
           <div
             className={`p-2 mb-4 rounded-lg text-white ${
@@ -88,7 +89,6 @@ export default function LoginForm() {
           />
         </div>
 
-        {/* Password Field with Show/Hide Button */}
         <div className="mb-4 relative">
           <label className="block text-gray-700">Password</label>
           <div className="relative">
@@ -102,7 +102,6 @@ export default function LoginForm() {
               className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300 pr-10"
               required
             />
-            {/* Toggle Password Visibility */}
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}

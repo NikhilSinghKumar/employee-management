@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -20,7 +21,7 @@ export default function ForgotPassword() {
     setIsLoading(true);
 
     try {
-      const res = await fetch("/api/auth/forgot_password", {
+      const res = await fetch(`${API_URL}/api/auth/forgot_password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -36,7 +37,7 @@ export default function ForgotPassword() {
         text: "Reset link sent! Check your email.",
         type: "success",
       });
-      setTimeout(() => router.push("/"), 2000); // Redirect to login after 2s
+      setTimeout(() => router.push("/"), 2000);
     } catch (error) {
       console.error("Forgot password error:", error);
       setMessage({

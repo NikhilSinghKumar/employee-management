@@ -7,6 +7,8 @@ import { ChevronDownIcon } from "@heroicons/react/24/solid";
 import { CgProfile } from "react-icons/cg";
 import { LiaSignOutAltSolid } from "react-icons/lia";
 
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 export function Navbar() {
   const [isOperationsOpen, setIsOperationsOpen] = useState(false);
   const { user, fetchUser } = useContext(UserContext);
@@ -14,14 +16,14 @@ export function Navbar() {
 
   const handleLogout = async () => {
     try {
-      await fetch("/api/auth/logout", {
+      await fetch(`${API_URL}/api/auth/logout`, {
         method: "POST",
         credentials: "include",
       });
       router.push("/");
 
       setTimeout(() => {
-        fetchUser(); // Ensure latest session state
+        fetchUser();
       }, 2000);
     } catch (error) {
       console.error("Logout failed:", error);

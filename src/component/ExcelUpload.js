@@ -2,11 +2,13 @@
 import { useState, useRef } from "react";
 import { MdCloudUpload } from "react-icons/md";
 
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 export default function ExcelUpload() {
   const [file, setFile] = useState(null);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  const fileInputRef = useRef(null); // <-- Add ref for file input
+  const fileInputRef = useRef(null);
 
   const handleUpload = async (e) => {
     e.preventDefault();
@@ -16,7 +18,6 @@ export default function ExcelUpload() {
       return;
     }
 
-    // Validate file type
     const allowedTypes = [
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       "application/vnd.ms-excel",
@@ -28,8 +29,7 @@ export default function ExcelUpload() {
       return;
     }
 
-    // Validate file size (max 5MB)
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
       setMessage("File size exceeds 5MB. Please upload a smaller file.");
       return;
@@ -42,7 +42,7 @@ export default function ExcelUpload() {
     setMessage("");
 
     try {
-      const response = await fetch("/api/upload", {
+      const response = await fetch(`${API_URL}/api/upload`, {
         method: "POST",
         body: formData,
         credentials: "include",
@@ -51,9 +51,9 @@ export default function ExcelUpload() {
       const data = await response.json();
       if (data.success) {
         setMessage("File uploaded successfully!");
-        setFile(null); // Reset state
+        setFile(null);
         if (fileInputRef.current) {
-          fileInputRef.current.value = ""; // <-- Manually reset the file input field
+          fileInputRef.current.value = "";
         }
       } else {
         setMessage(`Upload failed: ${data.error}`);

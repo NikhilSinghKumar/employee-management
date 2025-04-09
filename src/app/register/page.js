@@ -1,9 +1,8 @@
-// Register/page.js
-
 "use client";
 
 import { useState } from "react";
 import Link from "next/link";
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export default function RegisterForm() {
   const [firstName, setFirstName] = useState("");
@@ -15,25 +14,19 @@ export default function RegisterForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Clear previous messages
     setMessage({ text: "", type: "" });
 
-    // Email Validation
     if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) {
       setMessage({ text: "Please enter a valid email.", type: "error" });
       return;
     }
-
-    // Password Match Validation
     if (password !== confirmPassword) {
       setMessage({ text: "Passwords do not match.", type: "error" });
       return;
     }
 
-    // API Call for Registration
     try {
-      const res = await fetch("/api/auth/register", {
+      const res = await fetch(`${API_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ firstName, lastName, email, password }),
