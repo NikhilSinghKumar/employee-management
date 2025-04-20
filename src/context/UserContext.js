@@ -10,12 +10,12 @@ export function UserProvider({ children }) {
     try {
       const res = await fetch("/api/user", {
         credentials: "include",
-        cache: "no-store", // Ensure latest data
+        cache: "no-store",
       });
 
       if (!res.ok) {
         if (res.status === 401) {
-          setUser(null); // Clear user state when unauthorized
+          setUser(null);
           return;
         }
         throw new Error("Failed to fetch user");

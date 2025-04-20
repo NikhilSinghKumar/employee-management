@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import ExcelDownload from "@/component/ExcelDownload";
 import { MdDelete } from "react-icons/md";
 import { FaRegEdit } from "react-icons/fa";
+import { IoSearch } from "react-icons/io5";
 import Link from "next/link";
 
 const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL + "/api/employees";
@@ -17,7 +18,6 @@ export default function EmployeeList() {
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        console.log("Fetching employees from:", API_URL);
         const response = await fetch(API_URL, {
           method: "GET",
           credentials: "include",
@@ -133,13 +133,18 @@ export default function EmployeeList() {
           <>
             <h2 className="text-2xl font-bold m-4">All Employee Details</h2>
             <div className="flex justify-center mb-6">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search employees by Name, ET No., IQAMA, etc."
-                className="w-full max-w-md p-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+              <div className="relative w-full max-w-md">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                  <IoSearch className="w-5 h-5" />
+                </div>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search employees by Name, ET No., IQAMA, etc."
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                />
+              </div>
             </div>
             <div className="overflow-x-auto max-h-[500px]">
               <table className="table-auto w-max border-collapse border border-gray-200 text-sm">

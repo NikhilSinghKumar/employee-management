@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { pool } from "@/utils/db";
+import pool from "@/utils/db";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 
@@ -20,18 +20,9 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-async function getDBConnection() {
-  try {
-    const connection = await pool.getConnection();
-    return connection;
-  } catch (error) {
-    console.error("Database connection error:", error);
-    throw error;
-  }
-}
-
 export async function POST(req) {
-  let connection;
+  const client = await pool.connect();
+
   try {
     const { email } = await req.json();
     if (!email) {
@@ -41,13 +32,12 @@ export async function POST(req) {
       );
     }
 
-    connection = await getDBConnection();
-
-    const [users] = await connection.query(
-      "SELECT * FROM users WHERE email = ?",
+    const userResult = await client.query(
+      "SELECT * FROM users WHERE email = $1",
       [email]
     );
-    if (users.length === 0) {
+
+    if (userResult.rows.length === 0) {
       return NextResponse.json(
         { message: "Email not found." },
         { status: 404 }
@@ -57,12 +47,14 @@ export async function POST(req) {
     const resetToken = jwt.sign({ email }, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
-    await connection.query("UPDATE users SET reset_token = ? WHERE email = ?", [
+
+    await client.query("UPDATE users SET reset_token = $1 WHERE email = $2", [
       resetToken,
       email,
     ]);
 
     const resetLink = `/reset_password?token=${resetToken}`;
+
     await transporter.sendMail({
       from: `"Your App" <${process.env.EMAIL_USER}>`,
       to: email,
@@ -88,6 +80,6 @@ export async function POST(req) {
       { status: 500 }
     );
   } finally {
-    if (connection) connection.release();
+    client.release();
   }
 }

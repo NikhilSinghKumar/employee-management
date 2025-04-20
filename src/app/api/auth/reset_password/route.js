@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { pool } from "@/utils/db";
+import pool from "@/utils/db";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { RateLimiterMemory, RateLimiterRes } from "rate-limiter-flexible";
@@ -15,18 +15,9 @@ const rateLimiter = new RateLimiterMemory({
   duration: 60 * 60, // 1 hour
 });
 
-async function getDBConnection() {
-  try {
-    const connection = await pool.getConnection();
-    return connection;
-  } catch (error) {
-    console.error("Database connection error:", error);
-    throw error;
-  }
-}
-
 export async function POST(req) {
-  let connection;
+  const client = await pool.connect();
+
   try {
     const { token, password } = await req.json();
     if (!token || !password) {
@@ -53,18 +44,17 @@ export async function POST(req) {
       );
     }
 
-    // Verify JWT (this handles token expiration)
+    // Verify JWT
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const email = decoded.email;
 
-    connection = await getDBConnection();
-
-    // Check token (without reset_token_expires)
-    const [users] = await connection.query(
-      "SELECT * FROM users WHERE email = ? AND reset_token = ?",
+    // Check token validity
+    const userResult = await client.query(
+      "SELECT * FROM users WHERE email = $1 AND reset_token = $2",
       [email, token]
     );
-    if (users.length === 0) {
+
+    if (userResult.rows.length === 0) {
       return NextResponse.json(
         { message: "Invalid or expired token." },
         { status: 400 }
@@ -74,16 +64,16 @@ export async function POST(req) {
     // Hash new password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Update password and clear token in a transaction
-    await connection.beginTransaction();
+    // Transaction for password update
+    await client.query("BEGIN");
     try {
-      await connection.query(
-        "UPDATE users SET password = ?, reset_token = NULL WHERE email = ?",
+      await client.query(
+        "UPDATE users SET password = $1, reset_token = NULL WHERE email = $2",
         [hashedPassword, email]
       );
-      await connection.commit();
+      await client.query("COMMIT");
     } catch (error) {
-      await connection.rollback();
+      await client.query("ROLLBACK");
       throw error;
     }
 
@@ -124,6 +114,6 @@ export async function POST(req) {
       { status: 500 }
     );
   } finally {
-    if (connection) connection.release();
+    client.release();
   }
 }

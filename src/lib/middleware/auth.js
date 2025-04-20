@@ -5,7 +5,6 @@ export async function authenticateToken(token) {
     return { success: false };
   }
 
-  // Ensure SECRET_KEY is fetched when needed
   const SECRET_KEY = process.env.JWT_SECRET
     ? new TextEncoder().encode(process.env.JWT_SECRET)
     : null;

@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { pool } from "@/utils/db";
+import pool from "@/utils/db";
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 
-const SECRET_KEY = process.env.JWT_SECRET; // Use ENV variable
+const SECRET_KEY = process.env.JWT_SECRET;
 
 export async function GET() {
   try {
@@ -17,7 +17,6 @@ export async function GET() {
       );
     }
 
-    // Decode JWT to get userId
     let decoded;
     try {
       decoded = jwt.verify(token, SECRET_KEY);
@@ -31,30 +30,16 @@ export async function GET() {
 
     const userId = decoded.userId;
 
-    // Get a database connection
-    const connection = await pool.getConnection();
+    const result = await pool.query(
+      "SELECT first_name FROM users WHERE id = $1",
+      [userId]
+    );
 
-    try {
-      const [rows] = await connection.execute(
-        "SELECT first_name FROM users WHERE id = ?",
-        [userId]
-      );
-
-      connection.release();
-
-      if (rows.length === 0) {
-        return NextResponse.json({ error: "User not found" }, { status: 404 });
-      }
-
-      return NextResponse.json({ first_name: rows[0].first_name });
-    } catch (queryError) {
-      connection.release();
-      console.error("Database query error:", queryError);
-      return NextResponse.json(
-        { error: "Database query failed" },
-        { status: 500 }
-      );
+    if (result.rows.length === 0) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
+
+    return NextResponse.json({ first_name: result.rows[0].first_name });
   } catch (error) {
     console.error("Unexpected error:", error);
     return NextResponse.json(

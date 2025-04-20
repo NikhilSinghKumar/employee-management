@@ -1,14 +1,11 @@
-import { pool } from "../../../utils/db";
+import pool from "@/utils/db";
 import { NextResponse } from "next/server";
 import { authenticateToken } from "@/lib/middleware/auth";
 import { cookies } from "next/headers";
 
-async function getDBConnection() {
-  return pool.getConnection();
-}
-
 async function verifyAuth() {
-  const token = (await cookies()).get("token")?.value;
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
   if (!token)
     return { success: false, error: "Unauthorized: No token provided" };
   return authenticateToken(token);
@@ -19,12 +16,10 @@ export async function GET(req) {
   if (!authResult.success)
     return NextResponse.json(authResult, { status: 401 });
 
-  let connection;
   try {
-    connection = await getDBConnection();
-    const [employees] = await connection.query("SELECT * FROM employees");
+    const result = await pool.query("SELECT * FROM employees");
     return NextResponse.json(
-      { success: true, data: employees },
+      { success: true, data: result.rows },
       { status: 200 }
     );
   } catch (error) {
@@ -33,8 +28,6 @@ export async function GET(req) {
       { success: false, error: error.message },
       { status: 500 }
     );
-  } finally {
-    if (connection) connection.release();
   }
 }
 
@@ -81,23 +74,58 @@ export async function POST(req) {
       { status: 400 }
     );
 
-  let connection;
   try {
-    connection = await getDBConnection();
-    const sql = `INSERT INTO employees (
-      name, mobile, dob, email, et_number, iqama_number, iqama_expiry_date,
-      bank_account, nationality, passport_number, passport_expiry_date, profession,
-      client_number, client_name, contract_start_date, contract_end_date, basic_salary,
-      hra_type, hra, tra_type, tra, food_allowance_type, food_allowance, other_allowance,
-      total_salary, medical, employee_status
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    const sql = `
+      INSERT INTO employees (
+        name, mobile, dob, email, et_number, iqama_number, iqama_expiry_date,
+        bank_account, nationality, passport_number, passport_expiry_date, profession,
+        client_number, client_name, contract_start_date, contract_end_date, basic_salary,
+        hra_type, hra, tra_type, tra, food_allowance_type, food_allowance, other_allowance,
+        total_salary, medical, employee_status
+      ) VALUES (
+        $1, $2, $3, $4, $5, $6, $7,
+        $8, $9, $10, $11, $12,
+        $13, $14, $15, $16, $17,
+        $18, $19, $20, $21, $22, $23, $24,
+        $25, $26, $27
+      ) RETURNING id
+    `;
 
-    const values = requiredFields.map((field) => payload[field]);
-    const [result] = await connection.execute(sql, values);
+    const values = [
+      payload.employeeName,
+      payload.mobile,
+      payload.dob,
+      payload.email,
+      payload.etNo,
+      payload.iqamaNo,
+      payload.iqamaExpDate,
+      payload.bankAccount,
+      payload.nationality,
+      payload.passportNo,
+      payload.passportExpDate,
+      payload.profession,
+      payload.clientNo,
+      payload.clientName,
+      payload.contractStartDate,
+      payload.contractEndDate,
+      payload.basicSalary,
+      payload.hraType,
+      payload.hra,
+      payload.traType,
+      payload.tra,
+      payload.foodAllowanceType,
+      payload.foodAllowance,
+      payload.otherAllowance,
+      payload.totalSalary,
+      payload.medical,
+      payload.employeeStatus,
+    ];
+
+    const result = await pool.query(sql, values);
     return NextResponse.json(
       {
         result: "New Employee Created",
-        employeeId: result.insertId,
+        employeeId: result.rows[0].id,
         success: true,
       },
       { status: 201 }
@@ -108,8 +136,6 @@ export async function POST(req) {
       { result: "Database error", error: error.message, success: false },
       { status: 500 }
     );
-  } finally {
-    if (connection) connection.release();
   }
 }
 
@@ -125,14 +151,11 @@ export async function DELETE(req) {
       { status: 400 }
     );
 
-  let connection;
   try {
-    connection = await getDBConnection();
-    const [result] = await connection.execute(
-      "DELETE FROM employees WHERE id = ?",
-      [id]
-    );
-    if (result.affectedRows === 0)
+    const result = await pool.query("DELETE FROM employees WHERE id = $1", [
+      id,
+    ]);
+    if (result.rowCount === 0)
       return NextResponse.json(
         { error: "Employee not found" },
         { status: 404 }
@@ -147,7 +170,5 @@ export async function DELETE(req) {
       { error: "Server error", success: false },
       { status: 500 }
     );
-  } finally {
-    if (connection) connection.release();
   }
 }

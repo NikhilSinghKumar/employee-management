@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { calculateTotalSalary } from "@/utils/employeeUtils";
 import ExcelUpload from "@/component/ExcelUpload";
 
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL + "/api/employees";
 const defaultEmployee = {
   employeeName: "",
   mobile: "",
@@ -114,7 +115,7 @@ export default function AddEmployee() {
       return;
     }
     try {
-      const res = await fetch("http://localhost:3000/api/employees", {
+      const res = await fetch(API_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -122,7 +123,7 @@ export default function AddEmployee() {
         body: JSON.stringify({
           ...employee,
         }),
-        credentials: "include", // Allows cookies to be sent with the request
+        credentials: "include",
       });
       if (res.ok) {
         setMessage("Employee added successfully!");
@@ -141,7 +142,6 @@ export default function AddEmployee() {
     setEmployee(defaultEmployee);
     setIsModified(false);
     setMessage("Employee form is reset now");
-    // Clear any existing timer before setting a new one
     if (messageTimer.current) clearTimeout(messageTimer.current);
     messageTimer.current = setTimeout(() => setMessage(""), 2000);
   };

@@ -1,13 +1,13 @@
-import { pool } from "@/utils/db"; // MySQL connection
+import pool from "@/utils/db";
 import * as XLSX from "xlsx";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { authenticateToken } from "@/lib/middleware/auth";
+import format from "pg-format";
 
 export async function POST(req) {
   try {
-    // Extract token from cookies
-    const token = (await cookies()).get("token")?.value;
+    const token = cookies().get("token")?.value;
     if (!token) {
       return NextResponse.json(
         { error: "Unauthorized: No token provided" },
@@ -15,13 +15,11 @@ export async function POST(req) {
       );
     }
 
-    // Authenticate the token
     const authResult = await authenticateToken(token);
     if (!authResult.success) {
       return NextResponse.json(authResult, { status: 401 });
     }
 
-    // Parse the form data
     const formData = await req.formData();
     const file = formData.get("file");
 
@@ -32,49 +30,34 @@ export async function POST(req) {
       );
     }
 
-    // Read the file as a Buffer
     const fileBuffer = Buffer.from(await file.arrayBuffer());
-
-    // Process the Excel file
     const workbook = XLSX.read(fileBuffer, { type: "buffer" });
     const sheetName = workbook.SheetNames[0];
     const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {
       raw: false,
     });
 
-    console.log("Parsed Excel Data:", jsonData);
-
-    // Function to handle date conversion
     const formatDate = (value) => {
       if (!value) return null;
 
-      // If value is a number (Excel serial date)
       if (!isNaN(value) && Number(value) > 10000) {
         const excelDate = XLSX.SSF.parse_date_code(value);
         if (!excelDate) return null;
-
-        const formattedDate = new Date(
-          excelDate.y,
-          excelDate.m - 1,
-          excelDate.d
-        );
-        return formattedDate.toISOString().split("T")[0]; // Returns YYYY-MM-DD
+        return new Date(excelDate.y, excelDate.m - 1, excelDate.d)
+          .toISOString()
+          .split("T")[0];
       }
 
-      // If value is a string in DD/MM/YYYY format
-      const dateRegex = /^(\d{2})\/(\d{2})\/(\d{4})$/; // Matches DD/MM/YYYY
+      const dateRegex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
       const match = value.match(dateRegex);
-
       if (match) {
         const [, day, month, year] = match;
-        const formattedDate = `${year}-${month}-${day}`; // Convert to YYYY-MM-DD
-        return formattedDate;
+        return `${year}-${month}-${day}`;
       }
 
-      return null; // Return null if format is unrecognized
+      return null;
     };
 
-    // Normalize Excel data keys
     const normalizeKeys = (data) =>
       data.map((obj) =>
         Object.fromEntries(
@@ -84,9 +67,8 @@ export async function POST(req) {
 
     const normalizedData = normalizeKeys(jsonData);
 
-    // Map data to match database columns
     const filteredData = normalizedData
-      .filter((row) => row.name) // Ensure required field "name" is present
+      .filter((row) => row.name)
       .map((row) => [
         row.name || "Unknown",
         row.mobile || null,
@@ -124,21 +106,19 @@ export async function POST(req) {
       );
     }
 
-    // Insert data into MySQL
-    const connection = await pool.getConnection();
-    const sql = `
-      INSERT INTO employees (
+    const insertQuery = format(
+      `INSERT INTO employees (
         name, mobile, email, dob, et_number, iqama_number, iqama_expiry_date,
         bank_account, nationality, passport_number, passport_expiry_date,
         profession, client_number, client_name, contract_start_date,
         contract_end_date, basic_salary, hra_type, hra, tra_type, tra,
         food_allowance_type, food_allowance, other_allowance,
         total_salary, medical, employee_status
-      ) VALUES ?
-    `;
+      ) VALUES %L`,
+      filteredData
+    );
 
-    await connection.query(sql, [filteredData]);
-    connection.release();
+    await pool.query(insertQuery);
 
     return NextResponse.json({
       success: true,

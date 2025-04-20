@@ -1,14 +1,11 @@
-import { pool } from "../../../../utils/db";
+import pool from "@/utils/db";
 import { NextResponse } from "next/server";
 import { authenticateToken } from "@/lib/middleware/auth";
 import { cookies } from "next/headers";
 
-async function getDBConnection() {
-  return pool.getConnection();
-}
-
 async function verifyAuth() {
-  const token = (await cookies()).get("token")?.value;
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
   if (!token)
     return { success: false, error: "Unauthorized: No token provided" };
   return authenticateToken(token);
@@ -19,36 +16,29 @@ export async function GET(req, { params }) {
   if (!authResult.success)
     return NextResponse.json(authResult, { status: 401 });
 
-  const { id } = await params;
-  let connection;
+  const { id } = params;
 
   try {
-    connection = await getDBConnection();
-    const [employee] = await connection.query(
-      "SELECT * FROM employees WHERE id = ?",
-      [id]
-    );
-
-    if (employee.length === 0) {
+    const result = await pool.query("SELECT * FROM employees WHERE id = $1", [
+      id,
+    ]);
+    if (result.rows.length === 0) {
       return NextResponse.json(
         { success: false, error: "Employee not found" },
         { status: 404 }
       );
     }
 
-    return NextResponse.json({ success: true, data: employee[0] });
+    return NextResponse.json({ success: true, data: result.rows[0] });
   } catch (error) {
     console.error("Database query error:", error);
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500 }
     );
-  } finally {
-    if (connection) connection.release();
   }
 }
 
-// src/app/api/employees/[id]/route.js
 export async function PUT(req, { params }) {
   const authResult = await verifyAuth();
   if (!authResult.success)
@@ -57,15 +47,14 @@ export async function PUT(req, { params }) {
   const payload = await req.json();
   const { id } = params;
 
-  let connection;
   try {
-    connection = await getDBConnection();
     const sql = `UPDATE employees SET 
-      name=?, mobile=?, email=?, dob=?, et_number=?, iqama_number=?, iqama_expiry_date=?,
-      bank_account=?, nationality=?, passport_number=?, passport_expiry_date=?, profession=?,
-      client_number=?, client_name=?, contract_start_date=?, contract_end_date=?, basic_salary=?,
-      hra_type=?, hra=?, tra_type=?, tra=?, food_allowance_type=?, food_allowance=?, other_allowance=?,
-      total_salary=?, medical=?, employee_status=? WHERE id=?`;
+      name = $1, mobile = $2, email = $3, dob = $4, et_number = $5, iqama_number = $6, iqama_expiry_date = $7,
+      bank_account = $8, nationality = $9, passport_number = $10, passport_expiry_date = $11, profession = $12,
+      client_number = $13, client_name = $14, contract_start_date = $15, contract_end_date = $16, basic_salary = $17,
+      hra_type = $18, hra = $19, tra_type = $20, tra = $21, food_allowance_type = $22, food_allowance = $23, other_allowance = $24,
+      total_salary = $25, medical = $26, employee_status = $27, updated_at = NOW()
+      WHERE id = $28`;
 
     const values = [
       payload.name,
@@ -97,13 +86,16 @@ export async function PUT(req, { params }) {
       payload.employee_status,
       id,
     ];
-    const [result] = await connection.execute(sql, values);
 
-    if (result.affectedRows === 0)
+    const result = await pool.query(sql, values);
+
+    if (result.rowCount === 0) {
       return NextResponse.json(
         { error: "Employee not found", success: false },
         { status: 404 }
       );
+    }
+
     return NextResponse.json(
       { success: true, message: "Employee updated successfully" },
       { status: 200 }
@@ -114,7 +106,5 @@ export async function PUT(req, { params }) {
       { error: "Server error", success: false },
       { status: 500 }
     );
-  } finally {
-    if (connection) connection.release();
   }
 }
