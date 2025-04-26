@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { calculateTotalSalary } from "@/utils/employeeUtils";
 import ExcelUpload from "@/component/ExcelUpload";
+import { supabase } from "@/utils/supabaseClient";
 
 const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL + "/api/employees";
 const defaultEmployee = {
@@ -104,35 +105,36 @@ export default function AddEmployee() {
     e.preventDefault();
     setLoading(true);
     setMessage("");
+
     if (!/^[a-zA-Z0-9._]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(employee.email)) {
       setMessage("Invalid email format");
+      setLoading(false);
       return;
     }
+
     if (
       new Date(employee.contractEndDate) < new Date(employee.contractStartDate)
     ) {
       setMessage("Check Contract Date");
+      setLoading(false);
       return;
     }
+
     try {
-      const res = await fetch(API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...employee,
-        }),
-        credentials: "include",
-      });
-      if (res.ok) {
-        setMessage("Employee added successfully!");
-        setTimeout(() => setMessage(""), 5000);
-      } else {
+      const { error } = await supabase.from("employees").insert([employee]);
+
+      if (error) {
+        console.error("Supabase insert error:", error);
         setMessage("Failed to add employee.");
+      } else {
+        setMessage("Employee added successfully!");
+        setEmployee(defaultEmployee);
+        setIsModified(false);
+        setTimeout(() => setMessage(""), 5000);
       }
-    } catch (error) {
-      setMessage("An error occurred.");
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      setMessage("An unexpected error occurred.");
     } finally {
       setLoading(false);
     }

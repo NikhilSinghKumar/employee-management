@@ -1,4 +1,5 @@
 "use client";
+
 import { useState, useRef } from "react";
 import { MdCloudUpload } from "react-icons/md";
 
@@ -22,6 +23,7 @@ export default function ExcelUpload() {
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       "application/vnd.ms-excel",
     ];
+
     if (!allowedTypes.includes(file.type)) {
       setMessage(
         "Invalid file type. Please upload an Excel file (.xlsx or .xls)."
@@ -29,7 +31,7 @@ export default function ExcelUpload() {
       return;
     }
 
-    const maxSize = 5 * 1024 * 1024;
+    const maxSize = 5 * 1024 * 1024; // 5MB
     if (file.size > maxSize) {
       setMessage("File size exceeds 5MB. Please upload a smaller file.");
       return;
@@ -44,19 +46,20 @@ export default function ExcelUpload() {
     try {
       const response = await fetch(`${API_URL}/api/upload`, {
         method: "POST",
+        credentials: "include", // Send JWT cookie
         body: formData,
-        credentials: "include",
       });
 
       const data = await response.json();
-      if (data.success) {
+
+      if (response.ok && data.success) {
         setMessage("File uploaded successfully!");
         setFile(null);
         if (fileInputRef.current) {
           fileInputRef.current.value = "";
         }
       } else {
-        setMessage(`Upload failed: ${data.error}`);
+        setMessage(`Upload failed: ${data.error || "Unknown error."}`);
       }
     } catch (error) {
       console.error("Upload error:", error);

@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+import { supabase } from "@/utils/supabaseClient";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -21,7 +21,19 @@ export default function ForgotPassword() {
     setIsLoading(true);
 
     try {
-      const res = await fetch(`${API_URL}/api/auth/forgot_password`, {
+      // Check if email exists in Supabase `users` table
+      const { data: user, error } = await supabase
+        .from("users")
+        .select("id")
+        .eq("email", email)
+        .single();
+
+      if (error || !user) {
+        throw new Error("Email not found in our records.");
+      }
+
+      // Proceed to hit your custom auth endpoint
+      const res = await fetch("/api/auth/forgot_password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),

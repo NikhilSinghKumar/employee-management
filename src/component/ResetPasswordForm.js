@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/utils/supabaseClient";
 
 export default function ResetPasswordForm({ token }) {
   const [password, setPassword] = useState("");
@@ -10,13 +11,13 @@ export default function ResetPasswordForm({ token }) {
   const [isTokenValid, setIsTokenValid] = useState(null);
   const router = useRouter();
 
-  // Check token validity on mount
   useEffect(() => {
     if (!token) {
       setIsTokenValid(false);
       setMessage({ text: "Invalid or missing token.", type: "error" });
       setTimeout(() => router.push("/forgot_password"), 2000);
     } else {
+      // TODO: You can optionally validate token here via Supabase if stored
       setIsTokenValid(true);
     }
   }, [token, router]);
@@ -25,7 +26,6 @@ export default function ResetPasswordForm({ token }) {
     e.preventDefault();
     setMessage({ text: "", type: "" });
 
-    // Basic validation
     if (!password || password.length < 8) {
       setMessage({
         text: "Password must be at least 8 characters long.",
@@ -33,6 +33,7 @@ export default function ResetPasswordForm({ token }) {
       });
       return;
     }
+
     if (password !== confirmPassword) {
       setMessage({ text: "Passwords do not match.", type: "error" });
       return;
@@ -41,28 +42,42 @@ export default function ResetPasswordForm({ token }) {
     setIsLoading(true);
 
     try {
-      const apiBaseUrl =
-        process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000";
-      const res = await fetch(`${apiBaseUrl}/api/auth/reset_password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, password }),
-      });
+      // Get user associated with token
+      const { data: userData, error: userError } = await supabase
+        .from("users")
+        .select("id")
+        .eq("reset_token", token)
+        .single();
 
-      if (!res.ok) {
-        const text = await res.text();
-        console.error("Raw response:", text);
-        throw new Error(`Request failed with status ${res.status}: ${text}`);
+      if (userError || !userData) {
+        throw new Error("Invalid or expired reset token.");
       }
 
+      const userId = userData.id;
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/reset_password`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token, password }),
+        }
+      );
+
       const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to reset password");
+      }
+
       setMessage({
         text: "Password reset successfully! Redirecting to login...",
         type: "success",
       });
-      setTimeout(() => router.push("/login"), 2000);
+
+      setTimeout(() => router.push("/"), 2000);
     } catch (error) {
-      console.error("Reset password error:", error);
+      console.error("Reset error:", error);
       setMessage({
         text: error.message || "Server error. Please try again later.",
         type: "error",
@@ -72,7 +87,6 @@ export default function ResetPasswordForm({ token }) {
     }
   };
 
-  // Show loading state while checking token
   if (isTokenValid === null) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -81,7 +95,6 @@ export default function ResetPasswordForm({ token }) {
     );
   }
 
-  // Show form only if token is valid
   if (!isTokenValid) {
     return (
       <div className="flex justify-center items-center h-screen">

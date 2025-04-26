@@ -1,5 +1,5 @@
 import { hashPassword } from "@/utils/auth";
-import pool from "@/utils/db";
+import { supabase } from "@/utils/supabaseClient";
 
 export async function POST(req) {
   const { firstName, lastName, email, password } = await req.json();
@@ -12,13 +12,32 @@ export async function POST(req) {
   }
 
   try {
+    const { data: existingUser, error: userFetchError } = await supabase
+      .from("users")
+      .select("id")
+      .eq("email", email)
+      .single();
+
+    if (existingUser) {
+      return Response.json({
+        success: false,
+        message: "User already exists with this email.",
+      });
+    }
     const hashedPassword = await hashPassword(password);
 
-    await pool.query(
-      `INSERT INTO users (first_name, last_name, email, password)
-       VALUES ($1, $2, $3, $4)`,
-      [firstName, lastName, email, hashedPassword]
-    );
+    const { error: insertError } = await supabase.from("users").insert([
+      {
+        first_name: firstName,
+        last_name: lastName,
+        email: email,
+        password: hashedPassword,
+      },
+    ]);
+
+    if (insertError) {
+      throw insertError;
+    }
 
     return Response.json({
       success: true,

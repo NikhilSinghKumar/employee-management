@@ -1,13 +1,14 @@
-import pool from "@/utils/db";
+export const runtime = "nodejs";
+import { supabase } from "@/utils/supabaseClient";
 import * as XLSX from "xlsx";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { authenticateToken } from "@/lib/middleware/auth";
-import format from "pg-format";
 
 export async function POST(req) {
   try {
-    const token = cookies().get("token")?.value;
+    const cookieStore = await cookies();
+    const token = cookieStore.get("token")?.value;
     if (!token) {
       return NextResponse.json(
         { error: "Unauthorized: No token provided" },
@@ -39,7 +40,6 @@ export async function POST(req) {
 
     const formatDate = (value) => {
       if (!value) return null;
-
       if (!isNaN(value) && Number(value) > 10000) {
         const excelDate = XLSX.SSF.parse_date_code(value);
         if (!excelDate) return null;
@@ -67,58 +67,56 @@ export async function POST(req) {
 
     const normalizedData = normalizeKeys(jsonData);
 
-    const filteredData = normalizedData
+    const formattedData = normalizedData
       .filter((row) => row.name)
-      .map((row) => [
-        row.name || "Unknown",
-        row.mobile || null,
-        row.email || null,
-        formatDate(row.dob) || null,
-        row["et no."] || null,
-        row["iqama no."] || null,
-        formatDate(row["iqama exp date"]) || null,
-        row["bank acc."] || null,
-        row.nationality || null,
-        row["passport no."] || null,
-        formatDate(row["passport exp date"]) || null,
-        row.profession || null,
-        row["client no."] || null,
-        row["client name"] || null,
-        formatDate(row["contract start"]) || null,
-        formatDate(row["contract end"]) || null,
-        parseFloat(row["basic salary"]) || 0,
-        row["hra type"] || null,
-        parseFloat(row.hra) || 0,
-        row["tra type"] || null,
-        parseFloat(row.tra) || 0,
-        row["food allowance type"] || null,
-        parseFloat(row["food allowance"]) || 0,
-        parseFloat(row["other allowance"]) || 0,
-        parseFloat(row["total salary"]) || 0,
-        row.medical || null,
-        row["employee status"] || null,
-      ]);
+      .map((row) => ({
+        name: row.name || "Unknown",
+        mobile: row.mobile || null,
+        email: row.email || null,
+        dob: formatDate(row.dob) || null,
+        et_number: row["et no."] || null,
+        iqama_number: row["iqama no."] || null,
+        iqama_expiry_date: formatDate(row["iqama exp date"]) || null,
+        bank_account: row["bank acc."] || null,
+        nationality: row.nationality || null,
+        passport_number: row["passport no."] || null,
+        passport_expiry_date: formatDate(row["passport exp date"]) || null,
+        profession: row.profession || null,
+        client_number: row["client no."] || null,
+        client_name: row["client name"] || null,
+        contract_start_date: formatDate(row["contract start"]) || null,
+        contract_end_date: formatDate(row["contract end"]) || null,
+        basic_salary: parseFloat(row["basic salary"]) || 0,
+        hra_type: row["hra type"] || null,
+        hra: parseFloat(row.hra) || 0,
+        tra_type: row["tra type"] || null,
+        tra: parseFloat(row.tra) || 0,
+        food_allowance_type: row["food allowance type"] || null,
+        food_allowance: parseFloat(row["food allowance"]) || 0,
+        other_allowance: parseFloat(row["other allowance"]) || 0,
+        total_salary: parseFloat(row["total salary"]) || 0,
+        medical: row.medical || null,
+        employee_status: row["employee status"] || null,
+      }));
 
-    if (filteredData.length === 0) {
+    if (formattedData.length === 0) {
       return NextResponse.json(
         { error: "No valid data found" },
         { status: 400 }
       );
     }
 
-    const insertQuery = format(
-      `INSERT INTO employees (
-        name, mobile, email, dob, et_number, iqama_number, iqama_expiry_date,
-        bank_account, nationality, passport_number, passport_expiry_date,
-        profession, client_number, client_name, contract_start_date,
-        contract_end_date, basic_salary, hra_type, hra, tra_type, tra,
-        food_allowance_type, food_allowance, other_allowance,
-        total_salary, medical, employee_status
-      ) VALUES %L`,
-      filteredData
-    );
+    const { error: insertError } = await supabase
+      .from("employees")
+      .insert(formattedData);
 
-    await pool.query(insertQuery);
+    if (insertError) {
+      console.error("Supabase insert error:", insertError);
+      return NextResponse.json(
+        { success: false, error: "Failed to upload data" },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       success: true,

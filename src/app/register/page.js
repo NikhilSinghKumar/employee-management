@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+import { supabase } from "@/utils/supabaseClient";
 
 export default function RegisterForm() {
   const [firstName, setFirstName] = useState("");
@@ -26,7 +26,20 @@ export default function RegisterForm() {
     }
 
     try {
-      const res = await fetch(`${API_URL}/api/auth/register`, {
+      // Check if email already exists in Supabase
+      const { data: existingUser, error } = await supabase
+        .from("users")
+        .select("id")
+        .eq("email", email)
+        .single();
+
+      if (existingUser) {
+        setMessage({ text: "Email is already registered.", type: "error" });
+        return;
+      }
+
+      // Proceed with custom auth API
+      const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ firstName, lastName, email, password }),
@@ -66,7 +79,6 @@ export default function RegisterForm() {
       >
         <h2 className="text-xl font-semibold mb-4">New User!</h2>
 
-        {/* Display Message */}
         {message.text && (
           <div
             className={`p-1 mb-2 text-[14px] rounded-lg text-white ${
@@ -77,7 +89,6 @@ export default function RegisterForm() {
           </div>
         )}
 
-        {/* FirstName Field */}
         <div className="mb-4">
           <label className="block text-gray-700 text-[14px]">First Name</label>
           <input
@@ -85,14 +96,13 @@ export default function RegisterForm() {
             value={firstName}
             onChange={(e) => {
               setFirstName(e.target.value);
-              setMessage({ text: "", type: "" }); // Clear message on change
+              setMessage({ text: "", type: "" });
             }}
             className="w-full px-3 py-1 border rounded-lg text-[14px] focus:outline-none focus:ring focus:ring-blue-300"
             required
           />
         </div>
 
-        {/* LastName Field */}
         <div className="mb-4">
           <label className="block text-gray-700 text-[14px]">Last Name</label>
           <input
@@ -100,14 +110,13 @@ export default function RegisterForm() {
             value={lastName}
             onChange={(e) => {
               setLastName(e.target.value);
-              setMessage({ text: "", type: "" }); // Clear message on change
+              setMessage({ text: "", type: "" });
             }}
             className="w-full px-3 py-1 border rounded-lg text-[14px] focus:outline-none focus:ring focus:ring-blue-300"
             required
           />
         </div>
 
-        {/* Email Field */}
         <div className="mb-4">
           <label className="block text-gray-700 text-[14px]">Email</label>
           <input
@@ -115,14 +124,13 @@ export default function RegisterForm() {
             value={email}
             onChange={(e) => {
               setEmail(e.target.value);
-              setMessage({ text: "", type: "" }); // Clear message on change
+              setMessage({ text: "", type: "" });
             }}
             className="w-full px-3 py-1 border rounded-lg text-[14px] focus:outline-none focus:ring focus:ring-blue-300"
             required
           />
         </div>
 
-        {/* Password Field */}
         <div className="mb-4">
           <label className="block text-gray-700 text-[14px]">
             Set Password
@@ -132,14 +140,13 @@ export default function RegisterForm() {
             value={password}
             onChange={(e) => {
               setPassword(e.target.value);
-              setMessage({ text: "", type: "" }); // Clear message on change
+              setMessage({ text: "", type: "" });
             }}
             className="w-full px-3 py-1 border rounded-lg text-[14px] focus:outline-none focus:ring focus:ring-blue-300"
             required
           />
         </div>
 
-        {/* Confirm Password Field */}
         <div className="mb-4">
           <label className="block text-gray-700 text-[14px]">
             Confirm Password
@@ -149,14 +156,13 @@ export default function RegisterForm() {
             value={confirmPassword}
             onChange={(e) => {
               setConfirmPassword(e.target.value);
-              setMessage({ text: "", type: "" }); // Clear message on change
+              setMessage({ text: "", type: "" });
             }}
             className="w-full px-3 py-1 border rounded-lg text-[14px] focus:outline-none focus:ring focus:ring-blue-300"
             required
           />
         </div>
 
-        {/* Submit Button */}
         <button
           type="submit"
           className="w-35 bg-blue-500 text-white py-1 mb-3 rounded-lg hover:bg-blue-600 cursor-pointer"
@@ -164,7 +170,6 @@ export default function RegisterForm() {
           Register
         </button>
 
-        {/* Login Link */}
         <p className="py-1 text-[14px]">
           Already have an account? Please{" "}
           <Link

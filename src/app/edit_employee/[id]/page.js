@@ -2,19 +2,18 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-
-const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL + "/api/employees";
+import { supabase } from "@/utils/supabaseClient";
 
 // Format ISO date to DD-MM-YYYY for display
 function formatDateToDDMMYYYY(isoDate) {
   const date = new Date(isoDate);
   const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are 0-based
+  const month = String(date.getMonth() + 1).padStart(2, "0");
   const year = date.getFullYear();
   return `${day}-${month}-${year}`;
 }
 
-// Convert DD-MM-YYYY back to YYYY-MM-DD for MySQL
+// Convert DD-MM-YYYY back to YYYY-MM-DD
 function formatDateToYYYYMMDD(dateStr) {
   const [day, month, year] = dateStr.split("-");
   return `${year}-${month}-${day}`;
@@ -30,48 +29,29 @@ export default function EditEmployeePage() {
   useEffect(() => {
     if (!id) return;
 
-    async function fetchEmployee() {
-      try {
-        const res = await fetch(`${API_URL}/${id}`, {
-          // Use /id directly for cleaner API design
-          method: "GET",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-        });
+    const fetchEmployee = async () => {
+      const { data, error } = await supabase
+        .from("employees")
+        .select("*")
+        .eq("id", id)
+        .single();
 
-        const data = await res.json();
-
-        // Expecting data.data to be a single object, not an array
-        if (
-          data.data &&
-          typeof data.data === "object" &&
-          !Array.isArray(data.data)
-        ) {
-          setEmployee({
-            ...data.data,
-            dob: formatDateToDDMMYYYY(data.data.dob),
-            iqama_expiry_date: formatDateToDDMMYYYY(
-              data.data.iqama_expiry_date
-            ),
-            passport_expiry_date: formatDateToDDMMYYYY(
-              data.data.passport_expiry_date
-            ),
-            contract_start_date: formatDateToDDMMYYYY(
-              data.data.contract_start_date
-            ),
-            contract_end_date: formatDateToDDMMYYYY(
-              data.data.contract_end_date
-            ),
-          });
-        } else if (Array.isArray(data.data) && data.data.length > 0) {
-          setEmployee(data.data[0]); // Fallback if API returns an array
-        } else {
-          console.error("Unexpected employee format:", data);
-        }
-      } catch (err) {
-        console.error("Fetch failed:", err);
+      if (error) {
+        console.error("Error fetching employee:", error);
+        return;
       }
-    }
+
+      if (data) {
+        setEmployee({
+          ...data,
+          dob: formatDateToDDMMYYYY(data.dob),
+          iqama_expiry_date: formatDateToDDMMYYYY(data.iqama_expiry_date),
+          passport_expiry_date: formatDateToDDMMYYYY(data.passport_expiry_date),
+          contract_start_date: formatDateToDDMMYYYY(data.contract_start_date),
+          contract_end_date: formatDateToDDMMYYYY(data.contract_end_date),
+        });
+      }
+    };
 
     fetchEmployee();
   }, [id]);
@@ -84,6 +64,7 @@ export default function EditEmployeePage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsUpdating(true);
+
     const updatedEmployee = {
       ...employee,
       dob: formatDateToYYYYMMDD(employee.dob),
@@ -92,21 +73,25 @@ export default function EditEmployeePage() {
       contract_start_date: formatDateToYYYYMMDD(employee.contract_start_date),
       contract_end_date: formatDateToYYYYMMDD(employee.contract_end_date),
     };
-    try {
-      const res = await fetch(`${API_URL}/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatedEmployee),
-        credentials: "include",
-      });
-      if (res.ok) router.push("/employee_list");
-      else console.error("Update failed:", await res.text());
-    } catch (error) {
+
+    const { error } = await supabase
+      .from("employees")
+      .update(updatedEmployee)
+      .eq("id", id);
+
+    if (error) {
       console.error("Update failed:", error);
-    } finally {
-      setIsUpdating(false);
+    } else {
+      router.push("/employee_list");
     }
+
+    setIsUpdating(false);
   };
+
+  if (!id) return <div>Loading ID...</div>;
+  if (!employee) return <div>Loading employee...</div>;
+
+  // Rest of your form remains unchanged...
 
   if (!id) return <div>Loading ID...</div>;
   if (!employee) return <div>Loading employee...</div>;

@@ -1,11 +1,11 @@
 "use client";
 import { useState, useContext } from "react";
 import Link from "next/link";
-import { UserContext } from "@/context/UserContext";
 import { useRouter } from "next/navigation";
 import { ChevronDownIcon } from "@heroicons/react/24/solid";
 import { CgProfile } from "react-icons/cg";
 import { LiaSignOutAltSolid } from "react-icons/lia";
+import { UserContext } from "@/context/UserContext";
 
 const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -18,19 +18,18 @@ export function Navbar() {
     try {
       await fetch(`${API_URL}/api/auth/logout`, {
         method: "POST",
-        credentials: "include",
+        credentials: "include", // ensures cookies are sent
       });
-      router.push("/");
 
-      setTimeout(() => {
-        fetchUser();
-      }, 2000);
+      // Refresh the user context to clear user state after logout
+      fetchUser();
+
+      router.push("/");
     } catch (error) {
       console.error("Logout failed:", error);
     }
   };
 
-  console.log("user logged in: ", user);
   return (
     <nav className="bg-blue-600 text-white p-4 flex justify-between items-center">
       <div className="flex gap-6">
@@ -52,7 +51,7 @@ export function Navbar() {
             <ChevronDownIcon className="w-4 h-4" />
           </button>
           {isOperationsOpen && (
-            <div className="absolute left-0 top-full mt-2 bg-white text-black shadow-md w-48 rounded-md overflow-hidden">
+            <div className="absolute left-0 top-full mt-2 bg-white text-black shadow-md w-48 rounded-md overflow-hidden z-50">
               <Link
                 href="/add_employee"
                 className="block px-4 py-2 hover:bg-gray-200"
@@ -92,7 +91,7 @@ export function Navbar() {
         <div className="flex gap-6">
           <div className="flex flex-col items-center gap-1">
             <CgProfile className="w-6 h-6" />
-            <p>Hi {user.first_name} </p>
+            <p>Hi {user.first_name}</p>
           </div>
           <div className="flex flex-col items-center gap-1">
             <LiaSignOutAltSolid className="w-6 h-6 stroke-1" />

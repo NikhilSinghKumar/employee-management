@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import pool from "@/utils/db";
+import { supabase } from "@/utils/supabaseClient";
 import { verifyPassword } from "@/utils/auth";
 import jwt from "jsonwebtoken";
 import { serialize } from "cookie";
@@ -15,15 +15,22 @@ export async function POST(request) {
   }
 
   try {
-    const result = await pool.query("SELECT * FROM users WHERE email = $1", [
-      email,
-    ]);
+    const { data: users, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("email", email)
+      .limit(1);
 
-    if (result.rows.length === 0) {
+    if (error) {
+      console.error("Supabase error:", error.message);
+      return NextResponse.json({ message: "Database error." }, { status: 500 });
+    }
+
+    if (!users || users.length === 0) {
       return NextResponse.json({ message: "User not found." }, { status: 404 });
     }
 
-    const user = result.rows[0];
+    const user = users[0];
     const verifiedPassword = await verifyPassword(password, user.password);
 
     if (!verifiedPassword) {

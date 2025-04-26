@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import pool from "@/utils/db";
+import { supabase } from "@/utils/supabaseClient";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 
@@ -21,8 +21,6 @@ const transporter = nodemailer.createTransport({
 });
 
 export async function POST(req) {
-  const client = await pool.connect();
-
   try {
     const { email } = await req.json();
     if (!email) {
@@ -32,28 +30,36 @@ export async function POST(req) {
       );
     }
 
-    const userResult = await client.query(
-      "SELECT * FROM users WHERE email = $1",
-      [email]
-    );
+    const { data: user, error: fetchError } = await supabase
+      .from("users")
+      .select("*")
+      .eq("email", email)
+      .single();
 
-    if (userResult.rows.length === 0) {
-      return NextResponse.json(
-        { message: "Email not found." },
-        { status: 404 }
-      );
+    if (fetchError) {
+      if (fetchError.code === "PGRST116") {
+        return NextResponse.json(
+          { message: "Email not found." },
+          { status: 404 }
+        );
+      }
+      throw fetchError;
     }
 
     const resetToken = jwt.sign({ email }, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
 
-    await client.query("UPDATE users SET reset_token = $1 WHERE email = $2", [
-      resetToken,
-      email,
-    ]);
+    const { error: updateError } = await supabase
+      .from("users")
+      .update({ reset_token: resetToken })
+      .eq("email", email);
 
-    const resetLink = `/reset_password?token=${resetToken}`;
+    if (updateError) {
+      throw updateError;
+    }
+
+    const resetLink = `${process.env.NEXT_PUBLIC_API_BASE_URL}/reset_password?token=${resetToken}`;
 
     await transporter.sendMail({
       from: `"Your App" <${process.env.EMAIL_USER}>`,
@@ -79,7 +85,5 @@ export async function POST(req) {
       { message: "Server error: " + error.message },
       { status: 500 }
     );
-  } finally {
-    client.release();
   }
 }

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import pool from "@/utils/db";
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
+import { supabase } from "@/utils/supabaseClient";
 
 const SECRET_KEY = process.env.JWT_SECRET;
 
@@ -30,16 +30,17 @@ export async function GET() {
 
     const userId = decoded.userId;
 
-    const result = await pool.query(
-      "SELECT first_name FROM users WHERE id = $1",
-      [userId]
-    );
+    const { data, error } = await supabase
+      .from("users")
+      .select("first_name")
+      .eq("id", userId)
+      .single();
 
-    if (result.rows.length === 0) {
+    if (error || !data) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ first_name: result.rows[0].first_name });
+    return NextResponse.json({ first_name: data.first_name });
   } catch (error) {
     console.error("Unexpected error:", error);
     return NextResponse.json(

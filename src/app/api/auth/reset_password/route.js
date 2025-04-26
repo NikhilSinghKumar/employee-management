@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import pool from "@/utils/db";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import { supabase } from "@/utils/supabaseClient";
 import { RateLimiterMemory, RateLimiterRes } from "rate-limiter-flexible";
 
 // Validate environment variables
@@ -16,10 +16,9 @@ const rateLimiter = new RateLimiterMemory({
 });
 
 export async function POST(req) {
-  const client = await pool.connect();
-
   try {
     const { token, password } = await req.json();
+
     if (!token || !password) {
       return NextResponse.json(
         { message: "Token and password are required." },
@@ -49,12 +48,14 @@ export async function POST(req) {
     const email = decoded.email;
 
     // Check token validity
-    const userResult = await client.query(
-      "SELECT * FROM users WHERE email = $1 AND reset_token = $2",
-      [email, token]
-    );
+    const { data: user, error: fetchError } = await supabase
+      .from("users")
+      .select("*")
+      .eq("email", email)
+      .eq("reset_token", token)
+      .single();
 
-    if (userResult.rows.length === 0) {
+    if (fetchError || !user) {
       return NextResponse.json(
         { message: "Invalid or expired token." },
         { status: 400 }
@@ -64,19 +65,17 @@ export async function POST(req) {
     // Hash new password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Transaction for password update
-    await client.query("BEGIN");
-    try {
-      await client.query(
-        "UPDATE users SET password = $1, reset_token = NULL WHERE email = $2",
-        [hashedPassword, email]
-      );
-      await client.query("COMMIT");
-    } catch (error) {
-      await client.query("ROLLBACK");
-      throw error;
+    // Update password and clear reset token
+    const { error: updateError } = await supabase
+      .from("users")
+      .update({ password: hashedPassword, reset_token: null })
+      .eq("email", email);
+
+    if (updateError) {
+      throw updateError;
     }
 
+    // Clear token cookie
     const response = NextResponse.json(
       { message: "Password reset successfully." },
       { status: 200 }
@@ -92,18 +91,21 @@ export async function POST(req) {
     return response;
   } catch (error) {
     console.error("Reset password error:", error.message, error.stack);
+
     if (error instanceof RateLimiterRes) {
       return NextResponse.json(
         { message: "Too many attempts. Please try again later." },
         { status: 429 }
       );
     }
+
     if (error.name === "TokenExpiredError") {
       return NextResponse.json(
         { message: "Token has expired." },
         { status: 400 }
       );
     }
+
     return NextResponse.json(
       {
         message:
@@ -113,7 +115,5 @@ export async function POST(req) {
       },
       { status: 500 }
     );
-  } finally {
-    client.release();
   }
 }

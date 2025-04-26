@@ -1,29 +1,31 @@
-import pool from "@/utils/db";
 import { NextResponse } from "next/server";
-import { authenticateToken } from "@/lib/middleware/auth";
 import { cookies } from "next/headers";
+import { authenticateToken } from "@/lib/middleware/auth";
+import { supabase } from "@/utils/supabaseClient";
 
 async function verifyAuth() {
-  const cookieStore = await cookies();
+  const cookieStore = cookies();
   const token = cookieStore.get("token")?.value;
   if (!token)
     return { success: false, error: "Unauthorized: No token provided" };
   return authenticateToken(token);
 }
 
-export async function GET(req) {
+export async function GET() {
   const authResult = await verifyAuth();
   if (!authResult.success)
     return NextResponse.json(authResult, { status: 401 });
 
   try {
-    const result = await pool.query("SELECT * FROM employees");
-    return NextResponse.json(
-      { success: true, data: result.rows },
-      { status: 200 }
-    );
+    const { data, error } = await supabase.from("employees").select("*");
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return NextResponse.json({ success: true, data }, { status: 200 });
   } catch (error) {
-    console.error("Database query error:", error);
+    console.error("Supabase query error:", error);
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500 }
@@ -68,70 +70,62 @@ export async function POST(req) {
   ];
 
   const missingFields = requiredFields.filter((field) => !payload[field]);
-  if (missingFields.length)
+  if (missingFields.length) {
     return NextResponse.json(
       { result: "Missing required fields", missingFields, success: false },
       { status: 400 }
     );
+  }
 
   try {
-    const sql = `
-      INSERT INTO employees (
-        name, mobile, dob, email, et_number, iqama_number, iqama_expiry_date,
-        bank_account, nationality, passport_number, passport_expiry_date, profession,
-        client_number, client_name, contract_start_date, contract_end_date, basic_salary,
-        hra_type, hra, tra_type, tra, food_allowance_type, food_allowance, other_allowance,
-        total_salary, medical, employee_status
-      ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7,
-        $8, $9, $10, $11, $12,
-        $13, $14, $15, $16, $17,
-        $18, $19, $20, $21, $22, $23, $24,
-        $25, $26, $27
-      ) RETURNING id
-    `;
+    const { data, error } = await supabase
+      .from("employees")
+      .insert([
+        {
+          name: payload.employeeName,
+          mobile: payload.mobile,
+          dob: payload.dob,
+          email: payload.email,
+          et_number: payload.etNo,
+          iqama_number: payload.iqamaNo,
+          iqama_expiry_date: payload.iqamaExpDate,
+          bank_account: payload.bankAccount,
+          nationality: payload.nationality,
+          passport_number: payload.passportNo,
+          passport_expiry_date: payload.passportExpDate,
+          profession: payload.profession,
+          client_number: payload.clientNo,
+          client_name: payload.clientName,
+          contract_start_date: payload.contractStartDate,
+          contract_end_date: payload.contractEndDate,
+          basic_salary: payload.basicSalary,
+          hra_type: payload.hraType,
+          hra: payload.hra,
+          tra_type: payload.traType,
+          tra: payload.tra,
+          food_allowance_type: payload.foodAllowanceType,
+          food_allowance: payload.foodAllowance,
+          other_allowance: payload.otherAllowance,
+          total_salary: payload.totalSalary,
+          medical: payload.medical,
+          employee_status: payload.employeeStatus,
+        },
+      ])
+      .select("id")
+      .single();
 
-    const values = [
-      payload.employeeName,
-      payload.mobile,
-      payload.dob,
-      payload.email,
-      payload.etNo,
-      payload.iqamaNo,
-      payload.iqamaExpDate,
-      payload.bankAccount,
-      payload.nationality,
-      payload.passportNo,
-      payload.passportExpDate,
-      payload.profession,
-      payload.clientNo,
-      payload.clientName,
-      payload.contractStartDate,
-      payload.contractEndDate,
-      payload.basicSalary,
-      payload.hraType,
-      payload.hra,
-      payload.traType,
-      payload.tra,
-      payload.foodAllowanceType,
-      payload.foodAllowance,
-      payload.otherAllowance,
-      payload.totalSalary,
-      payload.medical,
-      payload.employeeStatus,
-    ];
+    if (error) throw new Error(error.message);
 
-    const result = await pool.query(sql, values);
     return NextResponse.json(
       {
         result: "New Employee Created",
-        employeeId: result.rows[0].id,
+        employeeId: data.id,
         success: true,
       },
       { status: 201 }
     );
   } catch (error) {
-    console.error("Database insert error:", error);
+    console.error("Supabase insert error:", error);
     return NextResponse.json(
       { result: "Database error", error: error.message, success: false },
       { status: 500 }
@@ -145,27 +139,37 @@ export async function DELETE(req) {
     return NextResponse.json(authResult, { status: 401 });
 
   const { id } = await req.json();
-  if (!id)
+  if (!id) {
     return NextResponse.json(
       { error: "Employee ID is required" },
       { status: 400 }
     );
+  }
 
   try {
-    const result = await pool.query("DELETE FROM employees WHERE id = $1", [
-      id,
-    ]);
-    if (result.rowCount === 0)
-      return NextResponse.json(
-        { error: "Employee not found" },
-        { status: 404 }
-      );
+    const { error, count } = await supabase
+      .from("employees")
+      .delete()
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) {
+      if (error.code === "PGRST116") {
+        return NextResponse.json(
+          { error: "Employee not found" },
+          { status: 404 }
+        );
+      }
+      throw new Error(error.message);
+    }
+
     return NextResponse.json(
       { success: true, message: "Employee deleted successfully" },
       { status: 200 }
     );
   } catch (error) {
-    console.error("Database delete error:", error);
+    console.error("Supabase delete error:", error);
     return NextResponse.json(
       { error: "Server error", success: false },
       { status: 500 }

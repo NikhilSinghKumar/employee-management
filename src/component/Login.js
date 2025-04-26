@@ -1,4 +1,5 @@
 "use client";
+
 import { useContext, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -20,7 +21,6 @@ export default function LoginForm() {
     e.preventDefault();
     setMessage({ text: "", type: "" });
 
-    // Optional email format check for faster client-side feedback
     if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) {
       setMessage({ text: "Please enter a valid email.", type: "error" });
       return;
@@ -32,11 +32,12 @@ export default function LoginForm() {
       const res = await fetch(`${API_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include", // ensures JWT cookie is stored
         body: JSON.stringify({ email, password }),
-        credentials: "include",
       });
 
       const data = await res.json();
+
       if (!res.ok) {
         throw new Error(data.message || "Invalid credentials.");
       }
@@ -45,7 +46,10 @@ export default function LoginForm() {
         text: "Login successful! Redirecting...",
         type: "success",
       });
+
+      // Re-fetch user from Supabase through your context after login
       await fetchUser();
+
       router.push("/services");
     } catch (error) {
       console.error("Login error:", error);
@@ -82,14 +86,14 @@ export default function LoginForm() {
             value={email}
             onChange={(e) => {
               setEmail(e.target.value);
-              setMessage({ text: "", type: "" }); // Clear message on change
+              setMessage({ text: "", type: "" });
             }}
             className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
             required
           />
         </div>
 
-        <div className="mb-4 relative">
+        <div className="mb-4">
           <label className="block text-gray-700">Password</label>
           <div className="relative">
             <input
@@ -115,6 +119,7 @@ export default function LoginForm() {
             </button>
           </div>
         </div>
+
         <button
           type="submit"
           className={`w-full py-2 rounded-lg text-white cursor-pointer ${
