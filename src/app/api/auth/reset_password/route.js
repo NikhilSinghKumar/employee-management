@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import { supabase } from "@supabase/supabase-js";
+import { createClient } from "@supabase/supabase-js";
 import { RateLimiterMemory, RateLimiterRes } from "rate-limiter-flexible";
 
 // Validate environment variables
