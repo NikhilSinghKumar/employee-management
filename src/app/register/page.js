@@ -38,7 +38,7 @@ export default function RegisterForm() {
       }
 
       // Proceed with custom auth API
-      const res = await fetch("/api/auth/register", {
+      const res = await fetch(`/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ firstName, lastName, email, password }),
