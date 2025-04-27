@@ -29,7 +29,7 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
-      const res = await fetch(`${API_URL}/api/auth/login`, {
+      const res = await fetch(`/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include", // ensures JWT cookie is stored
@@ -37,6 +37,11 @@ export default function LoginForm() {
       });
 
       const data = await res.json();
+
+      if (res.status === 401) {
+        console.log("User not logged in yet");
+        return null;
+      }
 
       if (!res.ok) {
         throw new Error(data.message || "Invalid credentials.");

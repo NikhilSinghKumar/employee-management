@@ -55,14 +55,11 @@ export default function ResetPasswordForm({ token }) {
 
       const userId = userData.id;
 
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/reset_password`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token, password }),
-        }
-      );
+      const res = await fetch(`/api/auth/reset_password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, password }),
+      });
 
       const data = await res.json();
 
