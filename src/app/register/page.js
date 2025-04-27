@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { supabase } from "@/utils/supabaseClient";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
 
 export default function RegisterForm() {
   const [firstName, setFirstName] = useState("");
