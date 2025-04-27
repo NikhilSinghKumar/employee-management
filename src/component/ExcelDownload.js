@@ -3,15 +3,13 @@
 import { useState } from "react";
 import { IoMdCloudDownload } from "react-icons/io";
 
-const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-
 export default function ExcelDownload() {
   const [loading, setLoading] = useState(false);
 
   const handleDownload = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/api/download`, {
+      const response = await fetch(`/api/download`, {
         method: "GET",
         credentials: "include", // Include JWT in cookies
       });

@@ -3,8 +3,6 @@
 import { useState, useRef } from "react";
 import { MdCloudUpload } from "react-icons/md";
 
-const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-
 export default function ExcelUpload() {
   const [file, setFile] = useState(null);
   const [message, setMessage] = useState("");
@@ -44,7 +42,7 @@ export default function ExcelUpload() {
     setMessage("");
 
     try {
-      const response = await fetch(`${API_URL}/api/upload`, {
+      const response = await fetch(`/api/upload`, {
         method: "POST",
         credentials: "include", // Send JWT cookie
         body: formData,
