@@ -33,7 +33,7 @@ export default function ForgotPassword() {
       }
 
       // Proceed to hit your custom auth endpoint
-      const res = await fetch("/api/auth/forgot_password", {
+      const res = await fetch(`/api/auth/forgot_password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
