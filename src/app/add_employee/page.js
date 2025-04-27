@@ -5,7 +5,6 @@ import { calculateTotalSalary } from "@/utils/employeeUtils";
 import ExcelUpload from "@/component/ExcelUpload";
 import { supabase } from "@/utils/supabaseClient";
 
-const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL + "/api/employees";
 const defaultEmployee = {
   employeeName: "",
   mobile: "",
@@ -121,17 +120,24 @@ export default function AddEmployee() {
     }
 
     try {
-      const { error } = await supabase.from("employees").insert([employee]);
+      const response = await fetch("/api/employees", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(employee),
+      });
 
-      if (error) {
-        console.error("Supabase insert error:", error);
-        setMessage("Failed to add employee.");
-      } else {
-        setMessage("Employee added successfully!");
-        setEmployee(defaultEmployee);
-        setIsModified(false);
-        setTimeout(() => setMessage(""), 5000);
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Failed to add employee");
       }
+
+      setMessage("Employee added successfully!");
+      setEmployee(defaultEmployee);
+      setIsModified(false);
+      setTimeout(() => setMessage(""), 5000);
     } catch (err) {
       console.error("Unexpected error:", err);
       setMessage("An unexpected error occurred.");
