@@ -1,3 +1,4 @@
+import { NextResponse } from "next/server";
 import { hashPassword } from "@/utils/auth";
 import { supabase } from "@/utils/supabaseClient";
 
@@ -5,7 +6,7 @@ export async function POST(req) {
   const { firstName, lastName, email, password } = await req.json();
 
   if (!firstName || !lastName || !email || !password) {
-    return Response.json({
+    return NextResponse.json({
       success: false,
       message: "All fields are required.",
     });
@@ -19,7 +20,7 @@ export async function POST(req) {
       .single();
 
     if (existingUser) {
-      return Response.json({
+      return NextResponse.json({
         success: false,
         message: "User already exists with this email.",
       });
@@ -39,13 +40,13 @@ export async function POST(req) {
       throw insertError;
     }
 
-    return Response.json({
+    return NextResponse.json({
       success: true,
       message: "User registered successfully.",
     });
   } catch (error) {
     console.error("Registration error:", error);
-    return Response.json({
+    return NextResponse.json({
       success: false,
       message: "Registration failed.",
       error: error.message,
