@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "@/utils/supabaseClient";
 import { RateLimiterMemory, RateLimiterRes } from "rate-limiter-flexible";
 
 // Validate environment variables
@@ -16,10 +16,6 @@ const rateLimiter = new RateLimiterMemory({
 });
 
 export async function POST(req) {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  );
   try {
     const { token, password } = await req.json();
 

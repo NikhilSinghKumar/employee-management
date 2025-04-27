@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "@/utils/supabaseClient";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 
@@ -21,10 +21,6 @@ const transporter = nodemailer.createTransport({
 });
 
 export async function POST(req) {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  );
   try {
     const { email } = await req.json();
     if (!email) {

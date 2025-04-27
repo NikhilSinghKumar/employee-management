@@ -1,11 +1,7 @@
 import { hashPassword } from "@/utils/auth";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "@/utils/supabaseClient";
 
 export async function POST(req) {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  );
   const { firstName, lastName, email, password } = await req.json();
 
   if (!firstName || !lastName || !email || !password) {
