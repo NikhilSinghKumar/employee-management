@@ -25,18 +25,6 @@ export default function RegisterForm() {
     }
 
     try {
-      // Check if email already exists in Supabase
-      const { data: existingUser, error } = await supabase
-        .from("users")
-        .select("id")
-        .eq("email", email)
-        .single();
-
-      if (existingUser) {
-        setMessage({ text: "Email is already registered.", type: "error" });
-        return;
-      }
-
       // Proceed with custom auth API
       const res = await fetch(`/api/auth/register`, {
         method: "POST",
