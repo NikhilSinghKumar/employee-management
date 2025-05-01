@@ -1,18 +1,40 @@
 "use client";
-import { useState, useContext } from "react";
+import { useState, useContext, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronDownIcon } from "@heroicons/react/24/solid";
 import { CgProfile } from "react-icons/cg";
-import { LiaSignOutAltSolid } from "react-icons/lia";
+import { IoPower } from "react-icons/io5";
 import { UserContext } from "@/context/UserContext";
 
 const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-export function Navbar() {
+export default function Navbar() {
+  const [isFinanceOpen, setIsFinanceOpen] = useState(false);
   const [isOperationsOpen, setIsOperationsOpen] = useState(false);
   const { user, fetchUser } = useContext(UserContext);
   const router = useRouter();
+  const operationsRef = useRef(null);
+  const financeRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        operationsRef.current &&
+        !operationsRef.current.contains(event.target)
+      ) {
+        setIsOperationsOpen(false);
+      }
+      if (financeRef.current && !financeRef.current.contains(event.target)) {
+        setIsFinanceOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -31,20 +53,32 @@ export function Navbar() {
   };
 
   return (
-    <nav className="bg-blue-600 text-white p-4 flex justify-between items-center">
+    <nav className="bg-white text-black px-14 font-medium py-2 flex justify-between items-center text-base">
       <div className="flex gap-6">
-        <Link href="" className="hover:underline">
-          Sales
-        </Link>
-        <Link href="" className="hover:underline">
-          Finance
-        </Link>
-        <Link href="" className="hover:underline">
-          HR
-        </Link>
-        <div className="relative">
+        <Link href="">Sales</Link>
+        <div className="relative" ref={financeRef}>
           <button
-            className="flex items-center gap-1 hover:underline"
+            className="flex items-center gap-1 cursor-pointer"
+            onClick={() => setIsFinanceOpen(!isFinanceOpen)}
+          >
+            Finance
+            <ChevronDownIcon className="w-4 h-4" />
+          </button>
+          {isFinanceOpen && (
+            <div className="absolute left-0 top-full mt-2 bg-white text-black shadow-md w-48 rounded-md overflow-hidden z-50">
+              <Link
+                href="/invoices"
+                className="block px-4 py-2 hover:bg-gray-200"
+              >
+                Invoices
+              </Link>
+            </div>
+          )}
+        </div>
+        <Link href="">HR</Link>
+        <div className="relative" ref={operationsRef}>
+          <button
+            className="flex items-center gap-1 cursor-pointer"
             onClick={() => setIsOperationsOpen(!isOperationsOpen)}
           >
             Operations
@@ -76,12 +110,6 @@ export function Navbar() {
               >
                 Timesheet/ Payroll
               </Link>
-              <Link
-                href="/invoices"
-                className="block px-4 py-2 hover:bg-gray-200"
-              >
-                Invoices
-              </Link>
             </div>
           )}
         </div>
@@ -90,11 +118,11 @@ export function Navbar() {
       {user && (
         <div className="flex gap-6">
           <div className="flex flex-col items-center gap-1">
-            <CgProfile className="w-6 h-6" />
+            <CgProfile className="w-5 h-5" />
             <p>Hi {user.first_name}</p>
           </div>
           <div className="flex flex-col items-center gap-1">
-            <LiaSignOutAltSolid className="w-6 h-6 stroke-1" />
+            <IoPower className="w-5 h-5 stroke-1" />
             <button onClick={handleLogout} className="cursor-pointer">
               Logout
             </button>

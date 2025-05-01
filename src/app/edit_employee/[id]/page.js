@@ -97,9 +97,9 @@ export default function EditEmployeePage() {
   if (!employee) return <div>Loading employee...</div>;
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white shadow rounded-lg">
-      <h2 className="text-2xl font-semibold mb-4">Edit Employee</h2>
-      <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-2">
+    <div className="max-w-3xl mx-auto p-4 bg-white shadow rounded-lg">
+      <h2 className="text-xl font-semibold mb-4">Edit Employee</h2>
+      <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
         <div className="flex flex-col">
           <label className="font-medium">Name</label>
           <input
@@ -107,7 +107,7 @@ export default function EditEmployeePage() {
             name="name"
             value={employee.name || ""}
             onChange={handleChange}
-            className="p-2 border rounded"
+            className="p-2 border rounded-sm text-sm"
           />
         </div>
         <div className="flex flex-col">
@@ -117,7 +117,7 @@ export default function EditEmployeePage() {
             name="mobile"
             value={employee.mobile || ""}
             onChange={handleChange}
-            className="p-2 border rounded"
+            className="p-2 border rounded-sm text-sm"
           />
         </div>
         <div className="flex flex-col">
@@ -127,7 +127,7 @@ export default function EditEmployeePage() {
             name="email"
             value={employee.email || ""}
             onChange={handleChange}
-            className="p-2 border rounded"
+            className="p-2 border rounded-sm text-sm"
           />
         </div>
         <div className="flex flex-col">
@@ -137,7 +137,7 @@ export default function EditEmployeePage() {
             name="dob"
             value={employee.dob || ""}
             onChange={handleChange}
-            className="p-2 border rounded"
+            className="p-2 border rounded-sm text-sm"
           />
         </div>
         <div className="flex flex-col">
@@ -147,7 +147,7 @@ export default function EditEmployeePage() {
             name="et_number"
             value={employee.et_number || ""}
             onChange={handleChange}
-            className="p-2 border rounded"
+            className="p-2 border rounded-sm text-sm"
           />
         </div>
         <div className="flex flex-col">
@@ -157,7 +157,7 @@ export default function EditEmployeePage() {
             name="iqama_number"
             value={employee.iqama_number || ""}
             onChange={handleChange}
-            className="p-2 border rounded"
+            className="p-2 border rounded-sm text-sm"
           />
         </div>
         <div className="flex flex-col">
@@ -167,7 +167,7 @@ export default function EditEmployeePage() {
             name="iqama_expiry_date"
             value={employee.iqama_expiry_date || ""}
             onChange={handleChange}
-            className="p-2 border rounded"
+            className="p-2 border rounded-sm text-sm"
           />
         </div>
         <div className="flex flex-col">
@@ -177,7 +177,7 @@ export default function EditEmployeePage() {
             name="bank_account"
             value={employee.bank_account || ""}
             onChange={handleChange}
-            className="p-2 border rounded"
+            className="p-2 border rounded-sm text-sm"
           />
         </div>
         <div className="flex flex-col">
@@ -187,7 +187,7 @@ export default function EditEmployeePage() {
             name="nationality"
             value={employee.nationality || ""}
             onChange={handleChange}
-            className="p-2 border rounded"
+            className="p-2 border rounded-sm text-sm"
           />
         </div>
         <div className="flex flex-col">
@@ -197,7 +197,7 @@ export default function EditEmployeePage() {
             name="passport_number"
             value={employee.passport_number || ""}
             onChange={handleChange}
-            className="p-2 border rounded"
+            className="p-2 border rounded-sm text-sm"
           />
         </div>
         <div className="flex flex-col">
@@ -207,7 +207,7 @@ export default function EditEmployeePage() {
             name="passport_expiry_date"
             value={employee.passport_expiry_date || ""}
             onChange={handleChange}
-            className="p-2 border rounded"
+            className="p-2 border rounded-sm text-sm"
           />
         </div>
         <div className="flex flex-col">
@@ -217,7 +217,7 @@ export default function EditEmployeePage() {
             name="profession"
             value={employee.profession || ""}
             onChange={handleChange}
-            className="p-2 border rounded"
+            className="p-2 border rounded-sm text-sm"
           />
         </div>
         <div className="flex flex-col">
@@ -227,7 +227,7 @@ export default function EditEmployeePage() {
             name="client_number"
             value={employee.client_number || ""}
             onChange={handleChange}
-            className="p-2 border rounded"
+            className="p-2 border rounded-sm text-sm"
           />
         </div>
         <div className="flex flex-col">
@@ -237,7 +237,7 @@ export default function EditEmployeePage() {
             name="client_name"
             value={employee.client_name || ""}
             onChange={handleChange}
-            className="p-2 border rounded"
+            className="p-2 border rounded-sm text-sm"
           />
         </div>
         <div className="flex flex-col">
@@ -247,7 +247,7 @@ export default function EditEmployeePage() {
             name="contract_start_date"
             value={employee.contract_start_date || ""}
             onChange={handleChange}
-            className="p-2 border rounded"
+            className="p-2 border rounded-sm text-sm"
           />
         </div>
         <div className="flex flex-col">
@@ -257,7 +257,7 @@ export default function EditEmployeePage() {
             name="contract_end_date"
             value={employee.contract_end_date || ""}
             onChange={handleChange}
-            className="p-2 border rounded"
+            className="p-2 border rounded-sm text-sm"
           />
         </div>
         <div className="flex flex-col">
@@ -267,7 +267,7 @@ export default function EditEmployeePage() {
             name="basic_salary"
             value={employee.basic_salary || ""}
             onChange={handleChange}
-            className="p-2 border rounded"
+            className="p-2 border rounded-sm text-sm"
           />
         </div>
         <div className="flex flex-col">
@@ -277,7 +277,7 @@ export default function EditEmployeePage() {
             name="hra_type"
             value={employee.hra_type || ""}
             onChange={handleChange}
-            className="p-2 border rounded"
+            className="p-2 border rounded-sm text-sm"
           />
         </div>
         <div className="flex flex-col">
@@ -287,7 +287,7 @@ export default function EditEmployeePage() {
             name="hra"
             value={employee.hra || ""}
             onChange={handleChange}
-            className="p-2 border rounded"
+            className="p-2 border rounded-sm text-sm"
           />
         </div>
         <div className="flex flex-col">
@@ -297,7 +297,7 @@ export default function EditEmployeePage() {
             name="tra_type"
             value={employee.tra_type || ""}
             onChange={handleChange}
-            className="p-2 border rounded"
+            className="p-2 border rounded-sm text-sm"
           />
         </div>
         <div className="flex flex-col">
@@ -307,7 +307,7 @@ export default function EditEmployeePage() {
             name="tra"
             value={employee.tra || ""}
             onChange={handleChange}
-            className="p-2 border rounded"
+            className="p-2 border rounded-sm text-sm"
           />
         </div>
         <div className="flex flex-col">
@@ -317,7 +317,7 @@ export default function EditEmployeePage() {
             name="food_allowance_type"
             value={employee.food_allowance_type || ""}
             onChange={handleChange}
-            className="p-2 border rounded"
+            className="p-2 border rounded-sm text-sm"
           />
         </div>
         <div className="flex flex-col">
@@ -327,7 +327,7 @@ export default function EditEmployeePage() {
             name="food_allowance"
             value={employee.food_allowance || ""}
             onChange={handleChange}
-            className="p-2 border rounded"
+            className="p-2 border rounded-sm text-sm"
           />
         </div>
         <div className="flex flex-col">
@@ -337,7 +337,7 @@ export default function EditEmployeePage() {
             name="other_allowance"
             value={employee.other_allowance || ""}
             onChange={handleChange}
-            className="p-2 border rounded"
+            className="p-2 border rounded-sm text-sm"
           />
         </div>
         <div className="flex flex-col">
@@ -347,7 +347,7 @@ export default function EditEmployeePage() {
             name="total_salary"
             value={employee.total_salary || ""}
             onChange={handleChange}
-            className="p-2 border rounded"
+            className="p-2 border rounded-sm text-sm"
           />
         </div>
         <div className="flex flex-col">
@@ -357,7 +357,7 @@ export default function EditEmployeePage() {
             name="medical"
             value={employee.medical || ""}
             onChange={handleChange}
-            className="p-2 border rounded"
+            className="p-2 border rounded-sm text-sm"
           />
         </div>
         <div className="flex flex-col">
@@ -367,10 +367,10 @@ export default function EditEmployeePage() {
             name="employee_status"
             value={employee.employee_status || ""}
             onChange={handleChange}
-            className="p-2 border rounded"
+            className="p-2 border rounded-sm text-sm"
           />
         </div>
-        <div className="col-span-2 flex justify-start gap-4 mt-4">
+        <div className="col-span-1 flex justify-start gap-4 mt-4">
           <button
             type="submit"
             disabled={isUpdating}

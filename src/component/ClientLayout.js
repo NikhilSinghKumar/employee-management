@@ -1,0 +1,24 @@
+"use client";
+
+import { usePathname } from "next/navigation";
+import Navbar from "./Navbar";
+
+export default function ClientLayout({ children }) {
+  const pathname = usePathname();
+
+  const allowedRoutes = [
+    /^\/services/,
+    /^\/employee_list/,
+    /^\/add_employee/,
+    /^\/edit_employee(\/|$)/,
+  ];
+  const showNavbar = allowedRoutes.some((pattern) => pattern.test(pathname));
+  console.log("Current pathname:", pathname);
+
+  return (
+    <>
+      {showNavbar && <Navbar />}
+      {children}
+    </>
+  );
+}

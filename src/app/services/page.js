@@ -1,9 +1,6 @@
-import { Navbar } from "@/component/Navbar";
-
 export default function Services() {
   return (
     <>
-      <Navbar />
       <div className="max-w-md mx-auto mt-30">
         <div className="bg-white shadow-lg rounded-2xl p-6 border border-gray-200">
           <h2 className="text-xl font-semibold text-gray-800 text-center">
