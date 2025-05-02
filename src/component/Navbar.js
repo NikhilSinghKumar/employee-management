@@ -53,7 +53,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white text-black px-14 font-semibold py-2 flex justify-between items-center text-base h-16 shadow">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white text-black px-14 font-medium py-2 flex justify-between items-center text-base h-16 shadow">
       <div className="flex gap-6">
         <Link href="">Sales</Link>
         <div className="relative" ref={financeRef}>
