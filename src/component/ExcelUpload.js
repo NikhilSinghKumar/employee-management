@@ -88,7 +88,7 @@ export default function ExcelUpload() {
             disabled={loading}
           >
             <MdCloudUpload className="text-xl" />
-            {loading ? "Uploading..." : "Upload"}
+            {loading ? "Uploading..." : "Upload Excel"}
           </button>
         </div>
       </form>

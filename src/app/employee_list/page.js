@@ -85,14 +85,16 @@ export default function EmployeeList() {
     return <p className="text-center text-red-500 mt-6">Error: {error}</p>;
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto pt-16 px-4 pb-4">
       {employees.length === 0 ? (
         <h2 className="text-center mt-20 text-lg text-gray-500">
           No employee! Add employee to see details here.
         </h2>
       ) : (
         <>
-          <h2 className="text-2xl font-bold m-4">All Employee Details</h2>
+          <h2 className="text-2xl text-center font-semibold m-4">
+            All Employee Details
+          </h2>
           <div className="flex justify-center mb-6">
             <div className="relative w-full max-w-md">
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">

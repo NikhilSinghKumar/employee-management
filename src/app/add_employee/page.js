@@ -158,7 +158,7 @@ export default function AddEmployee() {
   const table12 = [fields.slice(0, 8), fields.slice(8, 16)];
 
   return (
-    <div className="flex flex-col justify-center items-center min-h-screen bg-gray-100 p-4">
+    <div className="flex flex-col justify-center items-center min-h-screen bg-gray-100 pt-16 px-4 pb-4">
       <div className="bg-white p-6 rounded-lg shadow-lg w-260 max-w-7xl">
         <h2 className="text-2xl font-bold text-center text-gray-700 mb-6">
           New Employee Form
