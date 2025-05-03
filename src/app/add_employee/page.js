@@ -2,8 +2,6 @@
 
 import { useState, useEffect, useRef } from "react";
 import { calculateTotalSalary } from "@/utils/employeeUtils";
-import ExcelUpload from "@/component/ExcelUpload";
-import { supabase } from "@/utils/supabaseClient";
 
 const defaultEmployee = {
   employeeName: "",
@@ -410,9 +408,6 @@ export default function AddEmployee() {
             Reset Form
           </button>
         </form>
-      </div>
-      <div className="w-5xl m-3  max-w-7xl">
-        <ExcelUpload />
       </div>
     </div>
   );

@@ -108,7 +108,7 @@ export default function EmployeeList() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search employees by Name, ET No., IQAMA, etc."
+                placeholder="Search employee by Name, ET No., IQAMA, etc."
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               />
             </div>

@@ -1,5 +1,5 @@
 "use client";
-import { useContext, useRef } from "react";
+import { useContext } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -13,8 +13,6 @@ const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 export default function Navbar() {
   const { user, fetchUser } = useContext(UserContext);
   const router = useRouter();
-  const operationsRef = useRef(null);
-  const financeRef = useRef(null);
 
   const handleLogout = async () => {
     try {
@@ -55,6 +53,7 @@ export default function Navbar() {
           label="Operations"
           items={[
             { label: "Add Employee", href: "/add_employee" },
+            { label: "Upload Employees", href: "/upload_employees" },
             { label: "All Employees", href: "/employee_list" },
             { label: "All Clients", href: "/all_clients" },
             { label: "Timesheet/ Payroll", href: "/timesheet_payroll" },
