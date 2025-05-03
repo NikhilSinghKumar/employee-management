@@ -1,46 +1,26 @@
 "use client";
-import { useState, useContext, useRef, useEffect } from "react";
+import { useContext, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { ChevronDownIcon } from "@heroicons/react/24/solid";
 import { CgProfile } from "react-icons/cg";
 import { IoPower } from "react-icons/io5";
 import { UserContext } from "@/context/UserContext";
+import Dropdown from "@/component/Dropdown";
 
 const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export default function Navbar() {
-  const [isFinanceOpen, setIsFinanceOpen] = useState(false);
-  const [isOperationsOpen, setIsOperationsOpen] = useState(false);
   const { user, fetchUser } = useContext(UserContext);
   const router = useRouter();
   const operationsRef = useRef(null);
   const financeRef = useRef(null);
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        operationsRef.current &&
-        !operationsRef.current.contains(event.target)
-      ) {
-        setIsOperationsOpen(false);
-      }
-      if (financeRef.current && !financeRef.current.contains(event.target)) {
-        setIsFinanceOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
   const handleLogout = async () => {
     try {
       await fetch(`${API_URL}/api/auth/logout`, {
         method: "POST",
-        credentials: "include", // ensures cookies are sent
+        credentials: "include",
       });
 
       // Refresh the user context to clear user state after logout
@@ -54,65 +34,32 @@ export default function Navbar() {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white text-black px-14 font-medium py-2 flex justify-between items-center text-base h-16 shadow">
-      <div className="flex gap-6">
+      <div className="flex items-center gap-6">
+        <Link href="/services">
+          <Image
+            src="/logo.png"
+            alt="Company Logo"
+            width={60}
+            height={60}
+            className="cursor-pointer"
+            priority
+          />
+        </Link>
         <Link href="">Sales</Link>
-        <div className="relative" ref={financeRef}>
-          <button
-            className="flex items-center gap-1 cursor-pointer"
-            onClick={() => setIsFinanceOpen(!isFinanceOpen)}
-          >
-            Finance
-            <ChevronDownIcon className="w-4 h-4" />
-          </button>
-          {isFinanceOpen && (
-            <div className="absolute left-0 top-full mt-2 bg-white text-black shadow-md w-48 rounded-md overflow-hidden z-50">
-              <Link
-                href="/invoices"
-                className="block px-4 py-2 hover:bg-gray-200"
-              >
-                Invoices
-              </Link>
-            </div>
-          )}
-        </div>
+        <Dropdown
+          label="Finance"
+          items={[{ label: "Invoices", href: "/invoices" }]}
+        />
         <Link href="">HR</Link>
-        <div className="relative" ref={operationsRef}>
-          <button
-            className="flex items-center gap-1 cursor-pointer"
-            onClick={() => setIsOperationsOpen(!isOperationsOpen)}
-          >
-            Operations
-            <ChevronDownIcon className="w-4 h-4" />
-          </button>
-          {isOperationsOpen && (
-            <div className="absolute left-0 top-full mt-2 bg-white text-black shadow-md w-48 rounded-md overflow-hidden z-50">
-              <Link
-                href="/add_employee"
-                className="block px-4 py-2 hover:bg-gray-200"
-              >
-                Add Employee
-              </Link>
-              <Link
-                href="/employee_list"
-                className="block px-4 py-2 hover:bg-gray-200"
-              >
-                All Employees
-              </Link>
-              <Link
-                href="/all_clients"
-                className="block px-4 py-2 hover:bg-gray-200"
-              >
-                All Clients
-              </Link>
-              <Link
-                href="/timesheet_payroll"
-                className="block px-4 py-2 hover:bg-gray-200"
-              >
-                Timesheet/ Payroll
-              </Link>
-            </div>
-          )}
-        </div>
+        <Dropdown
+          label="Operations"
+          items={[
+            { label: "Add Employee", href: "/add_employee" },
+            { label: "All Employees", href: "/employee_list" },
+            { label: "All Clients", href: "/all_clients" },
+            { label: "Timesheet/ Payroll", href: "/timesheet_payroll" },
+          ]}
+        />
       </div>
 
       {user && (

@@ -38,17 +38,15 @@ export default function ExcelDownload() {
   };
 
   return (
-    <div className="p-6 bg-white shadow-md rounded-lg text-center">
-      <button
-        onClick={handleDownload}
-        disabled={loading}
-        className={`flex items-center justify-center gap-2 px-5 py-2 text-white rounded ${
-          loading ? "bg-gray-400" : "bg-green-600 hover:bg-green-700"
-        }`}
-      >
-        <IoMdCloudDownload className="text-xl" />
-        {loading ? "Downloading..." : "Download Excel"}
-      </button>
-    </div>
+    <button
+      onClick={handleDownload}
+      disabled={loading}
+      className={`flex items-center justify-center gap-2 px-5 py-2 text-white rounded cursor-pointer ${
+        loading ? "bg-gray-400" : "bg-green-600 hover:bg-green-700"
+      }`}
+    >
+      <IoMdCloudDownload className="text-xl" />
+      {loading ? "Downloading..." : "Download Excel"}
+    </button>
   );
 }

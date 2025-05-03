@@ -70,6 +70,7 @@ export default function EmployeeList() {
         employee.mobile,
         employee.email,
         employee.bank_account,
+        employee.employee_status,
       ];
 
       return fields.some((field) =>
@@ -80,9 +81,12 @@ export default function EmployeeList() {
     });
   }, [computedEmployees, searchQuery]);
 
-  if (loading) return <p className="text-center text-lg mt-6">Loading...</p>;
+  if (loading)
+    return <p className="text-center text-lg mt-6 pt-20">Loading...</p>;
   if (error)
-    return <p className="text-center text-red-500 mt-6">Error: {error}</p>;
+    return (
+      <p className="text-center text-red-500 mt-6 pt-20">Error: {error}</p>
+    );
 
   return (
     <div className="container mx-auto pt-16 px-4 pb-4">
@@ -95,8 +99,8 @@ export default function EmployeeList() {
           <h2 className="text-2xl text-center font-semibold m-4">
             All Employee Details
           </h2>
-          <div className="flex justify-center mb-6">
-            <div className="relative w-full max-w-md">
+          <div className="flex flex-wrap justify-center items-center mb-6 gap-4">
+            <div className="relative flex-grow max-w-md">
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
                 <IoSearch className="w-5 h-5" />
               </div>
@@ -108,108 +112,114 @@ export default function EmployeeList() {
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               />
             </div>
-          </div>
-          <div className="overflow-x-auto max-h-[500px]">
-            <table className="table-auto w-max border-collapse border border-gray-200 text-sm">
-              <thead>
-                <tr className="bg-gray-100">
-                  {[
-                    "Sr. No.",
-                    "ET No.",
-                    "IQAMA No",
-                    "Name",
-                    "Passport No.",
-                    "Profession",
-                    "Nationality",
-                    "Client No.",
-                    "Client Name",
-                    "Mobile",
-                    "Email",
-                    "Bank Account",
-                    "Basic Salary",
-                    "Allowance",
-                    "Total Salary",
-                    "Medical Type",
-                    "Start Date",
-                    "End Date",
-                    "Status",
-                    "Actions",
-                  ].map((header) => (
-                    <th key={header} className="p-1 border">
-                      {header}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="border border-red-500">
-                {filteredEmployees.map((employee, index) => (
-                  <tr
-                    key={employee.id}
-                    className="odd:bg-white even:bg-gray-50"
-                  >
-                    <td className="p-1 border text-center">{index + 1}</td>
-                    <td className="p-1 border">{employee.et_number}</td>
-                    <td className="p-1 border">{employee.iqama_number}</td>
-                    <td className="p-1 border">{employee.name}</td>
-                    <td className="p-1 border text-center">
-                      {employee.passport_number}
-                    </td>
-                    <td className="p-1 border text-center">
-                      {employee.profession}
-                    </td>
-                    <td className="p-1 border text-center">
-                      {employee.nationality}
-                    </td>
-                    <td className="p-1 border">{employee.client_number}</td>
-                    <td className="p-1 border text-center">
-                      {employee.client_name}
-                    </td>
-                    <td className="p-1 border">{employee.mobile}</td>
-                    <td className="p-1 border">{employee.email}</td>
-                    <td className="p-1 border text-center">
-                      {employee.bank_account}
-                    </td>
-                    <td className="p-1 border text-center">
-                      {employee.basic_salary}
-                    </td>
-                    <td className="p-1 border text-center">
-                      {employee.totalAllowance}
-                    </td>
-                    <td className="p-1 border text-center">
-                      {employee.total_salary}
-                    </td>
-                    <td className="p-1 border text-center">
-                      {employee.medical}
-                    </td>
-                    <td className="p-1 border">
-                      {formatDate(employee.contract_start_date)}
-                    </td>
-                    <td className="p-1 border">
-                      {formatDate(employee.contract_end_date)}
-                    </td>
-                    <td className="p-1 border">{employee.employee_status}</td>
-                    <td className="p-1 border flex items-center space-x-2">
-                      <Link
-                        href={`/edit_employee/${employee.id}`}
-                        className="text-blue-500 cursor-pointer hover:text-blue-700 hover:scale-110 transition-transform duration-200"
-                      >
-                        <FaRegEdit />
-                      </Link>
-                      <button
-                        className="text-red-500 cursor-pointer hover:text-red-600 hover:scale-110 transition-transform duration-200"
-                        onClick={() => handleDelete(employee.id)}
-                      >
-                        <MdDelete />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="mt-4">
             <ExcelDownload />
           </div>
+
+          {filteredEmployees.length === 0 ? (
+            <p className="text-center text-gray-500 text-sm mt-6">
+              No results found for{" "}
+              <span className="font-medium">{searchQuery}</span>
+            </p>
+          ) : (
+            <div className="overflow-x-auto max-h-[500px]">
+              <table className="table-auto w-max border-collapse border border-gray-200 text-sm">
+                <thead>
+                  <tr className="bg-gray-100">
+                    {[
+                      "Sr. No.",
+                      "ET No.",
+                      "IQAMA No",
+                      "Name",
+                      "Passport No.",
+                      "Profession",
+                      "Nationality",
+                      "Client No.",
+                      "Client Name",
+                      "Mobile",
+                      "Email",
+                      "Bank Account",
+                      "Basic Salary",
+                      "Allowance",
+                      "Total Salary",
+                      "Medical Type",
+                      "Start Date",
+                      "End Date",
+                      "Status",
+                      "Actions",
+                    ].map((header) => (
+                      <th key={header} className="p-1 border">
+                        {header}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredEmployees.map((employee, index) => (
+                    <tr
+                      key={employee.id}
+                      className="odd:bg-white even:bg-gray-50"
+                    >
+                      <td className="p-1 border text-center">{index + 1}</td>
+                      <td className="p-1 border">{employee.et_number}</td>
+                      <td className="p-1 border">{employee.iqama_number}</td>
+                      <td className="p-1 border">{employee.name}</td>
+                      <td className="p-1 border text-center">
+                        {employee.passport_number}
+                      </td>
+                      <td className="p-1 border text-center">
+                        {employee.profession}
+                      </td>
+                      <td className="p-1 border text-center">
+                        {employee.nationality}
+                      </td>
+                      <td className="p-1 border">{employee.client_number}</td>
+                      <td className="p-1 border text-center">
+                        {employee.client_name}
+                      </td>
+                      <td className="p-1 border">{employee.mobile}</td>
+                      <td className="p-1 border">{employee.email}</td>
+                      <td className="p-1 border text-center">
+                        {employee.bank_account}
+                      </td>
+                      <td className="p-1 border text-center">
+                        {employee.basic_salary}
+                      </td>
+                      <td className="p-1 border text-center">
+                        {employee.totalAllowance}
+                      </td>
+                      <td className="p-1 border text-center">
+                        {employee.total_salary}
+                      </td>
+                      <td className="p-1 border text-center">
+                        {employee.medical}
+                      </td>
+                      <td className="p-1 border">
+                        {formatDate(employee.contract_start_date)}
+                      </td>
+                      <td className="p-1 border">
+                        {formatDate(employee.contract_end_date)}
+                      </td>
+                      <td className="p-1 border">{employee.employee_status}</td>
+                      <td className="p-1 border flex items-center space-x-2">
+                        <Link
+                          href={`/edit_employee/${employee.id}`}
+                          className="text-blue-500 cursor-pointer hover:text-blue-700 hover:scale-110 transition-transform duration-200"
+                        >
+                          <FaRegEdit />
+                        </Link>
+                        <button
+                          className="text-red-500 cursor-pointer hover:text-red-600 hover:scale-110 transition-transform duration-200"
+                          onClick={() => handleDelete(employee.id)}
+                        >
+                          <MdDelete />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </>
       )}
     </div>
