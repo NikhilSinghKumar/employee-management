@@ -13,22 +13,36 @@ export default function EmployeeList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 20;
 
   useEffect(() => {
     document.title = "All Employees List";
     const fetchEmployees = async () => {
-      const { data, error } = await supabase.from("employees").select("*");
+      setLoading(true);
+      const from = (currentPage - 1) * pageSize;
+      const to = from + pageSize - 1;
+
+      // Fetch employees and total count
+      const { data, count, error } = await supabase
+        .from("employees")
+        .select("*", { count: "exact" })
+        .order("id", { ascending: true })
+        .range(from, to);
+
       if (error) {
         setError("Failed to fetch employees");
         console.error(error);
       } else {
         setEmployees(data || []);
+        setTotalCount(count || 0);
       }
       setLoading(false);
     };
 
     fetchEmployees();
-  }, []);
+  }, [currentPage]);
 
   const handleDelete = async (id) => {
     const { error } = await supabase.from("employees").delete().eq("id", id);
@@ -123,106 +137,134 @@ export default function EmployeeList() {
                 <span className="font-medium">{searchQuery}</span>
               </p>
             ) : (
-              <div className="overflow-x-auto max-h-[500px]">
-                <table className="table-auto w-max border-collapse border border-gray-200 text-sm">
-                  <thead>
-                    <tr className="bg-gray-100">
-                      {[
-                        "Sr. No.",
-                        "ET No.",
-                        "IQAMA No",
-                        "Name",
-                        "Passport No.",
-                        "Profession",
-                        "Nationality",
-                        "Client No.",
-                        "Client Name",
-                        "Mobile",
-                        "Email",
-                        "Bank Account",
-                        "Basic Salary",
-                        "Allowance",
-                        "Total Salary",
-                        "Medical Type",
-                        "Start Date",
-                        "End Date",
-                        "Status",
-                        "Actions",
-                      ].map((header) => (
-                        <th key={header} className="p-1 border">
-                          {header}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredEmployees.map((employee, index) => (
-                      <tr
-                        key={employee.id}
-                        className="odd:bg-white even:bg-gray-50"
-                      >
-                        <td className="p-1 border text-center">{index + 1}</td>
-                        <td className="p-1 border">{employee.et_number}</td>
-                        <td className="p-1 border">{employee.iqama_number}</td>
-                        <td className="p-1 border">{employee.name}</td>
-                        <td className="p-1 border text-center">
-                          {employee.passport_number}
-                        </td>
-                        <td className="p-1 border text-center">
-                          {employee.profession}
-                        </td>
-                        <td className="p-1 border text-center">
-                          {employee.nationality}
-                        </td>
-                        <td className="p-1 border">{employee.client_number}</td>
-                        <td className="p-1 border text-center">
-                          {employee.client_name}
-                        </td>
-                        <td className="p-1 border">{employee.mobile}</td>
-                        <td className="p-1 border">{employee.email}</td>
-                        <td className="p-1 border text-center">
-                          {employee.bank_account}
-                        </td>
-                        <td className="p-1 border text-center">
-                          {employee.basic_salary}
-                        </td>
-                        <td className="p-1 border text-center">
-                          {employee.totalAllowance}
-                        </td>
-                        <td className="p-1 border text-center">
-                          {employee.total_salary}
-                        </td>
-                        <td className="p-1 border text-center">
-                          {employee.medical}
-                        </td>
-                        <td className="p-1 border">
-                          {formatDate(employee.contract_start_date)}
-                        </td>
-                        <td className="p-1 border">
-                          {formatDate(employee.contract_end_date)}
-                        </td>
-                        <td className="p-1 border">
-                          {employee.employee_status}
-                        </td>
-                        <td className="p-1 border flex items-center space-x-2">
-                          <Link
-                            href={`/edit_employee/${employee.id}`}
-                            className="text-blue-500 cursor-pointer hover:text-blue-700 hover:scale-110 transition-transform duration-200"
-                          >
-                            <FaRegEdit />
-                          </Link>
-                          <button
-                            className="text-red-500 cursor-pointer hover:text-red-600 hover:scale-110 transition-transform duration-200"
-                            onClick={() => handleDelete(employee.id)}
-                          >
-                            <MdDelete />
-                          </button>
-                        </td>
+              <>
+                <div className="overflow-x-auto w-full">
+                  <table className="table-auto w-max border-collapse border border-gray-200 text-sm">
+                    <thead>
+                      <tr className="bg-gray-100">
+                        {[
+                          "Sr. No.",
+                          "ET No.",
+                          "IQAMA No",
+                          "Name",
+                          "Passport No.",
+                          "Profession",
+                          "Nationality",
+                          "Client No.",
+                          "Client Name",
+                          "Mobile",
+                          "Email",
+                          "Bank Account",
+                          "Basic Salary",
+                          "Allowance",
+                          "Total Salary",
+                          "Medical Type",
+                          "Start Date",
+                          "End Date",
+                          "Status",
+                          "Actions",
+                        ].map((header) => (
+                          <th key={header} className="p-1 border">
+                            {header}
+                          </th>
+                        ))}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {filteredEmployees.map((employee, index) => (
+                        <tr
+                          key={employee.id}
+                          className="odd:bg-white even:bg-gray-50"
+                        >
+                          <td className="p-1 border text-center">
+                            {index + 1}
+                          </td>
+                          <td className="p-1 border">{employee.et_number}</td>
+                          <td className="p-1 border">
+                            {employee.iqama_number}
+                          </td>
+                          <td className="p-1 border">{employee.name}</td>
+                          <td className="p-1 border text-center">
+                            {employee.passport_number}
+                          </td>
+                          <td className="p-1 border text-center">
+                            {employee.profession}
+                          </td>
+                          <td className="p-1 border text-center">
+                            {employee.nationality}
+                          </td>
+                          <td className="p-1 border">
+                            {employee.client_number}
+                          </td>
+                          <td className="p-1 border text-center">
+                            {employee.client_name}
+                          </td>
+                          <td className="p-1 border">{employee.mobile}</td>
+                          <td className="p-1 border">{employee.email}</td>
+                          <td className="p-1 border text-center">
+                            {employee.bank_account}
+                          </td>
+                          <td className="p-1 border text-center">
+                            {employee.basic_salary}
+                          </td>
+                          <td className="p-1 border text-center">
+                            {employee.totalAllowance}
+                          </td>
+                          <td className="p-1 border text-center">
+                            {employee.total_salary}
+                          </td>
+                          <td className="p-1 border text-center">
+                            {employee.medical}
+                          </td>
+                          <td className="p-1 border">
+                            {formatDate(employee.contract_start_date)}
+                          </td>
+                          <td className="p-1 border">
+                            {formatDate(employee.contract_end_date)}
+                          </td>
+                          <td className="p-1 border">
+                            {employee.employee_status}
+                          </td>
+                          <td className="p-1 border flex items-center space-x-2">
+                            <Link
+                              href={`/edit_employee/${employee.id}`}
+                              className="text-blue-500 cursor-pointer hover:text-blue-700 hover:scale-110 transition-transform duration-200"
+                            >
+                              <FaRegEdit />
+                            </Link>
+                            <button
+                              className="text-red-500 cursor-pointer hover:text-red-600 hover:scale-110 transition-transform duration-200"
+                              onClick={() => handleDelete(employee.id)}
+                            >
+                              <MdDelete />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {totalCount > 0 && (
+                  <div className="flex justify-center items-center gap-2 mt-6 flex-wrap">
+                    {Array.from(
+                      { length: Math.ceil(totalCount / pageSize) },
+                      (_, i) => (
+                        <button
+                          key={i + 1}
+                          onClick={() => setCurrentPage(i + 1)}
+                          className={`px-3 py-1 rounded cursor-pointer ${
+                            currentPage === i + 1
+                              ? "bg-blue-600 text-white"
+                              : "bg-gray-200 text-gray-700 hover:bg-blue-100"
+                          }`}
+                        >
+                          {i + 1}
+                        </button>
+                      )
+                    )}
+                  </div>
+                )}
+              </>
             )}
           </>
         )}

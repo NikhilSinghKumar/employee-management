@@ -26,6 +26,7 @@ export default function Dropdown({ label, items = [] }) {
             <Link
               key={idx}
               href={href}
+              onClick={() => setIsOpen(false)}
               className="block px-4 py-2 hover:bg-gray-200"
             >
               {label}
