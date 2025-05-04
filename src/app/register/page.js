@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 
 export default function RegisterForm() {
@@ -10,6 +10,10 @@ export default function RegisterForm() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState({ text: "", type: "" });
+
+  useEffect(() => {
+    document.title = "New User! Register";
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -59,114 +63,118 @@ export default function RegisterForm() {
   };
 
   return (
-    <div className="flex justify-center items-center h-screen">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-6 rounded-lg shadow-md w-96"
-      >
-        <h2 className="text-xl font-semibold mb-4">New User!</h2>
-
-        {message.text && (
-          <div
-            className={`p-1 mb-2 text-[14px] rounded-lg text-white ${
-              message.type === "success" ? "bg-green-500" : "bg-red-500"
-            }`}
-          >
-            {message.text}
-          </div>
-        )}
-
-        <div className="mb-4">
-          <label className="block text-gray-700 text-[14px]">First Name</label>
-          <input
-            type="text"
-            value={firstName}
-            onChange={(e) => {
-              setFirstName(e.target.value);
-              setMessage({ text: "", type: "" });
-            }}
-            className="w-full px-3 py-1 border rounded-lg text-[14px] focus:outline-none focus:ring focus:ring-blue-300"
-            required
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-gray-700 text-[14px]">Last Name</label>
-          <input
-            type="text"
-            value={lastName}
-            onChange={(e) => {
-              setLastName(e.target.value);
-              setMessage({ text: "", type: "" });
-            }}
-            className="w-full px-3 py-1 border rounded-lg text-[14px] focus:outline-none focus:ring focus:ring-blue-300"
-            required
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-gray-700 text-[14px]">Email</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => {
-              setEmail(e.target.value);
-              setMessage({ text: "", type: "" });
-            }}
-            className="w-full px-3 py-1 border rounded-lg text-[14px] focus:outline-none focus:ring focus:ring-blue-300"
-            required
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-gray-700 text-[14px]">
-            Set Password
-          </label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => {
-              setPassword(e.target.value);
-              setMessage({ text: "", type: "" });
-            }}
-            className="w-full px-3 py-1 border rounded-lg text-[14px] focus:outline-none focus:ring focus:ring-blue-300"
-            required
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-gray-700 text-[14px]">
-            Confirm Password
-          </label>
-          <input
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => {
-              setConfirmPassword(e.target.value);
-              setMessage({ text: "", type: "" });
-            }}
-            className="w-full px-3 py-1 border rounded-lg text-[14px] focus:outline-none focus:ring focus:ring-blue-300"
-            required
-          />
-        </div>
-
-        <button
-          type="submit"
-          className="w-35 bg-blue-500 text-white py-1 mb-3 rounded-lg hover:bg-blue-600 cursor-pointer"
+    <>
+      <div className="flex justify-center items-center h-screen">
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white p-6 rounded-lg shadow-md w-96"
         >
-          Register
-        </button>
+          <h2 className="text-xl font-semibold mb-4">New User!</h2>
 
-        <p className="py-1 text-[14px]">
-          Already have an account? Please{" "}
-          <Link
-            href="/"
-            className="text-blue-500 text-[14px] hover:text-blue-600"
+          {message.text && (
+            <div
+              className={`p-1 mb-2 text-[14px] rounded-lg text-white ${
+                message.type === "success" ? "bg-green-500" : "bg-red-500"
+              }`}
+            >
+              {message.text}
+            </div>
+          )}
+
+          <div className="mb-4">
+            <label className="block text-gray-700 text-[14px]">
+              First Name
+            </label>
+            <input
+              type="text"
+              value={firstName}
+              onChange={(e) => {
+                setFirstName(e.target.value);
+                setMessage({ text: "", type: "" });
+              }}
+              className="w-full px-3 py-1 border rounded-lg text-[14px] focus:outline-none focus:ring focus:ring-blue-300"
+              required
+            />
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-gray-700 text-[14px]">Last Name</label>
+            <input
+              type="text"
+              value={lastName}
+              onChange={(e) => {
+                setLastName(e.target.value);
+                setMessage({ text: "", type: "" });
+              }}
+              className="w-full px-3 py-1 border rounded-lg text-[14px] focus:outline-none focus:ring focus:ring-blue-300"
+              required
+            />
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-gray-700 text-[14px]">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setMessage({ text: "", type: "" });
+              }}
+              className="w-full px-3 py-1 border rounded-lg text-[14px] focus:outline-none focus:ring focus:ring-blue-300"
+              required
+            />
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-gray-700 text-[14px]">
+              Set Password
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setMessage({ text: "", type: "" });
+              }}
+              className="w-full px-3 py-1 border rounded-lg text-[14px] focus:outline-none focus:ring focus:ring-blue-300"
+              required
+            />
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-gray-700 text-[14px]">
+              Confirm Password
+            </label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => {
+                setConfirmPassword(e.target.value);
+                setMessage({ text: "", type: "" });
+              }}
+              className="w-full px-3 py-1 border rounded-lg text-[14px] focus:outline-none focus:ring focus:ring-blue-300"
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="w-35 bg-blue-500 text-white py-1 mb-3 rounded-lg hover:bg-blue-600 cursor-pointer"
           >
-            Login
-          </Link>
-        </p>
-      </form>
-    </div>
+            Register
+          </button>
+
+          <p className="py-1 text-[14px]">
+            Already have an account? Please{" "}
+            <Link
+              href="/"
+              className="text-blue-500 text-[14px] hover:text-blue-600"
+            >
+              Login
+            </Link>
+          </p>
+        </form>
+      </div>
+    </>
   );
 }

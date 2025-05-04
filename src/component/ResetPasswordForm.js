@@ -12,12 +12,12 @@ export default function ResetPasswordForm({ token }) {
   const router = useRouter();
 
   useEffect(() => {
+    document.title = "Reset Password";
     if (!token) {
       setIsTokenValid(false);
       setMessage({ text: "Invalid or missing token.", type: "error" });
       setTimeout(() => router.push("/forgot_password"), 2000);
     } else {
-      // TODO: You can optionally validate token here via Supabase if stored
       setIsTokenValid(true);
     }
   }, [token, router]);
@@ -42,7 +42,6 @@ export default function ResetPasswordForm({ token }) {
     setIsLoading(true);
 
     try {
-      // Get user associated with token
       const { data: userData, error: userError } = await supabase
         .from("users")
         .select("id")

@@ -1,12 +1,10 @@
 "use client";
 
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { UserContext } from "@/context/UserContext";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
-
-const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
@@ -16,6 +14,10 @@ export default function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const { fetchUser } = useContext(UserContext);
   const router = useRouter();
+
+  useEffect(() => {
+    document.title = "Welcome! Login";
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -67,91 +69,96 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="flex justify-center items-center h-screen">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-6 rounded-lg shadow-md w-96"
-      >
-        <h2 className="text-xl font-semibold mb-4">Welcome</h2>
+    <>
+      <div className="flex justify-center items-center h-screen">
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white p-6 rounded-lg shadow-md w-96"
+        >
+          <h2 className="text-xl font-semibold mb-4">Welcome</h2>
 
-        {message.text && (
-          <div
-            className={`p-2 mb-4 rounded-lg text-white ${
-              message.type === "success" ? "bg-green-500" : "bg-red-500"
-            }`}
-          >
-            {message.text}
-          </div>
-        )}
+          {message.text && (
+            <div
+              className={`p-2 mb-4 rounded-lg text-white ${
+                message.type === "success" ? "bg-green-500" : "bg-red-500"
+              }`}
+            >
+              {message.text}
+            </div>
+          )}
 
-        <div className="mb-4">
-          <label className="block text-gray-700">Email</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => {
-              setEmail(e.target.value);
-              setMessage({ text: "", type: "" });
-            }}
-            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
-            required
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-gray-700">Password</label>
-          <div className="relative">
+          <div className="mb-4">
+            <label className="block text-gray-700">Email</label>
             <input
-              type={showPassword ? "text" : "password"}
-              value={password}
+              type="email"
+              value={email}
               onChange={(e) => {
-                setPassword(e.target.value);
+                setEmail(e.target.value);
                 setMessage({ text: "", type: "" });
               }}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300 pr-10"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
               required
             />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-2 flex items-center px-2 text-gray-600"
-            >
-              {showPassword ? (
-                <EyeIcon className="h-5 w-5" />
-              ) : (
-                <EyeSlashIcon className="h-5 w-5" />
-              )}
-            </button>
           </div>
-        </div>
 
-        <button
-          type="submit"
-          className={`w-full py-2 rounded-lg text-white cursor-pointer ${
-            isLoading
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-blue-500 hover:bg-blue-600"
-          }`}
-          disabled={isLoading}
-        >
-          {isLoading ? "Logging in..." : "Login"}
-        </button>
+          <div className="mb-4">
+            <label className="block text-gray-700">Password</label>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setMessage({ text: "", type: "" });
+                }}
+                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300 pr-10"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-2 flex items-center px-2 text-gray-600"
+              >
+                {showPassword ? (
+                  <EyeIcon className="h-5 w-5" />
+                ) : (
+                  <EyeSlashIcon className="h-5 w-5" />
+                )}
+              </button>
+            </div>
+          </div>
 
-        <p className="py-2">
-          New User? Please{" "}
-          <Link href="/register" className="text-blue-500 hover:text-blue-600">
-            Register
-          </Link>
-        </p>
-        <p className="py-1">
-          <Link
-            href="/forgot_password"
-            className="text-blue-500 hover:text-blue-600"
+          <button
+            type="submit"
+            className={`w-full py-2 rounded-lg text-white cursor-pointer ${
+              isLoading
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-blue-500 hover:bg-blue-600"
+            }`}
+            disabled={isLoading}
           >
-            Forgot password?
-          </Link>
-        </p>
-      </form>
-    </div>
+            {isLoading ? "Logging in..." : "Login"}
+          </button>
+
+          <p className="py-2">
+            New User? Please{" "}
+            <Link
+              href="/register"
+              className="text-blue-500 hover:text-blue-600"
+            >
+              Register
+            </Link>
+          </p>
+          <p className="py-1">
+            <Link
+              href="/forgot_password"
+              className="text-blue-500 hover:text-blue-600"
+            >
+              Forgot password?
+            </Link>
+          </p>
+        </form>
+      </div>
+    </>
   );
 }

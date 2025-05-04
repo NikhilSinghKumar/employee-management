@@ -23,7 +23,6 @@ export default function Navbar() {
 
       // Refresh the user context to clear user state after logout
       fetchUser();
-
       router.push("/");
     } catch (error) {
       console.error("Logout failed:", error);

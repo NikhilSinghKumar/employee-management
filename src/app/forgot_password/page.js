@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/utils/supabaseClient";
 
@@ -8,6 +8,10 @@ export default function ForgotPassword() {
   const [message, setMessage] = useState({ text: "", type: "" });
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    document.title = "Forgot Password";
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -62,49 +66,51 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="flex justify-center items-center h-screen">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-6 rounded-lg shadow-md w-96"
-      >
-        <h2 className="text-xl font-semibold mb-4">Forgot Password</h2>
-
-        {message.text && (
-          <div
-            className={`p-2 mb-4 rounded-lg text-white ${
-              message.type === "success" ? "bg-green-500" : "bg-red-500"
-            }`}
-          >
-            {message.text}
-          </div>
-        )}
-
-        <div className="mb-4">
-          <label className="block text-gray-700">Email</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => {
-              setEmail(e.target.value);
-              setMessage({ text: "", type: "" });
-            }}
-            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
-            required
-          />
-        </div>
-
-        <button
-          type="submit"
-          className={`w-full py-2 rounded-lg text-white cursor-pointer ${
-            isLoading
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-blue-500 hover:bg-blue-600"
-          }`}
-          disabled={isLoading}
+    <>
+      <div className="flex justify-center items-center h-screen">
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white p-6 rounded-lg shadow-md w-96"
         >
-          {isLoading ? "Sending..." : "Send Reset Link"}
-        </button>
-      </form>
-    </div>
+          <h2 className="text-xl font-semibold mb-4">Forgot Password</h2>
+
+          {message.text && (
+            <div
+              className={`p-2 mb-4 rounded-lg text-white ${
+                message.type === "success" ? "bg-green-500" : "bg-red-500"
+              }`}
+            >
+              {message.text}
+            </div>
+          )}
+
+          <div className="mb-4">
+            <label className="block text-gray-700">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setMessage({ text: "", type: "" });
+              }}
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            className={`w-full py-2 rounded-lg text-white cursor-pointer ${
+              isLoading
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-blue-500 hover:bg-blue-600"
+            }`}
+            disabled={isLoading}
+          >
+            {isLoading ? "Sending..." : "Send Reset Link"}
+          </button>
+        </form>
+      </div>
+    </>
   );
 }

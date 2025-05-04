@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { MdCloudUpload } from "react-icons/md";
 
 export default function ExcelUpload() {
@@ -9,6 +9,9 @@ export default function ExcelUpload() {
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef(null);
 
+  useEffect(() => {
+    document.title = "Upload Employees";
+  }, []);
   const handleUpload = async (e) => {
     e.preventDefault();
 

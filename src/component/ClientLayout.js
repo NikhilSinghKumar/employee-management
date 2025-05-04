@@ -9,6 +9,7 @@ export default function ClientLayout({ children }) {
   const allowedRoutes = [
     /^\/services/,
     /^\/employee_list/,
+    /^\/upload_employees/,
     /^\/add_employee/,
     /^\/edit_employee(\/|$)/,
   ];
