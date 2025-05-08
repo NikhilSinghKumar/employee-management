@@ -160,21 +160,23 @@ export default function AddEmployee() {
   return (
     <>
       <div className="flex flex-col justify-center items-center min-h-screen bg-gray-100 pt-16 px-4 pb-4">
-        <div className="bg-white p-6 rounded-lg shadow-lg w-260 max-w-7xl">
-          <h2 className="text-2xl font-bold text-center text-gray-700 mb-6">
+
+        <div className="bg-white p-6 rounded-lg shadow-lg min-h-[70vh] w-full max-w-screen-xl mx-auto">
+        <h2 className="text-2xl font-bold text-center text-gray-700 m-6">
             New Employee Form
           </h2>
           {message && (
             <p className="text-center text-sm text-green-600 mb-4">{message}</p>
           )}
 
-          <form onSubmit={handleSubmit} className="w-250 space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4 w-full h-full">
             <div className="flex flex-col">
-              <div className="grid grid-cols-3 gap-1">
+              <div className="flex flex-col lg:flex-row gap-4 w-full h-full">
                 {table12.map((group1, index) => (
+                  <div key={index} className="flex-1">
                   <table
                     key={index}
-                    className="w-80 border border-gray-300 rounded-lg text-sm"
+                    className="w-full border border-gray-300 rounded-lg text-sm h-full"
                   >
                     <tbody>
                       {group1.map((key1, i) => (
@@ -226,8 +228,10 @@ export default function AddEmployee() {
                       ))}
                     </tbody>
                   </table>
+                  </div>
                 ))}
-                <table className="w-80 border border-gray-300 rounded-lg text-sm">
+                <div className="flex-1">
+                <table className="w-full border border-gray-300 rounded-lg text-sm h-full">
                   <tbody>
                     {/* Basic Salary */}
                     <tr className="border-b border-gray-200">
@@ -391,6 +395,7 @@ export default function AddEmployee() {
                     </tr>
                   </tbody>
                 </table>
+                </div>
               </div>
             </div>
             <button

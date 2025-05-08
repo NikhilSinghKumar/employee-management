@@ -15,6 +15,7 @@ export default function EmployeeList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [uniqueClientCount, setUniqueClientCount] = useState(0);
   const pageSize = 20;
 
   useEffect(() => {
@@ -37,6 +38,10 @@ export default function EmployeeList() {
       } else {
         setEmployees(data || []);
         setTotalCount(count || 0);
+
+        // Count unique client names
+        const clientSet = new Set(data?.map(emp => emp.client_name).filter(Boolean));
+        setUniqueClientCount(clientSet.size);
       }
       setLoading(false);
     };
@@ -103,6 +108,10 @@ export default function EmployeeList() {
               All Employee Details
             </h2>
             <div className="flex flex-wrap justify-center items-center mb-6 gap-4">
+            <div className="flex gap-4 text-sm font-medium text-gray-700 whitespace-nowrap mr-20">
+              <span>Total Clients: {uniqueClientCount}</span>
+              <span>Total Employees: {totalCount}</span>
+            </div>
               <div className="relative flex-grow max-w-md">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
                   <IoSearch className="w-5 h-5" />

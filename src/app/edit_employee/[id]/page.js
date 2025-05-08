@@ -4,20 +4,20 @@ import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/utils/supabaseClient";
 
-// Format ISO date to DD-MM-YYYY for display
-function formatDateToDDMMYYYY(isoDate) {
-  const date = new Date(isoDate);
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const year = date.getFullYear();
-  return `${day}-${month}-${year}`;
-}
+// // Format ISO date to DD-MM-YYYY for display
+// function formatDateToDDMMYYYY(isoDate) {
+//   const date = new Date(isoDate);
+//   const day = String(date.getDate()).padStart(2, "0");
+//   const month = String(date.getMonth() + 1).padStart(2, "0");
+//   const year = date.getFullYear();
+//   return `${day}-${month}-${year}`;
+// }
 
-// Convert DD-MM-YYYY back to YYYY-MM-DD
-function formatDateToYYYYMMDD(dateStr) {
-  const [day, month, year] = dateStr.split("-");
-  return `${year}-${month}-${day}`;
-}
+// // Convert DD-MM-YYYY back to YYYY-MM-DD
+// function formatDateToYYYYMMDD(dateStr) {
+//   const [day, month, year] = dateStr.split("-");
+//   return `${year}-${month}-${day}`;
+// }
 
 export default function EditEmployeePage() {
   const params = useParams();
@@ -43,13 +43,15 @@ export default function EditEmployeePage() {
       }
 
       if (data) {
+        const formatDate = (dateStr) => dateStr ? dateStr.split("T")[0] : "";
+    
         setEmployee({
           ...data,
-          dob: formatDateToDDMMYYYY(data.dob),
-          iqama_expiry_date: formatDateToDDMMYYYY(data.iqama_expiry_date),
-          passport_expiry_date: formatDateToDDMMYYYY(data.passport_expiry_date),
-          contract_start_date: formatDateToDDMMYYYY(data.contract_start_date),
-          contract_end_date: formatDateToDDMMYYYY(data.contract_end_date),
+          dob: formatDate(data.dob),
+          iqama_expiry_date: formatDate(data.iqama_expiry_date),
+          passport_expiry_date: formatDate(data.passport_expiry_date),
+          contract_start_date: formatDate(data.contract_start_date),
+          contract_end_date: formatDate(data.contract_end_date),
         });
       }
     };
@@ -59,8 +61,25 @@ export default function EditEmployeePage() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setEmployee((prev) => ({ ...prev, [name]: value }));
+    const numericFields = ["basic_salary", "hra", "tra", "food_allowance", "other_allowance"];
+  
+    setEmployee((prev) => {
+      const updatedEmployee = { ...prev, [name]: value };
+  
+      if (numericFields.includes(name)) {
+        const basic = parseFloat(updatedEmployee.basic_salary) || 0;
+        const hra = parseFloat(updatedEmployee.hra) || 0;
+        const tra = parseFloat(updatedEmployee.tra) || 0;
+        const food = parseFloat(updatedEmployee.food_allowance) || 0;
+        const other = parseFloat(updatedEmployee.other_allowance) || 0;
+  
+        updatedEmployee.total_salary = (basic + hra + tra + food + other).toString();
+      }
+  
+      return updatedEmployee;
+    });
   };
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -68,11 +87,6 @@ export default function EditEmployeePage() {
 
     const updatedEmployee = {
       ...employee,
-      dob: formatDateToYYYYMMDD(employee.dob),
-      iqama_expiry_date: formatDateToYYYYMMDD(employee.iqama_expiry_date),
-      passport_expiry_date: formatDateToYYYYMMDD(employee.passport_expiry_date),
-      contract_start_date: formatDateToYYYYMMDD(employee.contract_start_date),
-      contract_end_date: formatDateToYYYYMMDD(employee.contract_end_date),
     };
 
     const { error } = await supabase
@@ -133,7 +147,7 @@ export default function EditEmployeePage() {
           <div className="flex flex-col">
             <label className="font-medium">DOB</label>
             <input
-              type="text"
+              type="date"
               name="dob"
               value={employee.dob || ""}
               onChange={handleChange}
@@ -163,7 +177,7 @@ export default function EditEmployeePage() {
           <div className="flex flex-col">
             <label className="font-medium">Iqama Exp Date</label>
             <input
-              type="text"
+              type="date"
               name="iqama_expiry_date"
               value={employee.iqama_expiry_date || ""}
               onChange={handleChange}
@@ -203,7 +217,7 @@ export default function EditEmployeePage() {
           <div className="flex flex-col">
             <label className="font-medium">Passport Exp Date</label>
             <input
-              type="text"
+              type="date"
               name="passport_expiry_date"
               value={employee.passport_expiry_date || ""}
               onChange={handleChange}
@@ -243,7 +257,7 @@ export default function EditEmployeePage() {
           <div className="flex flex-col">
             <label className="font-medium">Contract Start Date</label>
             <input
-              type="text"
+              type="date"
               name="contract_start_date"
               value={employee.contract_start_date || ""}
               onChange={handleChange}
@@ -253,7 +267,7 @@ export default function EditEmployeePage() {
           <div className="flex flex-col">
             <label className="font-medium">Contract End Date</label>
             <input
-              type="text"
+              type="date"
               name="contract_end_date"
               value={employee.contract_end_date || ""}
               onChange={handleChange}
@@ -263,8 +277,9 @@ export default function EditEmployeePage() {
           <div className="flex flex-col">
             <label className="font-medium">Basic Salary</label>
             <input
-              type="text"
+              type="number"
               name="basic_salary"
+              step="0.01"
               value={employee.basic_salary || ""}
               onChange={handleChange}
               className="p-2 border rounded-sm text-sm"
@@ -283,8 +298,9 @@ export default function EditEmployeePage() {
           <div className="flex flex-col">
             <label className="font-medium">HRA</label>
             <input
-              type="text"
+              type="number"
               name="hra"
+              step="0.01"
               value={employee.hra || ""}
               onChange={handleChange}
               className="p-2 border rounded-sm text-sm"
@@ -303,8 +319,9 @@ export default function EditEmployeePage() {
           <div className="flex flex-col">
             <label className="font-medium">TRA</label>
             <input
-              type="text"
+              type="number"
               name="tra"
+              step="0.01"
               value={employee.tra || ""}
               onChange={handleChange}
               className="p-2 border rounded-sm text-sm"
@@ -323,8 +340,9 @@ export default function EditEmployeePage() {
           <div className="flex flex-col">
             <label className="font-medium">Food Allowance</label>
             <input
-              type="text"
+              type="number"
               name="food_allowance"
+              step="0.01"
               value={employee.food_allowance || ""}
               onChange={handleChange}
               className="p-2 border rounded-sm text-sm"
@@ -333,8 +351,9 @@ export default function EditEmployeePage() {
           <div className="flex flex-col">
             <label className="font-medium">Other Allowance</label>
             <input
-              type="text"
+              type="number"
               name="other_allowance"
+              step="0.01"
               value={employee.other_allowance || ""}
               onChange={handleChange}
               className="p-2 border rounded-sm text-sm"
@@ -343,10 +362,11 @@ export default function EditEmployeePage() {
           <div className="flex flex-col">
             <label className="font-medium">Total Salary</label>
             <input
-              type="text"
+              type="number"
               name="total_salary"
               value={employee.total_salary || ""}
               onChange={handleChange}
+              disabled
               className="p-2 border rounded-sm text-sm"
             />
           </div>
@@ -378,7 +398,7 @@ export default function EditEmployeePage() {
                 isUpdating ? "bg-blue-300 cursor-not-allowed" : "bg-blue-500"
               }`}
             >
-              {isUpdating ? "Updating..." : "Update Employee"}
+              {isUpdating ? "Updating..." : "Update"}
             </button>
             <button
               type="button"
