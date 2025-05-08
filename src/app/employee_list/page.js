@@ -96,23 +96,10 @@ export default function EmployeeList() {
     });
   }, [computedEmployees, searchQuery]);
 
-  if (loading)
-    return <p className="text-center text-lg mt-6 pt-20">Loading...</p>;
-  if (error)
-    return (
-      <p className="text-center text-red-500 mt-6 pt-20">Error: {error}</p>
-    );
-
   return (
     <>
-      <div className="container mx-auto pt-16 px-4 pb-4">
-        {employees.length === 0 ? (
-          <h2 className="text-center mt-20 text-lg text-gray-500">
-            No employee! Add employee to see details here.
-          </h2>
-        ) : (
-          <>
-            <h2 className="text-2xl text-center font-semibold m-4">
+      <div className="w-full pt-16 px-4 pb-4">
+      <h2 className="text-2xl text-center font-semibold m-4">
               All Employee Details
             </h2>
             <div className="flex flex-wrap justify-center items-center mb-6 gap-4">
@@ -130,144 +117,153 @@ export default function EmployeeList() {
               </div>
               <ExcelDownload />
             </div>
-
-            {filteredEmployees.length === 0 ? (
-              <p className="text-center text-gray-500 text-sm mt-6">
-                No results found for{" "}
-                <span className="font-medium">{searchQuery}</span>
-              </p>
-            ) : (
-              <>
-                <div className="overflow-x-auto w-full">
-                  <table className="table-auto w-max border-collapse border border-gray-200 text-sm">
-                    <thead>
-                      <tr className="bg-gray-100">
-                        {[
-                          "Sr. No.",
-                          "ET No.",
-                          "IQAMA No",
-                          "Name",
-                          "Passport No.",
-                          "Profession",
-                          "Nationality",
-                          "Client No.",
-                          "Client Name",
-                          "Mobile",
-                          "Email",
-                          "Bank Account",
-                          "Basic Salary",
-                          "Allowance",
-                          "Total Salary",
-                          "Medical Type",
-                          "Start Date",
-                          "End Date",
-                          "Status",
-                          "Actions",
-                        ].map((header) => (
-                          <th key={header} className="p-1 border">
-                            {header}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredEmployees.map((employee, index) => (
-                        <tr
-                          key={employee.id}
-                          className="odd:bg-white even:bg-gray-50"
+            {loading ? (
+      <p className="text-center text-lg mt-16">Loading...</p>
+    ) : error ? (
+      <p className="text-center text-red-500 mt-16">Error: {error}</p>
+    ) :         employees.length === 0 ? (
+      <h2 className="text-center mt-20 text-lg text-gray-500">
+        No employee! Add employee to see details here.
+      </h2>
+    ) : (
+      <>
+        {filteredEmployees.length === 0 ? (
+          <p className="text-center text-gray-500 text-sm mt-6">
+            No results found for{" "}
+            <span className="font-medium">{searchQuery}</span>
+          </p>
+        ) : (
+          <>
+            <div className="overflow-x-auto w-full">
+              <table className="table-auto w-max border-collapse border border-gray-200 text-sm">
+                <thead>
+                  <tr className="bg-gray-100">
+                    {[
+                      "Sr. No.",
+                      "ET No.",
+                      "IQAMA No",
+                      "Name",
+                      "Passport No.",
+                      "Profession",
+                      "Nationality",
+                      "Client No.",
+                      "Client Name",
+                      "Mobile",
+                      "Email",
+                      "Bank Account",
+                      "Basic Salary",
+                      "Allowance",
+                      "Total Salary",
+                      "Medical Type",
+                      "Start Date",
+                      "End Date",
+                      "Status",
+                      "Actions",
+                    ].map((header) => (
+                      <th key={header} className="p-1 border">
+                        {header}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredEmployees.map((employee, index) => (
+                    <tr
+                      key={employee.id}
+                      className="odd:bg-white even:bg-gray-50"
+                    >
+                      <td className="p-1 border text-center">
+                      {(currentPage - 1) * pageSize + index + 1}
+                      </td>
+                      <td className="p-1 border">{employee.et_number}</td>
+                      <td className="p-1 border">
+                        {employee.iqama_number}
+                      </td>
+                      <td className="p-1 border">{employee.name}</td>
+                      <td className="p-1 border text-center">
+                        {employee.passport_number}
+                      </td>
+                      <td className="p-1 border text-center">
+                        {employee.profession}
+                      </td>
+                      <td className="p-1 border text-center">
+                        {employee.nationality}
+                      </td>
+                      <td className="p-1 border">
+                        {employee.client_number}
+                      </td>
+                      <td className="p-1 border text-center">
+                        {employee.client_name}
+                      </td>
+                      <td className="p-1 border">{employee.mobile}</td>
+                      <td className="p-1 border">{employee.email}</td>
+                      <td className="p-1 border text-center">
+                        {employee.bank_account}
+                      </td>
+                      <td className="p-1 border text-center">
+                        {employee.basic_salary}
+                      </td>
+                      <td className="p-1 border text-center">
+                        {employee.totalAllowance}
+                      </td>
+                      <td className="p-1 border text-center">
+                        {employee.total_salary}
+                      </td>
+                      <td className="p-1 border text-center">
+                        {employee.medical}
+                      </td>
+                      <td className="p-1 border">
+                        {formatDate(employee.contract_start_date)}
+                      </td>
+                      <td className="p-1 border">
+                        {formatDate(employee.contract_end_date)}
+                      </td>
+                      <td className="p-1 border">
+                        {employee.employee_status}
+                      </td>
+                      <td className="p-1 border flex items-center space-x-2">
+                        <Link
+                          href={`/edit_employee/${employee.id}`}
+                          className="text-blue-500 cursor-pointer hover:text-blue-700 hover:scale-110 transition-transform duration-200"
                         >
-                          <td className="p-1 border text-center">
-                            {index + 1}
-                          </td>
-                          <td className="p-1 border">{employee.et_number}</td>
-                          <td className="p-1 border">
-                            {employee.iqama_number}
-                          </td>
-                          <td className="p-1 border">{employee.name}</td>
-                          <td className="p-1 border text-center">
-                            {employee.passport_number}
-                          </td>
-                          <td className="p-1 border text-center">
-                            {employee.profession}
-                          </td>
-                          <td className="p-1 border text-center">
-                            {employee.nationality}
-                          </td>
-                          <td className="p-1 border">
-                            {employee.client_number}
-                          </td>
-                          <td className="p-1 border text-center">
-                            {employee.client_name}
-                          </td>
-                          <td className="p-1 border">{employee.mobile}</td>
-                          <td className="p-1 border">{employee.email}</td>
-                          <td className="p-1 border text-center">
-                            {employee.bank_account}
-                          </td>
-                          <td className="p-1 border text-center">
-                            {employee.basic_salary}
-                          </td>
-                          <td className="p-1 border text-center">
-                            {employee.totalAllowance}
-                          </td>
-                          <td className="p-1 border text-center">
-                            {employee.total_salary}
-                          </td>
-                          <td className="p-1 border text-center">
-                            {employee.medical}
-                          </td>
-                          <td className="p-1 border">
-                            {formatDate(employee.contract_start_date)}
-                          </td>
-                          <td className="p-1 border">
-                            {formatDate(employee.contract_end_date)}
-                          </td>
-                          <td className="p-1 border">
-                            {employee.employee_status}
-                          </td>
-                          <td className="p-1 border flex items-center space-x-2">
-                            <Link
-                              href={`/edit_employee/${employee.id}`}
-                              className="text-blue-500 cursor-pointer hover:text-blue-700 hover:scale-110 transition-transform duration-200"
-                            >
-                              <FaRegEdit />
-                            </Link>
-                            <button
-                              className="text-red-500 cursor-pointer hover:text-red-600 hover:scale-110 transition-transform duration-200"
-                              onClick={() => handleDelete(employee.id)}
-                            >
-                              <MdDelete />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                {totalCount > 0 && (
-                  <div className="flex justify-center items-center gap-2 mt-6 flex-wrap">
-                    {Array.from(
-                      { length: Math.ceil(totalCount / pageSize) },
-                      (_, i) => (
+                          <FaRegEdit />
+                        </Link>
                         <button
-                          key={i + 1}
-                          onClick={() => setCurrentPage(i + 1)}
-                          className={`px-3 py-1 rounded cursor-pointer ${
-                            currentPage === i + 1
-                              ? "bg-blue-600 text-white"
-                              : "bg-gray-200 text-gray-700 hover:bg-blue-100"
-                          }`}
+                          className="text-red-500 cursor-pointer hover:text-red-600 hover:scale-110 transition-transform duration-200"
+                          onClick={() => handleDelete(employee.id)}
                         >
-                          {i + 1}
+                          <MdDelete />
                         </button>
-                      )
-                    )}
-                  </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {totalCount > 0 && (
+              <div className="flex justify-center items-center gap-2 mt-6 flex-wrap">
+                {Array.from(
+                  { length: Math.ceil(totalCount / pageSize) },
+                  (_, i) => (
+                    <button
+                      key={i + 1}
+                      onClick={() => setCurrentPage(i + 1)}
+                      className={`px-3 py-1 rounded cursor-pointer ${
+                        currentPage === i + 1
+                          ? "bg-blue-600 text-white"
+                          : "bg-gray-200 text-gray-700 hover:bg-blue-100"
+                      }`}
+                    >
+                      {i + 1}
+                    </button>
+                  )
                 )}
-              </>
+              </div>
             )}
           </>
         )}
+      </>
+    )}
       </div>
     </>
   );
