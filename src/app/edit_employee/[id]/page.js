@@ -4,20 +4,20 @@ import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/utils/supabaseClient";
 
-// // Format ISO date to DD-MM-YYYY for display
-// function formatDateToDDMMYYYY(isoDate) {
-//   const date = new Date(isoDate);
-//   const day = String(date.getDate()).padStart(2, "0");
-//   const month = String(date.getMonth() + 1).padStart(2, "0");
-//   const year = date.getFullYear();
-//   return `${day}-${month}-${year}`;
-// }
+// Format ISO date to DD-MM-YYYY for display
+function formatDateToDDMMYYYY(isoDate) {
+  const date = new Date(isoDate);
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}-${month}-${year}`;
+}
 
-// // Convert DD-MM-YYYY back to YYYY-MM-DD
-// function formatDateToYYYYMMDD(dateStr) {
-//   const [day, month, year] = dateStr.split("-");
-//   return `${year}-${month}-${day}`;
-// }
+// Convert DD-MM-YYYY back to YYYY-MM-DD
+function formatDateToYYYYMMDD(dateStr) {
+  const [day, month, year] = dateStr.split("-");
+  return `${year}-${month}-${day}`;
+}
 
 export default function EditEmployeePage() {
   const params = useParams();
@@ -43,15 +43,14 @@ export default function EditEmployeePage() {
       }
 
       if (data) {
-        const formatDate = (dateStr) => dateStr ? dateStr.split("T")[0] : "";
     
         setEmployee({
-          ...data,
-          dob: formatDate(data.dob),
-          iqama_expiry_date: formatDate(data.iqama_expiry_date),
-          passport_expiry_date: formatDate(data.passport_expiry_date),
-          contract_start_date: formatDate(data.contract_start_date),
-          contract_end_date: formatDate(data.contract_end_date),
+          ...data, 
+          dob: formatDateToDDMMYYYY(data.dob),
+          iqama_expiry_date: formatDateToDDMMYYYY(data.iqama_expiry_date),
+          passport_expiry_date: formatDateToDDMMYYYY(data.passport_expiry_date),
+          contract_start_date: formatDateToDDMMYYYY(data.contract_start_date),
+          contract_end_date: formatDateToDDMMYYYY(data.contract_end_date),
         });
       }
     };
@@ -147,7 +146,7 @@ export default function EditEmployeePage() {
           <div className="flex flex-col">
             <label className="font-medium">DOB</label>
             <input
-              type="date"
+              type="text"
               name="dob"
               value={employee.dob || ""}
               onChange={handleChange}
@@ -177,7 +176,7 @@ export default function EditEmployeePage() {
           <div className="flex flex-col">
             <label className="font-medium">Iqama Exp Date</label>
             <input
-              type="date"
+              type="text"
               name="iqama_expiry_date"
               value={employee.iqama_expiry_date || ""}
               onChange={handleChange}
@@ -217,7 +216,7 @@ export default function EditEmployeePage() {
           <div className="flex flex-col">
             <label className="font-medium">Passport Exp Date</label>
             <input
-              type="date"
+              type="text"
               name="passport_expiry_date"
               value={employee.passport_expiry_date || ""}
               onChange={handleChange}
@@ -257,7 +256,7 @@ export default function EditEmployeePage() {
           <div className="flex flex-col">
             <label className="font-medium">Contract Start Date</label>
             <input
-              type="date"
+              type="text"
               name="contract_start_date"
               value={employee.contract_start_date || ""}
               onChange={handleChange}
@@ -267,7 +266,7 @@ export default function EditEmployeePage() {
           <div className="flex flex-col">
             <label className="font-medium">Contract End Date</label>
             <input
-              type="date"
+              type="text"
               name="contract_end_date"
               value={employee.contract_end_date || ""}
               onChange={handleChange}
