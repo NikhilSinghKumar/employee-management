@@ -12,6 +12,7 @@ export default function ClientLayout({ children }) {
     /^\/upload_employees/,
     /^\/add_employee/,
     /^\/edit_employee(\/|$)/,
+    /^\/all_timesheet(\/|$)/,
   ];
   const showNavbar = allowedRoutes.some((pattern) => pattern.test(pathname));
   console.log("Current pathname:", pathname);

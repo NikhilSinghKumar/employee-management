@@ -55,7 +55,7 @@ export default function Navbar() {
             { label: "Upload Employees", href: "/upload_employees" },
             { label: "All Employees", href: "/employee_list" },
             { label: "All Clients", href: "/all_clients" },
-            { label: "Timesheet/ Payroll", href: "/timesheet_payroll" },
+            { label: "Timesheet/ Payroll", href: "/all_timesheet" },
           ]}
         />
       </div>

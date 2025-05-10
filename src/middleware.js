@@ -9,6 +9,7 @@ export async function middleware(request) {
     "/add_employee",
     "/upload_employees",
     "/edit_employee",
+    "/all_timesheet"
   ];
   const authRoutes = ["/", "/register"];
   const pathname = request.nextUrl.pathname;
@@ -51,5 +52,6 @@ export const config = {
     "/employee_list/:path*",
     "/add_employee/:path*",
     "/edit_employee/:path*",
+    "/all_timesheet/:path*"
   ],
 };

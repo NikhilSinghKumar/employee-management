@@ -39,9 +39,19 @@ export default function EmployeeList() {
         setEmployees(data || []);
         setTotalCount(count || 0);
 
-        // Count unique client names
-        const clientSet = new Set(data?.map(emp => emp.client_name).filter(Boolean));
+        const { data: allClientsData, error: clientError } = await supabase
+        .from("employees")
+        .select("client_number");
+  
+      if (clientError) {
+        console.error("Error fetching client numbers:", clientError.message);
+      } else {
+        const clientSet = new Set(
+          allClientsData?.map(emp => emp.client_number).filter(Boolean)
+        );
         setUniqueClientCount(clientSet.size);
+      }
+  
       }
       setLoading(false);
     };

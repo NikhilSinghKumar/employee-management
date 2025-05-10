@@ -300,7 +300,7 @@ export default function EditEmployeePage() {
               type="number"
               name="hra"
               step="0.01"
-              value={employee.hra || ""}
+              value={employee.hra !== null && employee.hra !== undefined ? employee.hra : 0}
               onChange={handleChange}
               className="p-2 border rounded-sm text-sm"
             />
@@ -321,7 +321,7 @@ export default function EditEmployeePage() {
               type="number"
               name="tra"
               step="0.01"
-              value={employee.tra || ""}
+              value={employee.tra !== null && employee.tra !== undefined ? employee.tra : 0}
               onChange={handleChange}
               className="p-2 border rounded-sm text-sm"
             />
@@ -342,7 +342,7 @@ export default function EditEmployeePage() {
               type="number"
               name="food_allowance"
               step="0.01"
-              value={employee.food_allowance || ""}
+              value={employee.food_allowance !== null && employee.food_allowance !== undefined ? employee.food_allowance : 0}
               onChange={handleChange}
               className="p-2 border rounded-sm text-sm"
             />
@@ -353,7 +353,7 @@ export default function EditEmployeePage() {
               type="number"
               name="other_allowance"
               step="0.01"
-              value={employee.other_allowance || ""}
+              value={employee.other_allowance !== null && employee.other_allowance !== undefined ? employee.other_allowance : 0}
               onChange={handleChange}
               className="p-2 border rounded-sm text-sm"
             />
@@ -363,7 +363,7 @@ export default function EditEmployeePage() {
             <input
               type="number"
               name="total_salary"
-              value={employee.total_salary || ""}
+              value={employee.total_salary !== null && employee.total_salary !== undefined ? employee.total_salary : 0}
               onChange={handleChange}
               disabled
               className="p-2 border rounded-sm text-sm"
