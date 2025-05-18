@@ -42,7 +42,14 @@ export default function Navbar() {
             priority
           />
         </Link>
-        <Link href="">Sales</Link>
+        <Dropdown
+          label="Sales"
+          items={[
+            { label: "Lead", href: "/lead" },
+            { label: "Quotation", href: "/quotation" },
+            { label: "Contracts", href: "/contracts" },
+          ]}
+        />
         <Dropdown
           label="Finance"
           items={[{ label: "Invoices", href: "/invoices" }]}

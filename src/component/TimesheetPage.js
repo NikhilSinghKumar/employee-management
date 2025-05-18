@@ -14,7 +14,7 @@ export default function TimesheetPage() {
   const [clientName, setClientName] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const pageSize = 15;
+  const pageSize = 20;
 
   useEffect(() => {
     if (clientNumber) {
@@ -93,6 +93,100 @@ export default function TimesheetPage() {
     setEmployees(updated);
   };
 
+  const handleSaveDraft = async () => {
+    if (!month || !year) {
+      alert("Missing month, or year from URL");
+      return;
+    }
+
+    const timesheet_month = `${year}-${month.padStart(2, "0")}-01`;
+
+    const draftData = employees.map((emp) => ({
+      employee_id: emp.id,
+      timesheet_month,
+      working_days: parseFloat(emp.workingDays || 0),
+      overtime_hrs: parseFloat(emp.overtimeHrs || 0),
+      absent_hrs: parseFloat(emp.absentHrs || 0),
+      incentive: parseFloat(emp.incentive || 0),
+      etmam_cost: parseFloat(emp.etmamCost || 0),
+      overtime: parseFloat(emp.overtime || 0),
+      deductions: parseFloat(emp.deductions || 0),
+      adjusted_salary: parseFloat(emp.adjustedSalary || 0),
+      total_cost: parseFloat(emp.totalCost || 0),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }));
+
+    const { error } = await supabase
+      .from("timesheet_draft")
+      .upsert(draftData, { onConflict: ["employee_id", "timesheet_month"] });
+
+    if (error) {
+      console.error("Error saving draft:", error);
+      alert("Failed to save draft");
+    } else {
+      alert("Draft saved successfully");
+    }
+  };
+
+  const handleSubmitTimesheet = async () => {
+    if (!month || !year) {
+      alert("Missing month, or year from URL");
+      return;
+    }
+
+    const timesheet_month = `${year}-${month.padStart(2, "0")}-01`;
+
+    try {
+      // 1. Get all draft records for this client and month
+      const { data: drafts, error: fetchError } = await supabase
+        .from("timesheet_draft")
+        .select("*")
+        .eq("timesheet_month", timesheet_month);
+
+      if (fetchError) {
+        console.error("Error fetching draft data:", fetchError);
+        alert("Failed to fetch draft data");
+        return;
+      }
+
+      if (!drafts || drafts.length === 0) {
+        alert("No draft data available to submit");
+        return;
+      }
+
+      // 2. Insert into the main timesheet table
+      const { error: insertError } = await supabase
+        .from("timesheet")
+        .insert(drafts.map(({ id, ...rest }) => rest)); // exclude `id` if it's auto-generated in `timesheet`
+
+      if (insertError) {
+        console.error("Error inserting into timesheet:", insertError);
+        alert("Failed to submit timesheet");
+        return;
+      }
+
+      // 3. Delete from timesheet_draft
+      const { error: deleteError } = await supabase
+        .from("timesheet_draft")
+        .delete()
+        .eq("timesheet_month", timesheet_month);
+
+      if (deleteError) {
+        console.error("Error deleting draft data:", deleteError);
+        alert("Failed to clear draft data");
+        return;
+      }
+
+      alert("Timesheet submitted successfully!");
+
+      // Optionally refresh data or redirect
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      alert("Something went wrong while submitting timesheet");
+    }
+  };
+
   const renderInput = (emp, idx, field) => {
     const min = [
       "workingDays",
@@ -117,7 +211,7 @@ export default function TimesheetPage() {
         type="number"
         step={step}
         className="w-20 p-1 border rounded text-sm"
-        value={emp[field]}
+        value={emp[field] ?? ""}
         onChange={(e) => {
           let value = Number(e.target.value);
 
@@ -243,7 +337,20 @@ export default function TimesheetPage() {
           Next
         </button>
       </div>
-      {/* Summary Table */}
+      <div className="flex justify-center mt-6 space-x-4">
+        <button
+          onClick={handleSaveDraft}
+          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded cursor-pointer"
+        >
+          Save
+        </button>
+        <button
+          onClick={handleSubmitTimesheet}
+          className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded cursor-pointer"
+        >
+          Submit
+        </button>
+      </div>
       <div className="flex justify-center mt-10">
         <table className="table-auto border border-gray-300 text-sm">
           <tbody>
@@ -280,7 +387,7 @@ export default function TimesheetPage() {
               <td className="border px-4 py-2"></td>
               <td className="border px-4 py-2 text-right">
                 {employees
-                  .reduce((sum, emp) => sum + parseFloat(emp.total || 0), 0)
+                  .reduce((sum, emp) => sum + parseFloat(emp.totalCost || 0), 0)
                   .toFixed(2)}
               </td>
             </tr>
@@ -290,7 +397,7 @@ export default function TimesheetPage() {
               <td className="border px-4 py-2 text-right">
                 {(
                   employees.reduce(
-                    (sum, emp) => sum + parseFloat(emp.total || 0),
+                    (sum, emp) => sum + parseFloat(emp.totalCost || 0),
                     0
                   ) * 0.15
                 ).toFixed(2)}
@@ -302,7 +409,7 @@ export default function TimesheetPage() {
               <td className="border px-4 py-2 text-right font-semibold">
                 {(
                   employees.reduce(
-                    (sum, emp) => sum + parseFloat(emp.total || 0),
+                    (sum, emp) => sum + parseFloat(emp.totalCost || 0),
                     0
                   ) * 1.15
                 ).toFixed(2)}

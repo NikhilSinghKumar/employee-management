@@ -99,7 +99,7 @@ export default function EmployeeList() {
     fetchEmployees();
   }, [currentPage, searchQuery]);
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (employee_id) => {
     const { error } = await supabase.from("employees").delete().eq("id", id);
     if (error) {
       console.error("Error deleting employee:", error.message);
@@ -229,7 +229,9 @@ export default function EmployeeList() {
                             {(currentPage - 1) * pageSize + index + 1}
                           </td>
                           <td className="p-1 border">{employee.et_number}</td>
-                          <td className="p-1 border">{employee.iqama_number}</td>
+                          <td className="p-1 border">
+                            {employee.iqama_number}
+                          </td>
                           <td className="p-1 border">{employee.name}</td>
                           <td className="p-1 border text-center">
                             {employee.passport_number}
@@ -240,7 +242,9 @@ export default function EmployeeList() {
                           <td className="p-1 border text-center">
                             {employee.nationality}
                           </td>
-                          <td className="p-1 border">{employee.client_number}</td>
+                          <td className="p-1 border">
+                            {employee.client_number}
+                          </td>
                           <td className="p-1 border text-center">
                             {employee.client_name}
                           </td>
@@ -267,7 +271,9 @@ export default function EmployeeList() {
                           <td className="p-1 border">
                             {formatDate(employee.contract_end_date)}
                           </td>
-                          <td className="p-1 border">{employee.employee_status}</td>
+                          <td className="p-1 border">
+                            {employee.employee_status}
+                          </td>
                           <td className="p-1 border flex items-center space-x-2">
                             <Link
                               href={`/edit_employee/${employee.id}`}

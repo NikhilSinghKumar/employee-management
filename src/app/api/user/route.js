@@ -40,7 +40,9 @@ export async function GET() {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ first_name: data.first_name });
+    return NextResponse.json({
+      first_name: data.first_name,
+    });
   } catch (error) {
     console.error("Unexpected error:", error);
     return NextResponse.json(
