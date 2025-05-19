@@ -466,7 +466,7 @@ export default function TimesheetPage() {
           onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
           disabled={currentPage === 1}
         >
-          Previous
+          Prev
         </button>
         {Array.from(
           { length: Math.ceil(totalCount / pageSize) },
@@ -514,8 +514,7 @@ export default function TimesheetPage() {
       </div>
       {isSubmitted && (
         <p className="text-center mt-4 text-green-600">
-          Timesheet submitted successfully. Save and Submit buttons are
-          disabled.
+          Timesheet submitted successfully.
         </p>
       )}
       <div className="flex justify-center mt-10">
