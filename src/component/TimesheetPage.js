@@ -20,9 +20,9 @@ export default function TimesheetPage() {
 
   useEffect(() => {
     if (clientNumber && month && year) {
+      fetchAllEmployeeSalaries(); // Fetch salaries first
       fetchAllDraftData();
       fetchAllTimesheetData();
-      fetchAllEmployeeSalaries();
     }
   }, [clientNumber, month, year]);
 
@@ -48,12 +48,16 @@ export default function TimesheetPage() {
       return;
     }
 
-    const salaryMap = data.reduce((acc, emp) => {
-      acc[emp.id] = { total_salary: emp.total_salary || 0 };
-      return acc;
-    }, {});
+    const salaryMap = data.reduce(
+      (acc, emp) => {
+        acc[emp.id] = { ...acc[emp.id], total_salary: emp.total_salary || 0 };
+        return acc;
+      },
+      { ...allEmployeeData }
+    ); // Preserve existing timesheet data
 
-    setAllEmployeeData((prev) => ({ ...prev, ...salaryMap }));
+    console.log("Salary map:", salaryMap); // Debug log
+    setAllEmployeeData(salaryMap);
   };
 
   const fetchAllDraftData = async () => {
@@ -75,23 +79,27 @@ export default function TimesheetPage() {
       return;
     }
 
-    const draftMap = data.reduce((acc, draft) => {
-      acc[draft.employee_id] = {
-        ...acc[draft.employee_id],
-        workingDays: draft.working_days || 0,
-        overtimeHrs: draft.overtime_hrs || 0,
-        absentHrs: draft.absent_hrs || 0,
-        incentive: draft.incentive || 0,
-        etmamCost: draft.etmam_cost || 0,
-        overtime: draft.overtime || 0,
-        deductions: draft.deductions || 0,
-        adjustedSalary: draft.adjusted_salary || 0,
-        totalCost: draft.total_cost || 0,
-      };
-      return acc;
-    }, {});
+    const draftMap = data.reduce(
+      (acc, draft) => {
+        acc[draft.employee_id] = {
+          ...acc[draft.employee_id],
+          workingDays: draft.working_days || 0,
+          overtimeHrs: draft.overtime_hrs || 0,
+          absentHrs: draft.absent_hrs || 0,
+          incentive: draft.incentive || 0,
+          etmamCost: draft.etmam_cost || 0,
+          overtime: draft.overtime || 0,
+          deductions: draft.deductions || 0,
+          adjustedSalary: draft.adjusted_salary || 0,
+          totalCost: draft.total_cost || 0,
+        };
+        return acc;
+      },
+      { ...allEmployeeData }
+    ); // Preserve existing data
 
-    setAllEmployeeData((prev) => ({ ...prev, ...draftMap }));
+    console.log("Draft map:", draftMap); // Debug log
+    setAllEmployeeData(draftMap);
   };
 
   const fetchAllTimesheetData = async () => {
@@ -113,24 +121,30 @@ export default function TimesheetPage() {
       return;
     }
 
-    const timesheetMap = data.reduce((acc, timesheet) => {
-      acc[timesheet.employee_id] = {
-        ...acc[timesheet.employee_id],
-        workingDays: timesheet.working_days || 0,
-        overtimeHrs: timesheet.overtime_hrs || 0,
-        absentHrs: timesheet.absent_hrs || 0,
-        incentive: timesheet.incentive || 0,
-        etmamCost: timesheet.etmam_cost || 0,
-        overtime: timesheet.overtime || 0,
-        deductions: timesheet.deductions || 0,
-        adjustedSalary: timesheet.adjusted_salary || 0,
-        totalCost: timesheet.total_cost || 0,
-      };
-      return acc;
-    }, {});
+    console.log("Fetched timesheet data:", data); // Debug log
 
-    setAllEmployeeData((prev) => ({ ...prev, ...timesheetMap }));
-    setIsSubmitted(data.length > 0); // Disable Submit if timesheet exists
+    const timesheetMap = data.reduce(
+      (acc, timesheet) => {
+        acc[timesheet.employee_id] = {
+          ...acc[timesheet.employee_id], // Preserve total_salary and other fields
+          workingDays: timesheet.working_days || 0,
+          overtimeHrs: timesheet.overtime_hrs || 0,
+          absentHrs: timesheet.absent_hrs || 0,
+          incentive: timesheet.incentive || 0,
+          etmamCost: timesheet.etmam_cost || 0,
+          overtime: timesheet.overtime || 0,
+          deductions: timesheet.deductions || 0,
+          adjustedSalary: timesheet.adjusted_salary || 0,
+          totalCost: timesheet.total_cost || 0,
+        };
+        return acc;
+      },
+      { ...allEmployeeData }
+    ); // Initialize with current allEmployeeData
+
+    console.log("Timesheet map:", timesheetMap); // Debug log
+    setAllEmployeeData(timesheetMap);
+    setIsSubmitted(data.length > 0); // Disable buttons if timesheet exists
   };
 
   const fetchEmployees = async () => {
@@ -241,9 +255,9 @@ export default function TimesheetPage() {
       timesheet_month,
       working_days: parseFloat(emp.workingDays || 0) || 0,
       overtime_hrs: parseFloat(emp.overtimeHrs || 0) || 0,
-      absent_hrs: parseFloat(emp.absentHrs || 0) || 0,
+      absent_hrs: parseFloat(emp.absent_hrs || 0) || 0,
       incentive: parseFloat(emp.incentive || 0) || 0,
-      etmam_cost: parseFloat(emp.etmamCost || 0) || 0,
+      etmam_cost: parseFloat(emp.etmam_cost || 0) || 0,
       overtime: parseFloat(emp.overtime || 0) || 0,
       deductions: parseFloat(emp.deductions || 0) || 0,
       adjusted_salary: parseFloat(emp.adjustedSalary || 0) || 0,
@@ -319,8 +333,9 @@ export default function TimesheetPage() {
       }
 
       alert("Timesheet submitted successfully!");
-      setIsSubmitted(true); // Disable Submit button
+      setIsSubmitted(true); // Disable Save and Submit buttons
       await fetchAllTimesheetData(); // Fetch submitted data
+      await fetchAllEmployeeSalaries(); // Ensure total_salary is set
       await fetchEmployees(); // Refresh current page
     } catch (err) {
       console.error("Unexpected error:", err);
@@ -451,7 +466,7 @@ export default function TimesheetPage() {
           onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
           disabled={currentPage === 1}
         >
-          Prev
+          Previous
         </button>
         {Array.from(
           { length: Math.ceil(totalCount / pageSize) },
@@ -484,8 +499,8 @@ export default function TimesheetPage() {
       <div className="flex justify-center mt-6 space-x-4">
         <button
           onClick={handleSaveDraft}
-          disabled={isSubmitted}
           className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded cursor-pointer disabled:opacity-50"
+          disabled={isSubmitted}
         >
           Save
         </button>
@@ -499,7 +514,8 @@ export default function TimesheetPage() {
       </div>
       {isSubmitted && (
         <p className="text-center mt-4 text-green-600">
-          Timesheet submitted successfully. Submit button is disabled.
+          Timesheet submitted successfully. Save and Submit buttons are
+          disabled.
         </p>
       )}
       <div className="flex justify-center mt-10">
