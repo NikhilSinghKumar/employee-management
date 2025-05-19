@@ -20,23 +20,9 @@ export default function TimesheetPage() {
 
   useEffect(() => {
     if (clientNumber && month && year) {
-      const fetchData = async () => {
-        // Ensure Supabase session is active
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        if (!session) {
-          console.error("No active session found");
-          return;
-        }
-
-        // Fetch salaries first to ensure total_salary is set
-        await fetchAllEmployeeSalaries();
-        // Then fetch draft and timesheet data
-        await fetchAllDraftData();
-        await fetchAllTimesheetData();
-      };
-      fetchData();
+      fetchAllEmployeeSalaries(); // Fetch salaries first
+      fetchAllDraftData();
+      fetchAllTimesheetData();
     }
   }, [clientNumber, month, year]);
 
@@ -70,7 +56,6 @@ export default function TimesheetPage() {
       { ...allEmployeeData }
     ); // Preserve existing timesheet data
 
-    console.log("Fetched employee salaries:", data); // Debug log
     console.log("Salary map:", salaryMap); // Debug log
     setAllEmployeeData(salaryMap);
   };
@@ -481,7 +466,7 @@ export default function TimesheetPage() {
           onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
           disabled={currentPage === 1}
         >
-          Prev
+          Previous
         </button>
         {Array.from(
           { length: Math.ceil(totalCount / pageSize) },
