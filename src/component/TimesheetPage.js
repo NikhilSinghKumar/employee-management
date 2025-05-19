@@ -13,14 +13,79 @@ export default function TimesheetPage() {
   const [employees, setEmployees] = useState([]);
   const [clientName, setClientName] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [allEmployeeData, setAllEmployeeData] = useState({}); // Stores data for all employees
   const [totalCount, setTotalCount] = useState(0);
   const pageSize = 20;
 
   useEffect(() => {
-    if (clientNumber) {
+    if (clientNumber && month && year) {
+      // Fetch draft data and salaries only when client, month, or year changes
+      fetchAllDraftData();
+      fetchAllEmployeeSalaries();
+    }
+  }, [clientNumber, month, year]);
+
+  useEffect(() => {
+    if (clientNumber && month && year) {
+      // Fetch paginated employees on page change
       fetchEmployees();
     }
-  }, [clientNumber, currentPage]);
+  }, [clientNumber, month, year, currentPage]);
+
+  const fetchAllEmployeeSalaries = async () => {
+    const { data, error } = await supabase
+      .from("employees")
+      .select("id, total_salary")
+      .eq("client_number", clientNumber)
+      .ilike("employee_status", "Active");
+
+    if (error) {
+      console.error("Error fetching employee salaries:", error);
+      return;
+    }
+
+    // Initialize allEmployeeData with total_salary for all employees
+    const salaryMap = data.reduce((acc, emp) => {
+      acc[emp.id] = { total_salary: emp.total_salary || 0 };
+      return acc;
+    }, {});
+
+    setAllEmployeeData((prev) => ({ ...prev, ...salaryMap }));
+  };
+
+  const fetchAllDraftData = async () => {
+    const timesheet_month = `${year}-${month.padStart(2, "0")}-01`;
+    const { data, error } = await supabase
+      .from("timesheet_draft")
+      .select(
+        "employee_id, working_days, overtime_hrs, absent_hrs, incentive, etmam_cost, overtime, deductions, adjusted_salary, total_cost"
+      )
+      .eq("timesheet_month", timesheet_month);
+
+    if (error) {
+      console.error("Error fetching draft data:", error);
+      return;
+    }
+
+    // Merge draft data into allEmployeeData
+    const draftMap = data.reduce((acc, draft) => {
+      acc[draft.employee_id] = {
+        ...acc[draft.employee_id],
+        workingDays: draft.working_days || 0,
+        overtimeHrs: draft.overtime_hrs || 0,
+        absentHrs: draft.absent_hrs || 0,
+        incentive: draft.incentive || 0,
+        etmamCost: draft.etmam_cost || 0,
+        overtime: draft.overtime || 0,
+        deductions: draft.deductions || 0,
+        adjustedSalary: draft.adjusted_salary || 0,
+        totalCost: draft.total_cost || 0,
+      };
+      return acc;
+    }, {});
+
+    setAllEmployeeData((prev) => ({ ...prev, ...draftMap }));
+  };
 
   const fetchEmployees = async () => {
     const from = (currentPage - 1) * pageSize;
@@ -46,18 +111,21 @@ export default function TimesheetPage() {
           (emp.tra || 0) +
           (emp.food_allowance || 0) +
           (emp.other_allowance || 0);
+        // Merge with allEmployeeData
+        const draft = allEmployeeData[emp.id] || {};
         return {
           ...emp,
           sNo: from + index + 1,
           allowance,
-          workingDays: "",
-          overtime: 0,
-          absentHrs: "",
-          incentive: "",
-          etmamCost: "",
-          deductions: 0,
-          adjustedSalary: 0,
-          totalCost: 0,
+          workingDays: draft.workingDays ?? "",
+          overtimeHrs: draft.overtimeHrs ?? "",
+          absentHrs: draft.absentHrs ?? "",
+          incentive: draft.incentive ?? "",
+          etmamCost: draft.etmamCost ?? "",
+          overtime: draft.overtime || 0,
+          deductions: draft.deductions || 0,
+          adjustedSalary: draft.adjustedSalary || 0,
+          totalCost: draft.totalCost || 0,
         };
       });
       setEmployees(enriched);
@@ -90,6 +158,24 @@ export default function TimesheetPage() {
     updated[index].adjustedSalary = adjustedSalary.toFixed(2);
     updated[index].totalCost = totalCost.toFixed(2);
 
+    // Update allEmployeeData
+    setAllEmployeeData((prev) => ({
+      ...prev,
+      [updated[index].id]: {
+        ...prev[updated[index].id],
+        workingDays: updated[index].workingDays,
+        overtimeHrs: updated[index].overtimeHrs,
+        absentHrs: updated[index].absentHrs,
+        incentive: updated[index].incentive,
+        etmamCost: updated[index].etmamCost,
+        overtime: updated[index].overtime,
+        deductions: updated[index].deductions,
+        adjustedSalary: updated[index].adjustedSalary,
+        totalCost: updated[index].totalCost,
+        total_salary: updated[index].total_salary, // Preserve total_salary
+      },
+    }));
+
     setEmployees(updated);
   };
 
@@ -104,15 +190,15 @@ export default function TimesheetPage() {
     const draftData = employees.map((emp) => ({
       employee_id: emp.id,
       timesheet_month,
-      working_days: parseFloat(emp.workingDays || 0),
-      overtime_hrs: parseFloat(emp.overtimeHrs || 0),
-      absent_hrs: parseFloat(emp.absentHrs || 0),
-      incentive: parseFloat(emp.incentive || 0),
-      etmam_cost: parseFloat(emp.etmamCost || 0),
-      overtime: parseFloat(emp.overtime || 0),
-      deductions: parseFloat(emp.deductions || 0),
-      adjusted_salary: parseFloat(emp.adjustedSalary || 0),
-      total_cost: parseFloat(emp.totalCost || 0),
+      working_days: parseFloat(emp.workingDays || 0) || 0,
+      overtime_hrs: parseFloat(emp.overtimeHrs || 0) || 0,
+      absent_hrs: parseFloat(emp.absentHrs || 0) || 0,
+      incentive: parseFloat(emp.incentive || 0) || 0,
+      etmam_cost: parseFloat(emp.etmamCost || 0) || 0,
+      overtime: parseFloat(emp.overtime || 0) || 0,
+      deductions: parseFloat(emp.deductions || 0) || 0,
+      adjusted_salary: parseFloat(emp.adjustedSalary || 0) || 0,
+      total_cost: parseFloat(emp.totalCost || 0) || 0,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }));
@@ -122,10 +208,17 @@ export default function TimesheetPage() {
       .upsert(draftData, { onConflict: ["employee_id", "timesheet_month"] });
 
     if (error) {
-      console.error("Error saving draft:", error);
-      alert("Failed to save draft");
+      console.error("Error saving draft:", {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+      });
+      alert(`Failed to save draft: ${error.message}`);
     } else {
       alert("Draft saved successfully");
+      // Refresh allEmployeeData to sync with server
+      await fetchAllDraftData();
     }
   };
 
@@ -138,7 +231,6 @@ export default function TimesheetPage() {
     const timesheet_month = `${year}-${month.padStart(2, "0")}-01`;
 
     try {
-      // 1. Get all draft records for this client and month
       const { data: drafts, error: fetchError } = await supabase
         .from("timesheet_draft")
         .select("*")
@@ -155,10 +247,9 @@ export default function TimesheetPage() {
         return;
       }
 
-      // 2. Insert into the main timesheet table
       const { error: insertError } = await supabase
         .from("timesheet")
-        .insert(drafts.map(({ id, ...rest }) => rest)); // exclude `id` if it's auto-generated in `timesheet`
+        .insert(drafts.map(({ id, ...rest }) => rest));
 
       if (insertError) {
         console.error("Error inserting into timesheet:", insertError);
@@ -166,7 +257,6 @@ export default function TimesheetPage() {
         return;
       }
 
-      // 3. Delete from timesheet_draft
       const { error: deleteError } = await supabase
         .from("timesheet_draft")
         .delete()
@@ -179,8 +269,9 @@ export default function TimesheetPage() {
       }
 
       alert("Timesheet submitted successfully!");
-
-      // Optionally refresh data or redirect
+      setAllEmployeeData({}); // Clear allEmployeeData
+      await fetchAllEmployeeSalaries(); // Reinitialize with salaries
+      await fetchEmployees(); // Refresh current page
     } catch (err) {
       console.error("Unexpected error:", err);
       alert("Something went wrong while submitting timesheet");
@@ -214,13 +305,11 @@ export default function TimesheetPage() {
         value={emp[field] ?? ""}
         onChange={(e) => {
           let value = Number(e.target.value);
-
           if (field === "workingDays") {
             value = Math.max(0, Math.min(30, value));
           } else if (["overtimeHrs", "absentHrs"].includes(field)) {
             value = Math.max(0, value);
           }
-
           handleInputChange(idx, field, value);
         }}
         min={min}
@@ -228,6 +317,16 @@ export default function TimesheetPage() {
       />
     );
   };
+
+  // Calculate summary totals from allEmployeeData
+  const summaryTotals = Object.values(allEmployeeData).reduce(
+    (acc, emp) => ({
+      workingDays: acc.workingDays + parseFloat(emp.workingDays || 0),
+      totalSalary: acc.totalSalary + parseFloat(emp.total_salary || 0),
+      totalCost: acc.totalCost + parseFloat(emp.totalCost || 0),
+    }),
+    { workingDays: 0, totalSalary: 0, totalCost: 0 }
+  );
 
   return (
     <div className="w-full mt-20 p-4 mb-10">
@@ -270,7 +369,6 @@ export default function TimesheetPage() {
                 <td className="p-1 border text-center">{emp.basic_salary}</td>
                 <td className="p-1 border text-center">{emp.allowance}</td>
                 <td className="p-1 border text-center">{emp.total_salary}</td>
-
                 <td className="p-1 border">
                   {renderInput(emp, idx, "workingDays")}
                 </td>
@@ -284,10 +382,8 @@ export default function TimesheetPage() {
                 <td className="p-1 border">
                   {renderInput(emp, idx, "incentive")}
                 </td>
-
                 <td className="p-1 border text-center">{emp.deductions}</td>
                 <td className="p-1 border text-center">{emp.adjustedSalary}</td>
-
                 <td className="p-1 border">
                   {renderInput(emp, idx, "etmamCost")}
                 </td>
@@ -307,7 +403,6 @@ export default function TimesheetPage() {
         >
           Prev
         </button>
-
         {Array.from(
           { length: Math.ceil(totalCount / pageSize) },
           (_, i) => i + 1
@@ -324,7 +419,6 @@ export default function TimesheetPage() {
             {pageNum}
           </button>
         ))}
-
         <button
           className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
           onClick={() =>
@@ -351,6 +445,7 @@ export default function TimesheetPage() {
           Submit
         </button>
       </div>
+      {/* Summary Table */}
       <div className="flex justify-center mt-10">
         <table className="table-auto border border-gray-300 text-sm">
           <tbody>
@@ -364,55 +459,35 @@ export default function TimesheetPage() {
               <td className="border px-4 py-2">Working Days</td>
               <td className="border px-4 py-2"></td>
               <td className="border px-4 py-2 text-right">
-                {employees.reduce(
-                  (sum, emp) => sum + parseFloat(emp.workingDays || 0),
-                  0
-                )}
+                {summaryTotals.workingDays.toFixed(0)}
               </td>
             </tr>
             <tr>
               <td className="border px-4 py-2">Salary</td>
               <td className="border px-4 py-2"></td>
               <td className="border px-4 py-2 text-right">
-                {employees
-                  .reduce(
-                    (sum, emp) => sum + parseFloat(emp.total_salary || 0),
-                    0
-                  )
-                  .toFixed(2)}
+                {summaryTotals.totalSalary.toFixed(2)}
               </td>
             </tr>
             <tr>
               <td className="border px-4 py-2">Cost</td>
               <td className="border px-4 py-2"></td>
               <td className="border px-4 py-2 text-right">
-                {employees
-                  .reduce((sum, emp) => sum + parseFloat(emp.totalCost || 0), 0)
-                  .toFixed(2)}
+                {summaryTotals.totalCost.toFixed(2)}
               </td>
             </tr>
             <tr>
               <td className="border px-4 py-2">VAT (15%)</td>
               <td className="border px-4 py-2"></td>
               <td className="border px-4 py-2 text-right">
-                {(
-                  employees.reduce(
-                    (sum, emp) => sum + parseFloat(emp.totalCost || 0),
-                    0
-                  ) * 0.15
-                ).toFixed(2)}
+                {(summaryTotals.totalCost * 0.15).toFixed(2)}
               </td>
             </tr>
             <tr>
               <td className="border px-4 py-2 font-semibold">Grand Total</td>
               <td className="border px-4 py-2"></td>
               <td className="border px-4 py-2 text-right font-semibold">
-                {(
-                  employees.reduce(
-                    (sum, emp) => sum + parseFloat(emp.totalCost || 0),
-                    0
-                  ) * 1.15
-                ).toFixed(2)}
+                {(summaryTotals.totalCost * 1.15).toFixed(2)}
               </td>
             </tr>
           </tbody>
