@@ -13,21 +13,21 @@ export default function TimesheetPage() {
   const [employees, setEmployees] = useState([]);
   const [clientName, setClientName] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [allEmployeeData, setAllEmployeeData] = useState({}); // Stores data for all employees
+  const [allEmployeeData, setAllEmployeeData] = useState({});
   const [totalCount, setTotalCount] = useState(0);
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const pageSize = 20;
 
   useEffect(() => {
     if (clientNumber && month && year) {
-      // Fetch draft data and salaries only when client, month, or year changes
       fetchAllDraftData();
+      fetchAllTimesheetData();
       fetchAllEmployeeSalaries();
     }
   }, [clientNumber, month, year]);
 
   useEffect(() => {
     if (clientNumber && month && year) {
-      // Fetch paginated employees on page change
       fetchEmployees();
     }
   }, [clientNumber, month, year, currentPage]);
@@ -40,11 +40,14 @@ export default function TimesheetPage() {
       .ilike("employee_status", "Active");
 
     if (error) {
-      console.error("Error fetching employee salaries:", error);
+      console.error("Error fetching employee salaries:", {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+      });
       return;
     }
 
-    // Initialize allEmployeeData with total_salary for all employees
     const salaryMap = data.reduce((acc, emp) => {
       acc[emp.id] = { total_salary: emp.total_salary || 0 };
       return acc;
@@ -60,14 +63,18 @@ export default function TimesheetPage() {
       .select(
         "employee_id, working_days, overtime_hrs, absent_hrs, incentive, etmam_cost, overtime, deductions, adjusted_salary, total_cost"
       )
+      .eq("client_number", clientNumber)
       .eq("timesheet_month", timesheet_month);
 
     if (error) {
-      console.error("Error fetching draft data:", error);
+      console.error("Error fetching draft data:", {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+      });
       return;
     }
 
-    // Merge draft data into allEmployeeData
     const draftMap = data.reduce((acc, draft) => {
       acc[draft.employee_id] = {
         ...acc[draft.employee_id],
@@ -87,6 +94,45 @@ export default function TimesheetPage() {
     setAllEmployeeData((prev) => ({ ...prev, ...draftMap }));
   };
 
+  const fetchAllTimesheetData = async () => {
+    const timesheet_month = `${year}-${month.padStart(2, "0")}-01`;
+    const { data, error } = await supabase
+      .from("timesheet")
+      .select(
+        "employee_id, working_days, overtime_hrs, absent_hrs, incentive, etmam_cost, overtime, deductions, adjusted_salary, total_cost"
+      )
+      .eq("client_number", clientNumber)
+      .eq("timesheet_month", timesheet_month);
+
+    if (error) {
+      console.error("Error fetching timesheet data:", {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+      });
+      return;
+    }
+
+    const timesheetMap = data.reduce((acc, timesheet) => {
+      acc[timesheet.employee_id] = {
+        ...acc[timesheet.employee_id],
+        workingDays: timesheet.working_days || 0,
+        overtimeHrs: timesheet.overtime_hrs || 0,
+        absentHrs: timesheet.absent_hrs || 0,
+        incentive: timesheet.incentive || 0,
+        etmamCost: timesheet.etmam_cost || 0,
+        overtime: timesheet.overtime || 0,
+        deductions: timesheet.deductions || 0,
+        adjustedSalary: timesheet.adjusted_salary || 0,
+        totalCost: timesheet.total_cost || 0,
+      };
+      return acc;
+    }, {});
+
+    setAllEmployeeData((prev) => ({ ...prev, ...timesheetMap }));
+    setIsSubmitted(data.length > 0); // Disable Submit if timesheet exists
+  };
+
   const fetchEmployees = async () => {
     const from = (currentPage - 1) * pageSize;
     const to = from + pageSize - 1;
@@ -101,7 +147,11 @@ export default function TimesheetPage() {
       .range(from, to);
 
     if (error) {
-      console.error("Error fetching employees:", error);
+      console.error("Error fetching employees:", {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+      });
     } else {
       setTotalCount(count);
       setClientName(data[0]?.client_name || "");
@@ -111,7 +161,6 @@ export default function TimesheetPage() {
           (emp.tra || 0) +
           (emp.food_allowance || 0) +
           (emp.other_allowance || 0);
-        // Merge with allEmployeeData
         const draft = allEmployeeData[emp.id] || {};
         return {
           ...emp,
@@ -158,7 +207,6 @@ export default function TimesheetPage() {
     updated[index].adjustedSalary = adjustedSalary.toFixed(2);
     updated[index].totalCost = totalCost.toFixed(2);
 
-    // Update allEmployeeData
     setAllEmployeeData((prev) => ({
       ...prev,
       [updated[index].id]: {
@@ -172,7 +220,7 @@ export default function TimesheetPage() {
         deductions: updated[index].deductions,
         adjustedSalary: updated[index].adjustedSalary,
         totalCost: updated[index].totalCost,
-        total_salary: updated[index].total_salary, // Preserve total_salary
+        total_salary: updated[index].total_salary,
       },
     }));
 
@@ -189,6 +237,7 @@ export default function TimesheetPage() {
 
     const draftData = employees.map((emp) => ({
       employee_id: emp.id,
+      client_number: clientNumber,
       timesheet_month,
       working_days: parseFloat(emp.workingDays || 0) || 0,
       overtime_hrs: parseFloat(emp.overtimeHrs || 0) || 0,
@@ -217,7 +266,6 @@ export default function TimesheetPage() {
       alert(`Failed to save draft: ${error.message}`);
     } else {
       alert("Draft saved successfully");
-      // Refresh allEmployeeData to sync with server
       await fetchAllDraftData();
     }
   };
@@ -234,6 +282,7 @@ export default function TimesheetPage() {
       const { data: drafts, error: fetchError } = await supabase
         .from("timesheet_draft")
         .select("*")
+        .eq("client_number", clientNumber)
         .eq("timesheet_month", timesheet_month);
 
       if (fetchError) {
@@ -260,6 +309,7 @@ export default function TimesheetPage() {
       const { error: deleteError } = await supabase
         .from("timesheet_draft")
         .delete()
+        .eq("client_number", clientNumber)
         .eq("timesheet_month", timesheet_month);
 
       if (deleteError) {
@@ -269,8 +319,8 @@ export default function TimesheetPage() {
       }
 
       alert("Timesheet submitted successfully!");
-      setAllEmployeeData({}); // Clear allEmployeeData
-      await fetchAllEmployeeSalaries(); // Reinitialize with salaries
+      setIsSubmitted(true); // Disable Submit button
+      await fetchAllTimesheetData(); // Fetch submitted data
       await fetchEmployees(); // Refresh current page
     } catch (err) {
       console.error("Unexpected error:", err);
@@ -314,11 +364,11 @@ export default function TimesheetPage() {
         }}
         min={min}
         max={max}
+        disabled={isSubmitted}
       />
     );
   };
 
-  // Calculate summary totals from allEmployeeData
   const summaryTotals = Object.values(allEmployeeData).reduce(
     (acc, emp) => ({
       workingDays: acc.workingDays + parseFloat(emp.workingDays || 0),
@@ -434,18 +484,24 @@ export default function TimesheetPage() {
       <div className="flex justify-center mt-6 space-x-4">
         <button
           onClick={handleSaveDraft}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded cursor-pointer"
+          disabled={isSubmitted}
+          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded cursor-pointer disabled:opacity-50"
         >
           Save
         </button>
         <button
           onClick={handleSubmitTimesheet}
-          className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded cursor-pointer"
+          className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded cursor-pointer disabled:opacity-50"
+          disabled={isSubmitted}
         >
           Submit
         </button>
       </div>
-      {/* Summary Table */}
+      {isSubmitted && (
+        <p className="text-center mt-4 text-green-600">
+          Timesheet submitted successfully. Submit button is disabled.
+        </p>
+      )}
       <div className="flex justify-center mt-10">
         <table className="table-auto border border-gray-300 text-sm">
           <tbody>

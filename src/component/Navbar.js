@@ -45,7 +45,7 @@ export default function Navbar() {
         <Dropdown
           label="Sales"
           items={[
-            { label: "Lead", href: "/lead" },
+            { label: "Opportunities", href: "/opportunities" },
             { label: "Quotation", href: "/quotation" },
             { label: "Contracts", href: "/contracts" },
           ]}
