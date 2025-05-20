@@ -160,9 +160,8 @@ export default function AddEmployee() {
   return (
     <>
       <div className="flex flex-col justify-center items-center min-h-screen bg-gray-100 pt-16 px-4 pb-4">
-
         <div className="bg-white p-6 rounded-lg shadow-lg min-h-[70vh] w-full max-w-screen-xl mx-auto">
-        <h2 className="text-2xl font-bold text-center text-gray-700 m-6">
+          <h2 className="text-2xl font-bold text-center text-gray-700 m-6">
             New Employee Form
           </h2>
           {message && (
@@ -174,227 +173,229 @@ export default function AddEmployee() {
               <div className="flex flex-col lg:flex-row gap-4 w-full h-full">
                 {table12.map((group1, index) => (
                   <div key={index} className="flex-1">
-                  <table
-                    key={index}
-                    className="w-full border border-gray-300 rounded-lg text-sm h-full"
-                  >
-                    <tbody>
-                      {group1.map((key1, i) => (
-                        <tr key={i} className="border-b border-gray-200">
-                          <td
-                            className={`p-1 text-gray-600 font-medium ${
-                              ["dob"].includes(key1)
-                                ? "uppercase"
-                                : "capitalize"
-                            }  whitespace-nowrap`}
-                          >
-                            {key1.replace(/([A-Z])/g, " $1").trim()}
-                          </td>
-                          <td className="p-1">
-                            <input
-                              type={
-                                [
-                                  "dob",
-                                  "iqamaExpDate",
-                                  "passportExpDate",
-                                  "contractStartDate",
-                                  "contractEndDate",
-                                ].includes(key1)
-                                  ? "date"
-                                  : "text"
-                              }
-                              name={key1}
-                              value={employee[key1]}
-                              onChange={handleChange}
-                              placeholder={`Enter ${key1
-                                .replace(/([A-Z])/g, " $1")
-                                .trim()}`}
-                              className={`w-full p-1 bg-gray-100 ${
-                                [
-                                  "dob",
-                                  "iqamaExpDate",
-                                  "passportExpDate",
-                                  "contractStartDate",
-                                  "contractEndDate",
-                                  "email",
-                                ].includes(key1)
-                                  ? "lowercase"
+                    <table
+                      key={index}
+                      className="w-full border border-gray-300 rounded-lg text-sm h-full"
+                    >
+                      <tbody>
+                        {group1.map((key1, i) => (
+                          <tr key={i} className="border-b border-gray-200">
+                            <td
+                              className={`p-1 text-gray-600 font-medium ${
+                                ["dob"].includes(key1)
+                                  ? "uppercase"
                                   : "capitalize"
-                              } focus:outline-none focus:ring-2 focus:ring-blue-400`}
-                              required
-                            />
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                              }  whitespace-nowrap`}
+                            >
+                              {key1.replace(/([A-Z])/g, " $1").trim()}
+                            </td>
+                            <td className="p-1">
+                              <input
+                                type={
+                                  [
+                                    "dob",
+                                    "iqamaExpDate",
+                                    "passportExpDate",
+                                    "contractStartDate",
+                                    "contractEndDate",
+                                  ].includes(key1)
+                                    ? "date"
+                                    : "text"
+                                }
+                                name={key1}
+                                value={employee[key1]}
+                                onChange={handleChange}
+                                placeholder={`Enter ${key1
+                                  .replace(/([A-Z])/g, " $1")
+                                  .trim()}`}
+                                className={`w-full p-1 bg-gray-100 ${
+                                  [
+                                    "dob",
+                                    "iqamaExpDate",
+                                    "passportExpDate",
+                                    "contractStartDate",
+                                    "contractEndDate",
+                                    "email",
+                                  ].includes(key1)
+                                    ? "lowercase"
+                                    : "capitalize"
+                                } focus:outline-none focus:ring-2 focus:ring-blue-400`}
+                                required
+                              />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 ))}
                 <div className="flex-1">
-                <table className="w-full border border-gray-300 rounded-lg text-sm h-full">
-                  <tbody>
-                    {/* Basic Salary */}
-                    <tr className="border-b border-gray-200">
-                      <td className="p-1 text-gray-600 font-medium whitespace-nowrap">
-                        Basic Salary
-                      </td>
-                      <td className="p-1">
-                        <input
-                          type="number"
-                          step="0.01"
-                          min="0.01"
-                          name="basicSalary"
-                          value={employee.basicSalary}
-                          onChange={handleChange}
-                          placeholder="Enter Basic Salary"
-                          className="w-full p-1 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                        />
-                      </td>
-                    </tr>
-
-                    {/* Allowance Fields */}
-                    {allowances.map(({ key, label, percentage }) => (
-                      <tr key={key} className="border-b border-gray-200">
+                  <table className="w-full border border-gray-300 rounded-lg text-sm h-full">
+                    <tbody>
+                      {/* Basic Salary */}
+                      <tr className="border-b border-gray-200">
                         <td className="p-1 text-gray-600 font-medium whitespace-nowrap">
-                          {label}
+                          Basic Salary
                         </td>
                         <td className="p-1">
-                          <label className="p-1">
-                            <input
-                              type="radio"
-                              name={`${key}Type`}
-                              value="provided"
-                              defaultChecked
-                              onChange={() =>
-                                setEmployee((prev) => ({
-                                  ...prev,
-                                  [`${key}Type`]: "provided",
-                                  [key]: "0",
-                                }))
-                              }
-                              className="mr-1"
-                            />
-                            Provided
-                          </label>
-                          {percentage && (
-                            <label className="p-1">
-                              <input
-                                type="radio"
-                                name={`${key}Type`}
-                                value="percent"
-                                onChange={() =>
-                                  setEmployee((prev) => {
-                                    const basicVal =
-                                      parseFloat(prev.basicSalary) || 0;
-                                    return {
-                                      ...prev,
-                                      [`${key}Type`]: "percent",
-                                      [key]: (basicVal * percentage).toFixed(2),
-                                    };
-                                  })
-                                }
-                                className="mr-1"
-                              />
-                              {percentage * 100}% of Basic
-                            </label>
-                          )}
-                          <label className="p-1">
-                            <input
-                              type="radio"
-                              name={`${key}Type`}
-                              value="manual"
-                              onChange={handleChange}
-                              className="mr-1"
-                            />
-                            Manual
-                          </label>
                           <input
                             type="number"
                             step="0.01"
-                            min="0.00"
-                            name={key}
-                            value={employee[key]}
+                            min="0.01"
+                            name="basicSalary"
+                            value={employee.basicSalary}
                             onChange={handleChange}
-                            placeholder="0.00"
-                            disabled={employee[`${key}Type`] !== "manual"}
+                            placeholder="Enter Basic Salary"
                             className="w-full p-1 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
                           />
                         </td>
                       </tr>
-                    ))}
 
-                    {/* Other Allowance */}
-                    <tr className="border-b border-gray-200">
-                      <td className="p-1 text-gray-600 font-medium whitespace-nowrap">
-                        Other Allowance
-                      </td>
-                      <td className="p-1">
-                        <input
-                          type="number"
-                          step="0.01"
-                          min="0.00"
-                          name="otherAllowance"
-                          value={employee.otherAllowance}
-                          onChange={handleChange}
-                          placeholder="0.00"
-                          className="w-full p-1 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                        />
-                      </td>
-                    </tr>
+                      {/* Allowance Fields */}
+                      {allowances.map(({ key, label, percentage }) => (
+                        <tr key={key} className="border-b border-gray-200">
+                          <td className="p-1 text-gray-600 font-medium whitespace-nowrap">
+                            {label}
+                          </td>
+                          <td className="p-1">
+                            <label className="p-1">
+                              <input
+                                type="radio"
+                                name={`${key}Type`}
+                                value="provided"
+                                defaultChecked
+                                onChange={() =>
+                                  setEmployee((prev) => ({
+                                    ...prev,
+                                    [`${key}Type`]: "provided",
+                                    [key]: "0",
+                                  }))
+                                }
+                                className="mr-1"
+                              />
+                              Provided
+                            </label>
+                            {percentage && (
+                              <label className="p-1">
+                                <input
+                                  type="radio"
+                                  name={`${key}Type`}
+                                  value="percent"
+                                  onChange={() =>
+                                    setEmployee((prev) => {
+                                      const basicVal =
+                                        parseFloat(prev.basicSalary) || 0;
+                                      return {
+                                        ...prev,
+                                        [`${key}Type`]: "percent",
+                                        [key]: (basicVal * percentage).toFixed(
+                                          2
+                                        ),
+                                      };
+                                    })
+                                  }
+                                  className="mr-1"
+                                />
+                                {percentage * 100}% of Basic
+                              </label>
+                            )}
+                            <label className="p-1">
+                              <input
+                                type="radio"
+                                name={`${key}Type`}
+                                value="manual"
+                                onChange={handleChange}
+                                className="mr-1"
+                              />
+                              Manual
+                            </label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0.00"
+                              name={key}
+                              value={employee[key]}
+                              onChange={handleChange}
+                              placeholder="0.00"
+                              disabled={employee[`${key}Type`] !== "manual"}
+                              className="w-full p-1 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            />
+                          </td>
+                        </tr>
+                      ))}
 
-                    {/* Medical */}
-                    <tr className="border-b border-gray-200">
-                      <td className="p-1 text-gray-600 font-medium whitespace-nowrap">
-                        Medical
-                      </td>
-                      <td className="p-1">
-                        <input
-                          type="text"
-                          name="medical"
-                          value={employee.medical}
-                          onChange={handleChange}
-                          placeholder="Enter Medical Status"
-                          className="w-full p-1 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                        />
-                      </td>
-                    </tr>
+                      {/* Other Allowance */}
+                      <tr className="border-b border-gray-200">
+                        <td className="p-1 text-gray-600 font-medium whitespace-nowrap">
+                          Other Allowance
+                        </td>
+                        <td className="p-1">
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0.00"
+                            name="otherAllowance"
+                            value={employee.otherAllowance}
+                            onChange={handleChange}
+                            placeholder="0.00"
+                            className="w-full p-1 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                          />
+                        </td>
+                      </tr>
 
-                    {/* Employee Status */}
-                    <tr className="border-b border-gray-200">
-                      <td className="p-1 text-gray-600 font-medium whitespace-nowrap">
-                        Employee Status
-                      </td>
-                      <td className="p-1">
-                        <select
-                          name="employeeStatus"
-                          value={employee.employeeStatus}
-                          onChange={handleChange}
-                          className="w-full p-1 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                        >
-                          <option value="Active">Active</option>
-                          <option value="Inactive">Inactive</option>
-                          <option value="On hold">On hold</option>
-                          <option value="On vacation">On vacation</option>
-                        </select>
-                      </td>
-                    </tr>
+                      {/* Medical */}
+                      <tr className="border-b border-gray-200">
+                        <td className="p-1 text-gray-600 font-medium whitespace-nowrap">
+                          Medical
+                        </td>
+                        <td className="p-1">
+                          <input
+                            type="text"
+                            name="medical"
+                            value={employee.medical}
+                            onChange={handleChange}
+                            placeholder="Enter Medical Status"
+                            className="w-full p-1 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                          />
+                        </td>
+                      </tr>
 
-                    {/* Total Salary */}
-                    <tr className="border-b border-gray-200">
-                      <td className="p-1 text-gray-600 font-medium whitespace-nowrap">
-                        Total Salary
-                      </td>
-                      <td className="p-1">
-                        <input
-                          type="text"
-                          value={employee.totalSalary}
-                          disabled
-                          className="w-full p-1 bg-gray-100 cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-400"
-                        />
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+                      {/* Employee Status */}
+                      <tr className="border-b border-gray-200">
+                        <td className="p-1 text-gray-600 font-medium whitespace-nowrap">
+                          Employee Status
+                        </td>
+                        <td className="p-1">
+                          <select
+                            name="employeeStatus"
+                            value={employee.employeeStatus}
+                            onChange={handleChange}
+                            className="w-full p-1 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                          >
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                            <option value="On hold">On hold</option>
+                            <option value="On vacation">On vacation</option>
+                          </select>
+                        </td>
+                      </tr>
+
+                      {/* Total Salary */}
+                      <tr className="border-b border-gray-200">
+                        <td className="p-1 text-gray-600 font-medium whitespace-nowrap">
+                          Total Salary
+                        </td>
+                        <td className="p-1">
+                          <input
+                            type="text"
+                            value={employee.totalSalary}
+                            disabled
+                            className="w-full p-1 bg-gray-100 cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-400"
+                          />
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>

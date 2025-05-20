@@ -100,11 +100,14 @@ export default function EmployeeList() {
   }, [currentPage, searchQuery]);
 
   const handleDelete = async (employee_id) => {
-    const { error } = await supabase.from("employees").delete().eq("id", id);
+    const { error } = await supabase
+      .from("employees")
+      .delete()
+      .eq("id", employee_id);
     if (error) {
       console.error("Error deleting employee:", error.message);
     } else {
-      setEmployees((prev) => prev.filter((emp) => emp.id !== id));
+      setEmployees((prev) => prev.filter((emp) => emp.id !== employee_id));
       // Update totalCount and uniqueClientCount after delete
       const { count } = await supabase
         .from("employees")
