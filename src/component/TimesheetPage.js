@@ -16,20 +16,23 @@ export default function TimesheetPage() {
   const [allEmployeeData, setAllEmployeeData] = useState({});
   const [totalCount, setTotalCount] = useState(0);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const pageSize = 20;
+  const pageSize = 5;
 
   useEffect(() => {
-    if (clientNumber && month && year) {
-      fetchAllEmployeeSalaries(); // Fetch salaries first
-      fetchAllDraftData();
-      fetchAllTimesheetData();
-    }
-  }, [clientNumber, month, year]);
+    const fetchData = async () => {
+      if (!clientNumber || !month || !year) return;
 
-  useEffect(() => {
-    if (clientNumber && month && year) {
-      fetchEmployees();
-    }
+      // Fetch salaries first
+      await fetchAllEmployeeSalaries();
+      // Fetch draft data next
+      await fetchAllDraftData();
+      // Fetch timesheet data
+      await fetchAllTimesheetData();
+      // Fetch employees last, ensuring draft data is available
+      await fetchEmployees();
+    };
+
+    fetchData();
   }, [clientNumber, month, year, currentPage]);
 
   const fetchAllEmployeeSalaries = async () => {
@@ -56,8 +59,6 @@ export default function TimesheetPage() {
       },
       { ...allEmployeeData }
     ); // Preserve existing timesheet data
-
-    console.log("Salary map:", salaryMap); // Debug log
     setAllEmployeeData(salaryMap);
   };
 
@@ -80,24 +81,25 @@ export default function TimesheetPage() {
       return;
     }
 
+    console.log("Fetched draft data:", data); // Debug log
     const draftMap = data.reduce(
       (acc, draft) => {
         acc[draft.employee_id] = {
           ...acc[draft.employee_id],
-          workingDays: draft.working_days || 0,
-          overtimeHrs: draft.overtime_hrs || 0,
-          absentHrs: draft.absent_hrs || 0,
-          incentive: draft.incentive || 0,
-          etmamCost: draft.etmam_cost || 0,
-          overtime: draft.overtime || 0,
-          deductions: draft.deductions || 0,
-          adjustedSalary: draft.adjusted_salary || 0,
-          totalCost: draft.total_cost || 0,
+          workingDays: draft.working_days ?? null,
+          overtimeHrs: draft.overtime_hrs ?? null,
+          absentHrs: draft.absent_hrs ?? null,
+          incentive: draft.incentive ?? null,
+          etmamCost: draft.etmam_cost ?? null,
+          overtime: draft.overtime ?? null,
+          deductions: draft.deductions ?? null,
+          adjustedSalary: draft.adjusted_salary ?? null,
+          totalCost: draft.total_cost ?? null,
         };
         return acc;
       },
       { ...allEmployeeData }
-    ); // Preserve existing data
+    );
 
     console.log("Draft map:", draftMap); // Debug log
     setAllEmployeeData(draftMap);
@@ -122,30 +124,30 @@ export default function TimesheetPage() {
       return;
     }
 
-    console.log("Fetched timesheet data:", data); // Debug log
+    console.log("Fetched timesheet data:", data);
 
     const timesheetMap = data.reduce(
       (acc, timesheet) => {
         acc[timesheet.employee_id] = {
-          ...acc[timesheet.employee_id], // Preserve total_salary and other fields
-          workingDays: timesheet.working_days || 0,
-          overtimeHrs: timesheet.overtime_hrs || 0,
-          absentHrs: timesheet.absent_hrs || 0,
-          incentive: timesheet.incentive || 0,
-          etmamCost: timesheet.etmam_cost || 0,
-          overtime: timesheet.overtime || 0,
-          deductions: timesheet.deductions || 0,
-          adjustedSalary: timesheet.adjusted_salary || 0,
-          totalCost: timesheet.total_cost || 0,
+          ...acc[timesheet.employee_id],
+          workingDays: timesheet.working_days ?? null,
+          overtimeHrs: timesheet.overtime_hrs ?? null,
+          absentHrs: timesheet.absent_hrs ?? null,
+          incentive: timesheet.incentive ?? null,
+          etmamCost: timesheet.etmam_cost ?? null,
+          overtime: timesheet.overtime ?? null,
+          deductions: timesheet.deductions ?? null,
+          adjustedSalary: timesheet.adjusted_salary ?? null,
+          totalCost: timesheet.total_cost ?? null,
         };
         return acc;
       },
       { ...allEmployeeData }
-    ); // Initialize with current allEmployeeData
+    );
 
-    console.log("Timesheet map:", timesheetMap); // Debug log
+    console.log("Timesheet map:", timesheetMap);
     setAllEmployeeData(timesheetMap);
-    setIsSubmitted(data.length > 0); // Disable buttons if timesheet exists
+    setIsSubmitted(data.length > 0);
   };
 
   const fetchEmployees = async () => {
@@ -167,38 +169,44 @@ export default function TimesheetPage() {
         code: error.code,
         details: error.details,
       });
-    } else {
-      setTotalCount(count);
-      setClientName(data[0]?.client_name || "");
-      const enriched = data.map((emp, index) => {
-        const allowance =
-          (emp.hra || 0) +
-          (emp.tra || 0) +
-          (emp.food_allowance || 0) +
-          (emp.other_allowance || 0);
-        const draft = allEmployeeData[emp.id] || {};
-        return {
-          ...emp,
-          sNo: from + index + 1,
-          allowance,
-          workingDays: draft.workingDays ?? "",
-          overtimeHrs: draft.overtimeHrs ?? "",
-          absentHrs: draft.absentHrs ?? "",
-          incentive: draft.incentive ?? "",
-          etmamCost: draft.etmamCost ?? "",
-          overtime: draft.overtime || 0,
-          deductions: draft.deductions || 0,
-          adjustedSalary: draft.adjustedSalary || 0,
-          totalCost: draft.totalCost || 0,
-        };
-      });
-      setEmployees(enriched);
+      return;
     }
+
+    console.log("Fetched employees:", data); // Debug log
+    console.log("Current allEmployeeData:", allEmployeeData); // Debug log
+
+    setTotalCount(count);
+    setClientName(data[0]?.client_name || "");
+    const enriched = data.map((emp, index) => {
+      const allowance =
+        (emp.hra || 0) +
+        (emp.tra || 0) +
+        (emp.food_allowance || 0) +
+        (emp.other_allowance || 0);
+      const draft = allEmployeeData[emp.id] || {};
+      return {
+        ...emp,
+        sNo: from + index + 1,
+        allowance,
+        workingDays: draft.workingDays ?? "", // Preserve null or valid number
+        overtimeHrs: draft.overtimeHrs ?? "",
+        absentHrs: draft.absentHrs ?? "",
+        incentive: draft.incentive ?? "",
+        etmamCost: draft.etmamCost ?? "",
+        overtime: draft.overtime ?? 0, // Calculated fields can default to 0
+        deductions: draft.deductions ?? 0,
+        adjustedSalary: draft.adjustedSalary ?? 0,
+        totalCost: draft.totalCost ?? 0,
+      };
+    });
+
+    console.log("Enriched employees:", enriched); // Debug log
+    setEmployees(enriched);
   };
 
   const handleInputChange = (index, field, value) => {
     const updated = [...employees];
-    updated[index][field] = value;
+    updated[index][field] = value === "" ? "" : Number(value);
 
     const basic_salary = parseFloat(updated[index].basic_salary || 0);
     const totalSalary = parseFloat(updated[index].total_salary || 0);
@@ -217,10 +225,12 @@ export default function TimesheetPage() {
       dailyrate * workingDays + overtime + incentive - deductions;
     const totalCost = adjustedSalary + etmamCost;
 
-    updated[index].deductions = deductions.toFixed(2);
-    updated[index].overtime = overtime.toFixed(2);
-    updated[index].adjustedSalary = adjustedSalary.toFixed(2);
-    updated[index].totalCost = totalCost.toFixed(2);
+    updated[index].deductions = isNaN(deductions) ? "" : deductions.toFixed(2);
+    updated[index].overtime = isNaN(overtime) ? "" : overtime.toFixed(2);
+    updated[index].adjustedSalary = isNaN(adjustedSalary)
+      ? ""
+      : adjustedSalary.toFixed(2);
+    updated[index].totalCost = isNaN(totalCost) ? "" : totalCost.toFixed(2);
 
     setAllEmployeeData((prev) => ({
       ...prev,
@@ -254,18 +264,24 @@ export default function TimesheetPage() {
       employee_id: emp.id,
       client_number: clientNumber,
       timesheet_month,
-      working_days: parseFloat(emp.workingDays || 0) || 0,
-      overtime_hrs: parseFloat(emp.overtimeHrs || 0) || 0,
-      absent_hrs: parseFloat(emp.absent_hrs || 0) || 0,
-      incentive: parseFloat(emp.incentive || 0) || 0,
-      etmam_cost: parseFloat(emp.etmam_cost || 0) || 0,
-      overtime: parseFloat(emp.overtime || 0) || 0,
-      deductions: parseFloat(emp.deductions || 0) || 0,
-      adjusted_salary: parseFloat(emp.adjustedSalary || 0) || 0,
-      total_cost: parseFloat(emp.totalCost || 0) || 0,
+      working_days:
+        emp.workingDays === "" ? null : parseFloat(emp.workingDays) || 0,
+      overtime_hrs:
+        emp.overtimeHrs === "" ? null : parseFloat(emp.overtimeHrs) || 0,
+      absent_hrs: emp.absentHrs === "" ? null : parseFloat(emp.absentHrs) || 0,
+      incentive: emp.incentive === "" ? null : parseFloat(emp.incentive) || 0,
+      etmam_cost: emp.etmamCost === "" ? null : parseFloat(emp.etmamCost) || 0,
+      overtime: emp.overtime === "" ? null : parseFloat(emp.overtime) || 0,
+      deductions:
+        emp.deductions === "" ? null : parseFloat(emp.deductions) || 0,
+      adjusted_salary:
+        emp.adjustedSalary === "" ? null : parseFloat(emp.adjustedSalary) || 0,
+      total_cost: emp.totalCost === "" ? null : parseFloat(emp.totalCost) || 0,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }));
+
+    console.log("Saving draft data:", draftData); // Debug log
 
     const { error } = await supabase
       .from("timesheet_draft")
@@ -368,15 +384,20 @@ export default function TimesheetPage() {
         type="number"
         step={step}
         className="w-20 p-1 border rounded text-sm"
-        value={emp[field] ?? ""}
+        value={emp[field] ?? ""} // Display empty string for null/undefined
         onChange={(e) => {
-          let value = Number(e.target.value);
-          if (field === "workingDays") {
-            value = Math.max(0, Math.min(30, value));
-          } else if (["overtimeHrs", "absentHrs"].includes(field)) {
-            value = Math.max(0, value);
+          let value = e.target.value;
+          if (value === "") {
+            handleInputChange(idx, field, "");
+          } else {
+            value = Number(value);
+            if (field === "workingDays") {
+              value = Math.max(0, Math.min(30, value));
+            } else if (["overtimeHrs", "absentHrs"].includes(field)) {
+              value = Math.max(0, value);
+            }
+            handleInputChange(idx, field, value);
           }
-          handleInputChange(idx, field, value);
         }}
         min={min}
         max={max}

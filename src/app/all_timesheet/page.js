@@ -9,12 +9,13 @@ import { calculateGrandTotal } from "@/utils/calculateGrandTotal";
 const ClientTimesheetPage = () => {
   const [clientNumbers, setClientNumbers] = useState([]);
   const [selectedClient, setSelectedClient] = useState("");
-  const [allSummaryData, setAllSummaryData] = useState([]); // Store all grouped data
-  const [summaryData, setSummaryData] = useState([]); // Paginated data
+  const [allSummaryData, setAllSummaryData] = useState([]);
+  const [summaryData, setSummaryData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [month, setMonth] = useState("");
   const [year, setYear] = useState("");
+  const [totalAdjustedSalary, setTotalAdjustedSalary] = useState(0); // New state for total adjusted salary
   const router = useRouter();
 
   const pageSize = 10;
@@ -41,7 +42,7 @@ const ClientTimesheetPage = () => {
 
   useEffect(() => {
     fetchSummaryData();
-  }, []);
+  }, [selectedClient, month, year]); // Added dependencies to refresh data on filter change
 
   useEffect(() => {
     // Paginate the grouped data on the client side
@@ -52,13 +53,13 @@ const ClientTimesheetPage = () => {
   }, [currentPage, allSummaryData]);
 
   const fetchSummaryData = async () => {
-    // Fetch all data (or filter by month/year if provided)
     let query = supabase
       .from("timesheet")
       .select(
         `
         client_number,
         timesheet_month,
+        adjusted_salary,
         total_cost,
         employee_id,
         employees(client_name)
@@ -86,6 +87,13 @@ const ClientTimesheetPage = () => {
       return;
     }
 
+    // Calculate total adjusted salary across all records
+    const totalSalary = data.reduce(
+      (sum, row) => sum + (row.adjusted_salary || 0),
+      0
+    );
+    setTotalAdjustedSalary(totalSalary);
+
     // Group data by client_number, year, month
     const groupedData = data.reduce((acc, row) => {
       const timesheetDate = new Date(row.timesheet_month);
@@ -107,6 +115,7 @@ const ClientTimesheetPage = () => {
       acc[key].employee_ids.add(row.employee_id);
       acc[key].employeeData[row.employee_id] = {
         totalCost: row.total_cost || 0,
+        adjusted_salary: row.adjusted_salary || 0,
       };
 
       return acc;
@@ -114,12 +123,18 @@ const ClientTimesheetPage = () => {
 
     const rows = Object.values(groupedData).map((group) => {
       const { grandTotal } = calculateGrandTotal(group.employeeData);
+      // Calculate total adjusted salary for the group
+      const groupAdjustedSalary = Object.values(group.employeeData).reduce(
+        (sum, emp) => sum + (emp.adjusted_salary || 0),
+        0
+      );
       return {
         client_number: group.client_number,
         client_name: group.client_name,
         month: group.month,
         year: group.year,
         total_employees: group.employee_ids.size,
+        adjusted_salary: groupAdjustedSalary, // Fixed calculation
         grand_total: grandTotal,
         status: "Submitted",
       };
@@ -224,6 +239,7 @@ const ClientTimesheetPage = () => {
                   "Month",
                   "Year",
                   "Total Employees",
+                  "Total Adj Sal",
                   "Grand Total",
                   "Action",
                   "Status",
@@ -243,14 +259,19 @@ const ClientTimesheetPage = () => {
                   <td className="p-2 border text-center">
                     {(currentPage - 1) * pageSize + index + 1}
                   </td>
-                  <td className="p-2 border">{row.client_number}</td>
+                  <td className="p-2 border text-center">
+                    {row.client_number}
+                  </td>
                   <td className="p-2 border">{row.client_name}</td>
-                  <td className="p-2 border">{row.month}</td>
-                  <td className="p-2 border">{row.year}</td>
+                  <td className="p-2 border text-center">{row.month}</td>
+                  <td className="p-2 border text-center">{row.year}</td>
                   <td className="p-2 border text-center">
                     {row.total_employees}
                   </td>
-                  <td className="p-2 border text-right">
+                  <td className="p-2 border text-center">
+                    {row.adjusted_salary.toFixed(2)}
+                  </td>
+                  <td className="p-2 border text-center">
                     {row.grand_total.toFixed(2)}
                   </td>
                   <td className="p-2 border text-center">
