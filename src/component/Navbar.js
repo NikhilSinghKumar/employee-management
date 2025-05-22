@@ -54,7 +54,14 @@ export default function Navbar() {
           label="Finance"
           items={[{ label: "Invoices", href: "/invoices" }]}
         />
-        <Link href="">HR</Link>
+        <Dropdown
+          label="Human Resource"
+          items={[
+            { label: "New Employee Form", href: "/etmam_employee_form" },
+            { label: "Etmam Employees", href: "/etmam_employees" },
+            { label: "Etmam Timesheet", href: "/etmam_timesheet" },
+          ]}
+        />
         <Dropdown
           label="Operations"
           items={[
