@@ -60,7 +60,7 @@ export default function EmployeeList() {
           .from("employees")
           .select("*")
           .or(
-            `name.ilike.%${query}%,et_number.ilike.%${query}%,iqama_number.ilike.%${query}%,passport_number.ilike.%${query}%,profession.ilike.%${query}%,nationality.ilike.%${query}%,client_number.ilike.%${query}%,client_name.ilike.%${query}%,mobile.ilike.%${query}%,email.ilike.%${query}%,bank_account.ilike.%${query}%,employee_status.ilike.%${query}%`
+            `name.ilike.%${query}%,et_number.ilike.%${query}%,iqama_number.ilike.%${query}%,passport_number.ilike.%${query}%,profession.ilike.%${query}%,nationality.ilike.%${query}%,client_number.ilike.%${query}%,client_name.ilike.%${query}%,mobile.ilike.%${query}%,email.ilike.%${query}%,bank_account.ilike.%${query}%,employee_status.ilike.%${query}%,employee_source.ilike.%${query}%`
           )
           .order("id", { ascending: true });
 
