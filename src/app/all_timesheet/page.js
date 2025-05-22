@@ -70,7 +70,9 @@ const ClientTimesheetPage = () => {
 
     if (month && year) {
       const timesheetMonthStart = `${year}-${month.padStart(2, "0")}-01`;
-      const timesheetMonthEnd = `${year}-${month.padStart(2, "0")}-31`;
+      // Calculate the last day of the selected month
+      const lastDay = new Date(year, month, 0).getDate(); // month is 1-12, so month 0 gives the last day of the previous month
+      const timesheetMonthEnd = `${year}-${month.padStart(2, "0")}-${lastDay}`;
       query = query
         .gte("timesheet_month", timesheetMonthStart)
         .lte("timesheet_month", timesheetMonthEnd);

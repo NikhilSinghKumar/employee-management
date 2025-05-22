@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { calculateTotalSalary } from "@/utils/employeeUtils";
+import ExcelUpload from "@/component/ExcelUpload";
 
 const defaultEmployee = {
   employeeName: "",
@@ -399,26 +400,38 @@ export default function AddEmployee() {
                 </div>
               </div>
             </div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-40 bg-blue-500 hover:bg-blue-500 text-white font-medium py-2 rounded-lg transition-all cursor-pointer"
-            >
-              {loading ? "Submitting..." : "Submit"}
-            </button>
-            <button
-              type="button"
-              onClick={handleReset}
-              disabled={!isModified}
-              className={`w-40 ${
-                isModified
-                  ? "bg-red-600 hover:bg-red-700"
-                  : "bg-gray-300 cursor-not-allowed"
-              } text-white font-medium ml-4 py-2 rounded-lg transition-all`}
-            >
-              Reset Form
-            </button>
           </form>
+          <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4 w-full">
+            {/* Buttons Container */}
+            <div className="flex space-x-4">
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-40 bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 rounded-lg transition-all cursor-pointer"
+              >
+                {loading ? "Submitting..." : "Submit"}
+              </button>
+              <button
+                type="button"
+                onClick={handleReset}
+                disabled={!isModified}
+                className={`w-40 ${
+                  isModified
+                    ? "bg-red-600 hover:bg-red-700"
+                    : "bg-gray-300 cursor-not-allowed"
+                } text-white font-medium py-2 rounded-lg transition-all`}
+              >
+                Reset Form
+              </button>
+            </div>
+
+            {/* ExcelUpload Container - Pushed to the right */}
+            <div className="ml-50">
+              <div className="w-auto min-w-[200px]">
+                <ExcelUpload />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </>

@@ -59,7 +59,7 @@ export default function Navbar() {
           label="Operations"
           items={[
             { label: "Add Employee", href: "/add_employee" },
-            { label: "Upload Employees", href: "/upload_employees" },
+            { label: "Onboarding", href: "/onboarding" },
             { label: "All Employees", href: "/employee_list" },
             { label: "All Clients", href: "/all_clients" },
             { label: "Timesheet/ Payroll", href: "/all_timesheet" },

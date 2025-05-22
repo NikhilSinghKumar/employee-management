@@ -12,6 +12,14 @@ export default function ExcelUpload() {
   useEffect(() => {
     document.title = "Upload Employees";
   }, []);
+
+  useEffect(() => {
+    if (message && message.includes("successfully")) {
+      const timer = setTimeout(() => setMessage(""), 3000); // Clear after 3 seconds
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
+
   const handleUpload = async (e) => {
     e.preventDefault();
 
@@ -71,7 +79,7 @@ export default function ExcelUpload() {
   };
 
   return (
-    <div className="p-6 bg-white rounded-lg">
+    <div className="bg-white rounded-lg mt-10">
       <form onSubmit={handleUpload} className="space-y-4">
         <div className="flex items-center space-x-2">
           <input
@@ -82,7 +90,6 @@ export default function ExcelUpload() {
             disabled={loading}
             ref={fileInputRef}
           />
-
           <button
             type="submit"
             className={`flex items-center gap-2 px-4 py-2 rounded text-white ${
@@ -94,9 +101,21 @@ export default function ExcelUpload() {
             {loading ? "Uploading..." : "Upload Excel"}
           </button>
         </div>
+        {/* Reserve space for the message to prevent layout shift */}
+        <div className="h-6">
+          {message && (
+            <p
+              className={`text-sm  ${
+                message.includes("successfully")
+                  ? "text-green-600"
+                  : "text-red-600"
+              }`}
+            >
+              {message}
+            </p>
+          )}
+        </div>
       </form>
-
-      {message && <p className="mt-3 text-gray-700">{message}</p>}
     </div>
   );
 }

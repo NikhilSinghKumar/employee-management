@@ -7,10 +7,10 @@ export async function middleware(request) {
     "/services",
     "/employee_list",
     "/add_employee",
-    "/upload_employees",
+    "/onboarding",
     "/edit_employee",
     "/all_timesheet",
-    "/timesheet"
+    "/timesheet",
   ];
   const authRoutes = ["/", "/register"];
   const pathname = request.nextUrl.pathname;
@@ -49,11 +49,11 @@ export async function middleware(request) {
 export const config = {
   matcher: [
     "/services/:path*",
-    "/upload_employees/:path*",
+    "/onboarding/:path*",
     "/employee_list/:path*",
     "/add_employee/:path*",
     "/edit_employee/:path*",
     "/all_timesheet/:path*",
-    "/timesheet/:path*"
+    "/timesheet/:path*",
   ],
 };

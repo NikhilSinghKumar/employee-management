@@ -22,13 +22,13 @@ export default function TimesheetPage() {
     const fetchData = async () => {
       if (!clientNumber || !month || !year) return;
 
-      // Fetch salaries first
+      // Step 1: Fetch all employee salaries (not paginated) to ensure total_salary is available for summary
       await fetchAllEmployeeSalaries();
-      // Fetch draft data next
+      // Step 2: Fetch draft data
       await fetchAllDraftData();
-      // Fetch timesheet data
+      // Step 3: Fetch timesheet data
       await fetchAllTimesheetData();
-      // Fetch employees last, ensuring draft data is available
+      // Step 4: Fetch paginated employees for display
       await fetchEmployees();
     };
 
@@ -47,18 +47,14 @@ export default function TimesheetPage() {
         message: error.message,
         code: error.code,
         details: error.details,
-        F,
       });
       return;
     }
 
-    const salaryMap = data.reduce(
-      (acc, emp) => {
-        acc[emp.id] = { ...acc[emp.id], total_salary: emp.total_salary || 0 };
-        return acc;
-      },
-      { ...allEmployeeData }
-    ); // Preserve existing timesheet data
+    const salaryMap = data.reduce((acc, emp) => {
+      acc[emp.id] = { ...acc[emp.id], total_salary: emp.total_salary || 0 };
+      return acc;
+    }, {});
     setAllEmployeeData(salaryMap);
   };
 
@@ -81,11 +77,11 @@ export default function TimesheetPage() {
       return;
     }
 
-    console.log("Fetched draft data:", data); // Debug log
+    console.log("Fetched draft data:", data);
     const draftMap = data.reduce(
       (acc, draft) => {
         acc[draft.employee_id] = {
-          ...acc[draft.employee_id],
+          ...acc[draft.employee_id], // Preserve total_salary
           workingDays: draft.working_days ?? null,
           overtimeHrs: draft.overtime_hrs ?? null,
           absentHrs: draft.absent_hrs ?? null,
@@ -101,7 +97,7 @@ export default function TimesheetPage() {
       { ...allEmployeeData }
     );
 
-    console.log("Draft map:", draftMap); // Debug log
+    console.log("Draft map:", draftMap);
     setAllEmployeeData(draftMap);
   };
 
@@ -129,7 +125,7 @@ export default function TimesheetPage() {
     const timesheetMap = data.reduce(
       (acc, timesheet) => {
         acc[timesheet.employee_id] = {
-          ...acc[timesheet.employee_id],
+          ...acc[timesheet.employee_id], // Preserve total_salary
           workingDays: timesheet.working_days ?? null,
           overtimeHrs: timesheet.overtime_hrs ?? null,
           absentHrs: timesheet.absent_hrs ?? null,
@@ -172,8 +168,8 @@ export default function TimesheetPage() {
       return;
     }
 
-    console.log("Fetched employees:", data); // Debug log
-    console.log("Current allEmployeeData:", allEmployeeData); // Debug log
+    console.log("Fetched employees:", data);
+    console.log("Current allEmployeeData:", allEmployeeData);
 
     setTotalCount(count);
     setClientName(data[0]?.client_name || "");
@@ -188,19 +184,19 @@ export default function TimesheetPage() {
         ...emp,
         sNo: from + index + 1,
         allowance,
-        workingDays: draft.workingDays ?? "", // Preserve null or valid number
+        workingDays: draft.workingDays ?? "",
         overtimeHrs: draft.overtimeHrs ?? "",
         absentHrs: draft.absentHrs ?? "",
         incentive: draft.incentive ?? "",
         etmamCost: draft.etmamCost ?? "",
-        overtime: draft.overtime ?? 0, // Calculated fields can default to 0
+        overtime: draft.overtime ?? 0,
         deductions: draft.deductions ?? 0,
         adjustedSalary: draft.adjustedSalary ?? 0,
         totalCost: draft.totalCost ?? 0,
       };
     });
 
-    console.log("Enriched employees:", enriched); // Debug log
+    console.log("Enriched employees:", enriched);
     setEmployees(enriched);
   };
 
@@ -245,7 +241,7 @@ export default function TimesheetPage() {
         deductions: updated[index].deductions,
         adjustedSalary: updated[index].adjustedSalary,
         totalCost: updated[index].totalCost,
-        total_salary: updated[index].total_salary,
+        total_salary: updated[index].total_salary, // Ensure total_salary is preserved
       },
     }));
 
@@ -281,7 +277,7 @@ export default function TimesheetPage() {
       updated_at: new Date().toISOString(),
     }));
 
-    console.log("Saving draft data:", draftData); // Debug log
+    console.log("Saving draft data:", draftData);
 
     const { error } = await supabase
       .from("timesheet_draft")
@@ -350,10 +346,11 @@ export default function TimesheetPage() {
       }
 
       alert("Timesheet submitted successfully!");
-      setIsSubmitted(true); // Disable Save and Submit buttons
-      await fetchAllTimesheetData(); // Fetch submitted data
-      await fetchAllEmployeeSalaries(); // Ensure total_salary is set
-      await fetchEmployees(); // Refresh current page
+      setIsSubmitted(true);
+      // Re-fetch all data in the correct order
+      await fetchAllEmployeeSalaries();
+      await fetchAllTimesheetData();
+      await fetchEmployees();
     } catch (err) {
       console.error("Unexpected error:", err);
       alert("Something went wrong while submitting timesheet");
@@ -384,7 +381,7 @@ export default function TimesheetPage() {
         type="number"
         step={step}
         className="w-20 p-1 border rounded text-sm"
-        value={emp[field] ?? ""} // Display empty string for null/undefined
+        value={emp[field] ?? ""}
         onChange={(e) => {
           let value = e.target.value;
           if (value === "") {
