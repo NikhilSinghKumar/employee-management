@@ -214,6 +214,7 @@ export default function EmployeeList() {
                           "Start Date",
                           "End Date",
                           "Status",
+                          "Source",
                           "Actions",
                         ].map((header) => (
                           <th key={header} className="p-1 border">
@@ -276,6 +277,9 @@ export default function EmployeeList() {
                           </td>
                           <td className="p-1 border">
                             {employee.employee_status}
+                          </td>
+                          <td className="p-1 border">
+                            {employee.employee_source}
                           </td>
                           <td className="p-1 border flex items-center space-x-2">
                             <Link

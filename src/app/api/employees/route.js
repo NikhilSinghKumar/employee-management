@@ -67,6 +67,7 @@ export async function POST(req) {
     "totalSalary",
     "medical",
     "employeeStatus",
+    "employeeSource",
   ];
 
   const missingFields = requiredFields.filter((field) => !payload[field]);
@@ -109,6 +110,7 @@ export async function POST(req) {
           total_salary: payload.totalSalary,
           medical: payload.medical,
           employee_status: payload.employeeStatus,
+          employee_source: payload.employeeSource,
         },
       ])
       .select("id")

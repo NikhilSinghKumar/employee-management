@@ -295,6 +295,7 @@ export default function EditEmployeePage() {
           },
           { name: "medical", label: "Medical", type: "text" },
           { name: "employee_status", label: "Employee Status", type: "text" },
+          { name: "employee_source", label: "Employee Source", type: "text" },
         ].map((field) => (
           <div key={field.name} className="flex flex-col">
             <label className="font-medium">{field.label}</label>

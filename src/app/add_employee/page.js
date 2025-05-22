@@ -21,6 +21,7 @@ const defaultEmployee = {
   clientName: "",
   contractStartDate: "",
   contractEndDate: "",
+  employeeSource: "",
   basicSalary: "",
   hraType: "provided",
   hra: "",
@@ -30,7 +31,7 @@ const defaultEmployee = {
   otherAllowance: "",
   totalSalary: "00.00",
   medical: "",
-  employeeStatus: "Active",
+  employeeStatus: "",
 };
 
 export default function AddEmployee() {
@@ -297,7 +298,7 @@ export default function AddEmployee() {
                                   }
                                   className="mr-1"
                                 />
-                                {percentage * 100}% of Basic
+                                Percent ({percentage * 100}%)
                               </label>
                             )}
                             <label className="p-1">
@@ -361,23 +362,37 @@ export default function AddEmployee() {
                         </td>
                       </tr>
 
-                      {/* Employee Status */}
+                      {/* Employee Status & Source*/}
                       <tr className="border-b border-gray-200">
-                        <td className="p-1 text-gray-600 font-medium whitespace-nowrap">
-                          Employee Status
-                        </td>
-                        <td className="p-1">
-                          <select
-                            name="employeeStatus"
-                            value={employee.employeeStatus}
-                            onChange={handleChange}
-                            className="w-full p-1 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                          >
-                            <option value="Active">Active</option>
-                            <option value="Inactive">Inactive</option>
-                            <option value="On hold">On hold</option>
-                            <option value="On vacation">On vacation</option>
-                          </select>
+                        <td colSpan="2" className="p-1">
+                          <div className="flex w-full">
+                            <div className="w-1/2 pr-1">
+                              <select
+                                name="employeeStatus"
+                                value={employee.employeeStatus}
+                                onChange={handleChange}
+                                className="w-full p-1 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                              >
+                                <option value="">Status</option>
+                                <option value="Active">Active</option>
+                                <option value="Inactive">Inactive</option>
+                                <option value="On hold">On hold</option>
+                                <option value="On vacation">On vacation</option>
+                              </select>
+                            </div>
+                            <div className="w-1/2 pl-1">
+                              <select
+                                name="employeeSource"
+                                value={employee.employeeSource}
+                                onChange={handleChange}
+                                className="w-full p-1 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                              >
+                                <option value="">Source</option>
+                                <option value="local">Local</option>
+                                <option value="overseas">Overseas</option>
+                              </select>
+                            </div>
+                          </div>
                         </td>
                       </tr>
 

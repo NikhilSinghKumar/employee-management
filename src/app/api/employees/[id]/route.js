@@ -84,6 +84,7 @@ export async function PUT(req, { params }) {
         total_salary: payload.total_salary,
         medical: payload.medical,
         employee_status: payload.employee_status,
+        employee_source: payload.employee_source,
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)

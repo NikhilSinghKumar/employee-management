@@ -97,6 +97,7 @@ export async function POST(req) {
         total_salary: parseFloat(row["total salary"]) || 0,
         medical: row.medical || null,
         employee_status: row["employee status"] || null,
+        employee_source: row["employee source"] || null,
       }));
 
     if (formattedData.length === 0) {
