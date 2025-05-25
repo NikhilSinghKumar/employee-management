@@ -227,6 +227,7 @@ export default function AddEmployee() {
                                     "passportExpDate",
                                     "contractStartDate",
                                     "contractEndDate",
+                                    "email",
                                   ].includes(key1)
                                     ? "lowercase"
                                     : "capitalize"

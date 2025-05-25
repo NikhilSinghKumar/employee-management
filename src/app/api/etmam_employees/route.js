@@ -6,7 +6,7 @@ import { z } from "zod";
 
 // Validation schema for POST payload
 const staffSchema = z.object({
-  name: z.string().min(1, "Name is required"),
+  name: z.string().optional(),
   mobile: z.string().optional(),
   email: z.string().email().optional().or(z.literal("")),
   dob: z.string().date().optional(),
@@ -18,7 +18,7 @@ const staffSchema = z.object({
   passport_no: z.string().optional(),
   passport_exp_date: z.string().date().optional(),
   profession: z.string().optional(),
-  staff_id: z.string().min(1, "Staff ID is required"),
+  staff_id: z.string().optional(),
   department: z.string().optional(),
   contract_start_date: z.string().date().optional(),
   contract_end_date: z.string().date().optional(),
@@ -61,7 +61,7 @@ const deleteSchema = z.object({
 
 // Authentication middleware
 async function verifyAuth() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
   if (!token) {
     return { success: false, error: "Unauthorized: No token provided" };
@@ -69,7 +69,8 @@ async function verifyAuth() {
 
   // Set Supabase session for RLS
   await supabase.auth.setSession({ access_token: token });
-  return authenticateToken(token);
+  const authResult = await authenticateToken(token);
+  return authResult;
 }
 
 export async function GET() {

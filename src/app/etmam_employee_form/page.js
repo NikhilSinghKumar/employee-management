@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { calculateTotalSalary } from "@/utils/employeeUtils";
-import ExcelUpload from "@/component/ExcelUpload";
+import EtmamEmployeesUpload from "@/component/EtmamEmployeesUpload";
 
 const defaultEmployee = {
   name: "",
@@ -38,6 +38,7 @@ const defaultEmployee = {
 export default function EtmamEmployeeFormPage() {
   const [employee, setEmployee] = useState(defaultEmployee);
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState(""); // "success" or "error"
   const [isModified, setIsModified] = useState(false);
   const [loading, setLoading] = useState(false);
   const messageTimer = useRef(null);
@@ -55,12 +56,14 @@ export default function EtmamEmployeeFormPage() {
       nationality: /^[a-zA-Z\s'-]{1,50}$/,
       profession: /^[a-zA-Z\s'-]{1,50}$/,
       mobile: /^[1-9]\d{0,9}$/,
-      iqamaNo: /^[0-9]{10}$/,
-      passportNo: /^[A-Z0-9]{5,15}$/,
-      bankAccount: /^[0-9]{10,20}$/,
+      iqamaNo: /^[1-9]\d{0,9}$/,
+      passportNo: /^[A-Z0-9]{1,15}$/,
+      bankAccount: /^[A-Z0-9]{1,20}$/,
     };
 
     if (validators[name] && !validators[name].test(value) && value !== "") {
+      setMessage(`Invalid ${name.replace(/([A-Z])/g, " $1").trim()}`);
+      setMessageType("error");
       return;
     }
 
@@ -71,6 +74,10 @@ export default function EtmamEmployeeFormPage() {
       value !== "" &&
       parseFloat(value) < 0
     ) {
+      setMessage(
+        `${name.replace(/([A-Z])/g, " $1").trim()} cannot be negative`
+      );
+      setMessageType("error");
       return;
     }
 
@@ -108,33 +115,26 @@ export default function EtmamEmployeeFormPage() {
     });
 
     setIsModified(true);
+    setMessage(""); // Clear any previous message on successful change
+    setMessageType("");
   };
 
   useEffect(() => {
     document.title = "ETMAM Staff Form";
+  }, []);
 
-    setEmployee((prev) => ({
-      ...prev,
-      totalSalary: calculateTotalSalary(prev),
-    }));
-  }, [
-    employee.basicSalary,
-    employee.hraType,
-    employee.hra,
-    employee.traType,
-    employee.tra,
-    employee.foodAllowanceType,
-    employee.foodAllowance,
-    employee.otherAllowance,
-  ]);
+  const totalSalary = calculateTotalSalary(employee);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage("");
+    setMessageType("");
 
+    // Client-side validation
     if (!employee.name || !employee.staffId) {
       setMessage("Name and Staff ID are required");
+      setMessageType("error");
       setLoading(false);
       return;
     }
@@ -144,6 +144,7 @@ export default function EtmamEmployeeFormPage() {
       !/^[a-zA-Z0-9._]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(employee.email)
     ) {
       setMessage("Invalid email format");
+      setMessageType("error");
       setLoading(false);
       return;
     }
@@ -154,6 +155,7 @@ export default function EtmamEmployeeFormPage() {
       new Date(employee.contractEndDate) < new Date(employee.contractStartDate)
     ) {
       setMessage("Contract end date must be after start date");
+      setMessageType("error");
       setLoading(false);
       return;
     }
@@ -185,7 +187,7 @@ export default function EtmamEmployeeFormPage() {
         food_allowance_type: employee.foodAllowanceType,
         food_allowance: parseFloat(employee.foodAllowance) || 0,
         other_allowance: parseFloat(employee.otherAllowance) || 0,
-        total_salary: parseFloat(employee.totalSalary) || 0,
+        total_salary: parseFloat(totalSalary) || 0,
         medical: employee.medical,
         staff_status: employee.staffStatus,
       };
@@ -198,30 +200,47 @@ export default function EtmamEmployeeFormPage() {
         body: JSON.stringify(payload),
       });
 
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
+      if (!response.ok) {
+        const result = await response.json();
         if (response.status === 401) {
           setMessage("Unauthorized: Please log in");
-          setLoading(false);
-          return;
-        }
-        if (response.status === 409) {
+          setMessageType("error");
+        } else if (response.status === 409) {
           setMessage("Staff ID already exists");
-          setLoading(false);
-          return;
+          setMessageType("error");
+        } else if (response.status === 400) {
+          setMessage(result.error || "Invalid input data");
+          setMessageType("error");
+        } else {
+          setMessage(result.error || "Failed to add staff");
+          setMessageType("error");
         }
-        throw new Error(result.error || "Failed to add employee");
+        setLoading(false);
+        return;
       }
 
-      setMessage("Employee added successfully!");
+      const result = await response.json();
+
+      if (!result.success) {
+        setMessage(result.error || "Failed to add staff");
+        setMessageType("error");
+        setLoading(false);
+        return;
+      }
+
+      setMessage("Staff added successfully!");
+      setMessageType("success");
       setEmployee(defaultEmployee);
       setIsModified(false);
-      setTimeout(() => setMessage(""), 5000);
+      if (messageTimer.current) clearTimeout(messageTimer.current);
+      messageTimer.current = setTimeout(() => {
+        setMessage("");
+        setMessageType("");
+      }, 5000);
     } catch (err) {
-      console.error("Unexpected error:", err);
-      setMessage(err.message || "An unexpected error occurred.");
-    } finally {
+      console.error("Submission error:", err);
+      setMessage("An unexpected error occurred. Please try again.");
+      setMessageType("error");
       setLoading(false);
     }
   };
@@ -230,8 +249,12 @@ export default function EtmamEmployeeFormPage() {
     setEmployee(defaultEmployee);
     setIsModified(false);
     setMessage("Form is reset now");
+    setMessageType("success");
     if (messageTimer.current) clearTimeout(messageTimer.current);
-    messageTimer.current = setTimeout(() => setMessage(""), 2000);
+    messageTimer.current = setTimeout(() => {
+      setMessage("");
+      setMessageType("");
+    }, 2000);
   };
 
   const fields = Object.keys(employee);
@@ -245,7 +268,13 @@ export default function EtmamEmployeeFormPage() {
             ETMAM Staff Form
           </h2>
           {message && (
-            <p className="text-center text-sm text-green-600 mb-4">{message}</p>
+            <p
+              className={`text-center text-sm mb-4 ${
+                messageType === "error" ? "text-red-600" : "text-green-600"
+              }`}
+            >
+              {message}
+            </p>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4 w-full h-full">
@@ -466,7 +495,7 @@ export default function EtmamEmployeeFormPage() {
                         <td className="p-1">
                           <input
                             type="text"
-                            value={employee.totalSalary}
+                            value={totalSalary}
                             disabled
                             className="w-full p-1 bg-gray-100 cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-400"
                           />
@@ -484,6 +513,7 @@ export default function EtmamEmployeeFormPage() {
               <button
                 type="submit"
                 disabled={loading}
+                onClick={handleSubmit}
                 className="w-40 bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 rounded-lg transition-all cursor-pointer"
               >
                 {loading ? "Submitting..." : "Submit"}
@@ -505,7 +535,7 @@ export default function EtmamEmployeeFormPage() {
             {/* ExcelUpload Container */}
             <div className="ml-auto">
               <div className="w-auto min-w-[200px]">
-                <ExcelUpload />
+                <EtmamEmployeesUpload />
               </div>
             </div>
           </div>
