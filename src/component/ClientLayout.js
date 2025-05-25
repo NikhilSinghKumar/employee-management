@@ -10,6 +10,7 @@ export default function ClientLayout({ children }) {
     /^\/services/,
     /^\/employee_list/,
     /^\/onboarding/,
+    /^\/etmam_employee_form/,
     /^\/add_employee/,
     /^\/edit_employee(\/|$)/,
     /^\/all_timesheet(\/|$)/,

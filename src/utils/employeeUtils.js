@@ -1,16 +1,14 @@
 export const calculateTotalSalary = (employee) => {
-  const basicVal = parseFloat(employee.basicSalary) || 0;
+  const basicSalary = parseFloat(employee.basicSalary) || 0;
+  const hra =
+    employee.hraType === "provided" ? 0 : parseFloat(employee.hra) || 0;
+  const tra =
+    employee.traType === "provided" ? 0 : parseFloat(employee.tra) || 0;
+  const foodAllowance =
+    employee.foodAllowanceType === "provided"
+      ? 0
+      : parseFloat(employee.foodAllowance) || 0;
+  const otherAllowance = parseFloat(employee.otherAllowance) || 0;
 
-  const getAllowance = (type, value, percentage) =>
-    type === "percent" ? basicVal * percentage : parseFloat(value) || 0;
-
-  return (
-    basicVal +
-      getAllowance(employee.hraType, employee.hra, 0.25) +
-      getAllowance(employee.traType, employee.tra, 0.1) +
-      (employee.foodAllowance === "provided"
-        ? 0
-        : parseFloat(employee.foodAllowance) || 0) +
-      parseFloat(employee.otherAllowance) || 0
-  ).toFixed(2);
+  return (basicSalary + hra + tra + foodAllowance + otherAllowance).toFixed(2);
 };

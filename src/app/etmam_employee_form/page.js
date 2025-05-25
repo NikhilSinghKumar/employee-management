@@ -5,7 +5,7 @@ import { calculateTotalSalary } from "@/utils/employeeUtils";
 import ExcelUpload from "@/component/ExcelUpload";
 
 const defaultEmployee = {
-  employeeName: "",
+  name: "",
   mobile: "",
   email: "",
   dob: "",
@@ -17,11 +17,11 @@ const defaultEmployee = {
   passportNo: "",
   passportExpDate: "",
   profession: "",
-  clientNo: "",
-  clientName: "",
+  staffId: "",
+  department: "",
   contractStartDate: "",
   contractEndDate: "",
-  employeeSource: "",
+  staffSource: "",
   basicSalary: "",
   hraType: "provided",
   hra: "",
@@ -30,12 +30,12 @@ const defaultEmployee = {
   foodAllowanceType: "provided",
   foodAllowance: "",
   otherAllowance: "",
-  totalSalary: "00.00",
+  totalSalary: "0.00",
   medical: "",
-  employeeStatus: "",
+  staffStatus: "",
 };
 
-export default function AddEmployee() {
+export default function EtmamEmployeeFormPage() {
   const [employee, setEmployee] = useState(defaultEmployee);
   const [message, setMessage] = useState("");
   const [isModified, setIsModified] = useState(false);
@@ -51,62 +51,78 @@ export default function AddEmployee() {
     const { name, value } = e.target;
 
     const validators = {
-      employeeName: /^[a-zA-Z\s'-]{1,50}$/,
+      name: /^[a-zA-Z\s'-]{1,50}$/,
       nationality: /^[a-zA-Z\s'-]{1,50}$/,
       profession: /^[a-zA-Z\s'-]{1,50}$/,
-      clientName: /^[a-zA-Z\s'-]{1,50}$/,
       mobile: /^[1-9]\d{0,9}$/,
-      email: /^[a-zA-Z0-9._]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+      iqamaNo: /^[0-9]{10}$/,
+      passportNo: /^[A-Z0-9]{5,15}$/,
+      bankAccount: /^[0-9]{10,20}$/,
     };
 
+    if (validators[name] && !validators[name].test(value) && value !== "") {
+      return;
+    }
+
     if (
-      validators[name] &&
-      name !== "email" && // Exclude email from inline validation
-      !validators[name].test(value) &&
-      value !== ""
+      ["basicSalary", "hra", "tra", "foodAllowance", "otherAllowance"].includes(
+        name
+      ) &&
+      value !== "" &&
+      parseFloat(value) < 0
     ) {
       return;
     }
-    setEmployee((prev) => ({
-      ...prev,
-      [name]: name === "medical" ? value.toUpperCase() : value,
-    }));
+
+    setEmployee((prev) => {
+      const updated = {
+        ...prev,
+        [name]: name === "medical" ? value.toUpperCase() : value,
+      };
+
+      const basicSalary = parseFloat(updated.basicSalary) || 0;
+
+      if (name === "basicSalary" || name === "hraType") {
+        if (updated.hraType === "percent") {
+          updated.hra = (basicSalary * 0.25).toFixed(2);
+        } else if (updated.hraType === "provided") {
+          updated.hra = "0";
+        }
+      }
+
+      if (name === "basicSalary" || name === "traType") {
+        if (updated.traType === "percent") {
+          updated.tra = (basicSalary * 0.1).toFixed(2);
+        } else if (updated.traType === "provided") {
+          updated.tra = "0";
+        }
+      }
+
+      if (name === "basicSalary" || name === "foodAllowanceType") {
+        if (updated.foodAllowanceType === "provided") {
+          updated.foodAllowance = "0";
+        }
+      }
+
+      return updated;
+    });
 
     setIsModified(true);
   };
 
   useEffect(() => {
-    document.title = "New Employee Form";
+    document.title = "ETMAM Staff Form";
 
-    setEmployee((prev) => {
-      const basicSalary = parseFloat(prev.basicSalary) || 0;
-
-      const updatedValues = {
-        totalSalary: calculateTotalSalary(prev),
-      };
-
-      if (prev.hraType === "percent") {
-        updatedValues.hra = (basicSalary * 0.25).toFixed(2);
-      } else if (prev.hraType === "provided") {
-        updatedValues.hra = "0";
-      }
-
-      if (prev.traType === "percent") {
-        updatedValues.tra = (basicSalary * 0.1).toFixed(2);
-      } else if (prev.traType === "provided") {
-        updatedValues.tra = "0";
-      }
-
-      if (prev.foodAllowanceType === "provided") {
-        updatedValues.foodAllowance = "0";
-      }
-
-      return { ...prev, ...updatedValues };
-    });
+    setEmployee((prev) => ({
+      ...prev,
+      totalSalary: calculateTotalSalary(prev),
+    }));
   }, [
     employee.basicSalary,
     employee.hraType,
+    employee.hra,
     employee.traType,
+    employee.tra,
     employee.foodAllowanceType,
     employee.foodAllowance,
     employee.otherAllowance,
@@ -117,32 +133,84 @@ export default function AddEmployee() {
     setLoading(true);
     setMessage("");
 
-    if (!/^[a-zA-Z0-9._]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(employee.email)) {
+    if (!employee.name || !employee.staffId) {
+      setMessage("Name and Staff ID are required");
+      setLoading(false);
+      return;
+    }
+
+    if (
+      employee.email &&
+      !/^[a-zA-Z0-9._]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(employee.email)
+    ) {
       setMessage("Invalid email format");
       setLoading(false);
       return;
     }
 
     if (
+      employee.contractStartDate &&
+      employee.contractEndDate &&
       new Date(employee.contractEndDate) < new Date(employee.contractStartDate)
     ) {
-      setMessage("Check Contract Date");
+      setMessage("Contract end date must be after start date");
       setLoading(false);
       return;
     }
 
     try {
-      const response = await fetch("/api/employees", {
+      const payload = {
+        name: employee.name,
+        mobile: employee.mobile,
+        email: employee.email,
+        dob: employee.dob,
+        et_no: employee.etNo,
+        iqama_no: employee.iqamaNo,
+        iqama_exp_date: employee.iqamaExpDate,
+        bank_account: employee.bankAccount,
+        nationality: employee.nationality,
+        passport_no: employee.passportNo,
+        passport_exp_date: employee.passportExpDate,
+        profession: employee.profession,
+        staff_id: employee.staffId,
+        department: employee.department,
+        contract_start_date: employee.contractStartDate,
+        contract_end_date: employee.contractEndDate,
+        staff_source: employee.staffSource,
+        basic_salary: parseFloat(employee.basicSalary) || 0,
+        hra_type: employee.hraType,
+        hra: parseFloat(employee.hra) || 0,
+        tra_type: employee.traType,
+        tra: parseFloat(employee.tra) || 0,
+        food_allowance_type: employee.foodAllowanceType,
+        food_allowance: parseFloat(employee.foodAllowance) || 0,
+        other_allowance: parseFloat(employee.otherAllowance) || 0,
+        total_salary: parseFloat(employee.totalSalary) || 0,
+        medical: employee.medical,
+        staff_status: employee.staffStatus,
+      };
+
+      const response = await fetch("/api/etmam_employees", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(employee),
+        body: JSON.stringify(payload),
       });
 
       const result = await response.json();
 
       if (!response.ok || !result.success) {
+        if (response.status === 401) {
+          setMessage("Unauthorized: Please log in");
+          setLoading(false);
+          return;
+        }
+        if (response.status === 409) {
+          setMessage("Staff ID already exists");
+          setLoading(false);
+          return;
+        }
         throw new Error(result.error || "Failed to add employee");
       }
 
@@ -152,7 +220,7 @@ export default function AddEmployee() {
       setTimeout(() => setMessage(""), 5000);
     } catch (err) {
       console.error("Unexpected error:", err);
-      setMessage("An unexpected error occurred.");
+      setMessage(err.message || "An unexpected error occurred.");
     } finally {
       setLoading(false);
     }
@@ -161,7 +229,7 @@ export default function AddEmployee() {
   const handleReset = () => {
     setEmployee(defaultEmployee);
     setIsModified(false);
-    setMessage("Employee form is reset now");
+    setMessage("Form is reset now");
     if (messageTimer.current) clearTimeout(messageTimer.current);
     messageTimer.current = setTimeout(() => setMessage(""), 2000);
   };
@@ -174,7 +242,7 @@ export default function AddEmployee() {
       <div className="flex flex-col justify-center items-center min-h-screen bg-gray-100 pt-16 px-4 pb-4">
         <div className="bg-white p-6 rounded-lg shadow-lg min-h-[70vh] w-full max-w-screen-xl mx-auto">
           <h2 className="text-2xl font-bold text-center text-gray-700 m-6">
-            New Employee Form
+            ETMAM Staff Form
           </h2>
           {message && (
             <p className="text-center text-sm text-green-600 mb-4">{message}</p>
@@ -197,7 +265,7 @@ export default function AddEmployee() {
                                 ["dob"].includes(key1)
                                   ? "uppercase"
                                   : "capitalize"
-                              }  whitespace-nowrap`}
+                              } whitespace-nowrap`}
                             >
                               {key1.replace(/([A-Z])/g, " $1").trim()}
                             </td>
@@ -227,11 +295,12 @@ export default function AddEmployee() {
                                     "passportExpDate",
                                     "contractStartDate",
                                     "contractEndDate",
+                                    "email",
                                   ].includes(key1)
                                     ? "lowercase"
                                     : "capitalize"
                                 } focus:outline-none focus:ring-2 focus:ring-blue-400`}
-                                required
+                                required={["name", "staffId"].includes(key1)}
                               />
                             </td>
                           </tr>
@@ -274,14 +343,8 @@ export default function AddEmployee() {
                                 type="radio"
                                 name={`${key}Type`}
                                 value="provided"
-                                defaultChecked
-                                onChange={() =>
-                                  setEmployee((prev) => ({
-                                    ...prev,
-                                    [`${key}Type`]: "provided",
-                                    [key]: "0",
-                                  }))
-                                }
+                                checked={employee[`${key}Type`] === "provided"}
+                                onChange={handleChange}
                                 className="mr-1"
                               />
                               Provided
@@ -292,19 +355,8 @@ export default function AddEmployee() {
                                   type="radio"
                                   name={`${key}Type`}
                                   value="percent"
-                                  onChange={() =>
-                                    setEmployee((prev) => {
-                                      const basicVal =
-                                        parseFloat(prev.basicSalary) || 0;
-                                      return {
-                                        ...prev,
-                                        [`${key}Type`]: "percent",
-                                        [key]: (basicVal * percentage).toFixed(
-                                          2
-                                        ),
-                                      };
-                                    })
-                                  }
+                                  checked={employee[`${key}Type`] === "percent"}
+                                  onChange={handleChange}
                                   className="mr-1"
                                 />
                                 Percent ({percentage * 100}%)
@@ -315,6 +367,7 @@ export default function AddEmployee() {
                                 type="radio"
                                 name={`${key}Type`}
                                 value="manual"
+                                checked={employee[`${key}Type`] === "manual"}
                                 onChange={handleChange}
                                 className="mr-1"
                               />
@@ -371,14 +424,14 @@ export default function AddEmployee() {
                         </td>
                       </tr>
 
-                      {/* Employee Status & Source*/}
+                      {/* Employee Status & Source */}
                       <tr className="border-b border-gray-200">
                         <td colSpan="2" className="p-1">
                           <div className="flex w-full">
                             <div className="w-1/2 pr-1">
                               <select
-                                name="employeeStatus"
-                                value={employee.employeeStatus}
+                                name="staffStatus"
+                                value={employee.staffStatus}
                                 onChange={handleChange}
                                 className="w-full p-1 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
                               >
@@ -391,8 +444,8 @@ export default function AddEmployee() {
                             </div>
                             <div className="w-1/2 pl-1">
                               <select
-                                name="employeeSource"
-                                value={employee.employeeSource}
+                                name="staffSource"
+                                value={employee.staffSource}
                                 onChange={handleChange}
                                 className="w-full p-1 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
                               >
@@ -449,8 +502,8 @@ export default function AddEmployee() {
               </button>
             </div>
 
-            {/* ExcelUpload Container - Pushed to the right */}
-            <div className="ml-50">
+            {/* ExcelUpload Container */}
+            <div className="ml-auto">
               <div className="w-auto min-w-[200px]">
                 <ExcelUpload />
               </div>
