@@ -15,17 +15,17 @@ export default function EtmamEmployeesList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0); // Total employees (unchanged by search)
-  const [uniqueClientCount, setUniqueClientCount] = useState(0);
+  // const [uniqueClientCount, setUniqueClientCount] = useState(0);
   const [searchResultCount, setSearchResultCount] = useState(0); // Number of search results
   const pageSize = 20;
 
   useEffect(() => {
-    document.title = "All Employees List";
+    document.title = "All Staffs List";
 
     // Fetch total employee count and unique client count (runs only once or after delete)
     const fetchCounts = async () => {
       const { count, error: countError } = await supabase
-        .from("employees")
+        .from("etmam_staff")
         .select("*", { count: "exact", head: true }); // head: true avoids fetching data
 
       if (countError) {
@@ -35,18 +35,18 @@ export default function EtmamEmployeesList() {
         setTotalCount(count || 0);
       }
 
-      const { data: allClientsData, error: clientError } = await supabase
-        .from("employees")
-        .select("client_number");
+      // const { data: allClientsData, error: clientError } = await supabase
+      //   .from("employees")
+      //   .select("client_number");
 
-      if (clientError) {
-        console.error("Error fetching client numbers:", clientError.message);
-      } else {
-        const clientSet = new Set(
-          allClientsData?.map((emp) => emp.client_number).filter(Boolean)
-        );
-        setUniqueClientCount(clientSet.size);
-      }
+      // if (clientError) {
+      //   console.error("Error fetching client numbers:", clientError.message);
+      // } else {
+      //   const clientSet = new Set(
+      //     allClientsData?.map((emp) => emp.client_number).filter(Boolean)
+      //   );
+      //   setUniqueClientCount(clientSet.size);
+      // }
     };
 
     // Fetch employees (paginated or search results)
@@ -57,12 +57,12 @@ export default function EtmamEmployeesList() {
         // Search mode: Fetch all employees matching the search query
         const query = searchQuery.toLowerCase();
         const { data, error } = await supabase
-          .from("employees")
+          .from("etmam_staff")
           .select("*")
           .or(
-            `name.ilike.%${query}%,et_number.ilike.%${query}%,iqama_number.ilike.%${query}%,passport_number.ilike.%${query}%,profession.ilike.%${query}%,nationality.ilike.%${query}%,client_number.ilike.%${query}%,client_name.ilike.%${query}%,mobile.ilike.%${query}%,email.ilike.%${query}%,bank_account.ilike.%${query}%,employee_status.ilike.%${query}%,employee_source.ilike.%${query}%`
+            `name.ilike.%${query}%,et_number.ilike.%${query}%,iqama_number.ilike.%${query}%,passport_number.ilike.%${query}%,profession.ilike.%${query}%,nationality.ilike.%${query}%,staff_id.ilike.%${query}%,departementilike.%${query}%,mobile.ilike.%${query}%,email.ilike.%${query}%,bank_account.ilike.%${query}%,staff_status.ilike.%${query}%,staff_source.ilike.%${query}%`
           )
-          .order("id", { ascending: true });
+          .order("etmam_staff_id", { ascending: true });
 
         if (error) {
           setError("Failed to fetch employees");
@@ -77,9 +77,9 @@ export default function EtmamEmployeesList() {
         const to = from + pageSize - 1;
 
         const { data, error } = await supabase
-          .from("employees")
+          .from("etmam_staff")
           .select("*")
-          .order("id", { ascending: true })
+          .order("etmam_staff_id", { ascending: true })
           .range(from, to);
 
         if (error) {
@@ -101,26 +101,28 @@ export default function EtmamEmployeesList() {
 
   const handleDelete = async (employee_id) => {
     const { error } = await supabase
-      .from("employees")
+      .from("etmam_staff")
       .delete()
-      .eq("id", employee_id);
+      .eq("etmam_staff_id", employee_id);
     if (error) {
       console.error("Error deleting employee:", error.message);
     } else {
-      setEmployees((prev) => prev.filter((emp) => emp.id !== employee_id));
+      setEmployees((prev) =>
+        prev.filter((emp) => emp.employee_status_id !== employee_id)
+      );
       // Update totalCount and uniqueClientCount after delete
       const { count } = await supabase
         .from("employees")
         .select("*", { count: "exact", head: true });
       setTotalCount(count || 0);
 
-      const { data: allClientsData } = await supabase
-        .from("employees")
-        .select("client_number");
-      const clientSet = new Set(
-        allClientsData?.map((emp) => emp.client_number).filter(Boolean)
-      );
-      setUniqueClientCount(clientSet.size);
+      // const { data: allClientsData } = await supabase
+      //   .from("employees")
+      //   .select("client_number");
+      // const clientSet = new Set(
+      //   allClientsData?.map((emp) => emp.client_number).filter(Boolean)
+      // );
+      // setUniqueClientCount(clientSet.size);
     }
   };
 
@@ -143,12 +145,12 @@ export default function EtmamEmployeesList() {
     <>
       <div className="w-full pt-16 px-4 pb-4">
         <h2 className="text-2xl text-center font-semibold m-4">
-          All Employee Details
+          All Staff Details
         </h2>
         <div className="flex flex-wrap justify-center items-center mb-6 gap-4">
           <div className="flex gap-4 text-sm font-medium text-gray-700 whitespace-nowrap mr-20">
-            <span>Total Clients: {uniqueClientCount}</span>
-            <span>Total Employees: {totalCount}</span>
+            {/* <span>Total Clients: {uniqueClientCount}</span> */}
+            <span>Total Staffs: {totalCount}</span>
           </div>
           <div className="relative flex-grow max-w-md">
             <div className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
@@ -202,8 +204,8 @@ export default function EtmamEmployeesList() {
                           "Passport No.",
                           "Profession",
                           "Nationality",
-                          "Client No.",
-                          "Client Name",
+                          "Staff Id",
+                          "Department",
                           "Mobile",
                           "Email",
                           "Bank Account",
@@ -226,19 +228,17 @@ export default function EtmamEmployeesList() {
                     <tbody>
                       {computedEmployees.map((employee, index) => (
                         <tr
-                          key={employee.id}
+                          key={employee.etmam_staff_id}
                           className="odd:bg-white even:bg-gray-50"
                         >
                           <td className="p-1 border text-center">
                             {(currentPage - 1) * pageSize + index + 1}
                           </td>
-                          <td className="p-1 border">{employee.et_number}</td>
-                          <td className="p-1 border">
-                            {employee.iqama_number}
-                          </td>
+                          <td className="p-1 border">{employee.et_no}</td>
+                          <td className="p-1 border">{employee.iqama_no}</td>
                           <td className="p-1 border">{employee.name}</td>
                           <td className="p-1 border text-center">
-                            {employee.passport_number}
+                            {employee.passport_no}
                           </td>
                           <td className="p-1 border text-center">
                             {employee.profession}
@@ -246,11 +246,9 @@ export default function EtmamEmployeesList() {
                           <td className="p-1 border text-center">
                             {employee.nationality}
                           </td>
-                          <td className="p-1 border">
-                            {employee.client_number}
-                          </td>
+                          <td className="p-1 border">{employee.staff_id}</td>
                           <td className="p-1 border text-center">
-                            {employee.client_name}
+                            {employee.department}
                           </td>
                           <td className="p-1 border">{employee.mobile}</td>
                           <td className="p-1 border">{employee.email}</td>
@@ -276,21 +274,23 @@ export default function EtmamEmployeesList() {
                             {formatDate(employee.contract_end_date)}
                           </td>
                           <td className="p-1 border">
-                            {employee.employee_status}
+                            {employee.staff_status}
                           </td>
                           <td className="p-1 border">
-                            {employee.employee_source}
+                            {employee.staff_source}
                           </td>
                           <td className="p-1 border flex items-center space-x-2">
                             <Link
-                              href={`/edit_employee/${employee.id}`}
+                              href={`/edit_employee/${employee.etmam_staff_id}`}
                               className="text-blue-500 cursor-pointer hover:text-blue-700 hover:scale-110 transition-transform duration-200"
                             >
                               <FaRegEdit />
                             </Link>
                             <button
                               className="text-red-500 cursor-pointer hover:text-red-600 hover:scale-110 transition-transform duration-200"
-                              onClick={() => handleDelete(employee.id)}
+                              onClick={() =>
+                                handleDelete(employee.etmam_staff_id)
+                              }
                             >
                               <MdDelete />
                             </button>

@@ -432,6 +432,7 @@ export default function AddEmployee() {
               <button
                 type="submit"
                 disabled={loading}
+                onClick={handleSubmit}
                 className="w-40 bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 rounded-lg transition-all cursor-pointer"
               >
                 {loading ? "Submitting..." : "Submit"}
