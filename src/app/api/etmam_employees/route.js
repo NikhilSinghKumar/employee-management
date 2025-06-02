@@ -18,7 +18,7 @@ const staffSchema = z.object({
   passport_no: z.string().optional(),
   passport_exp_date: z.string().date().optional(),
   profession: z.string().optional(),
-  staff_id: z.string().optional(),
+  company_staff: z.string().optional(),
   department: z.string().optional(),
   contract_start_date: z.string().date().optional(),
   contract_end_date: z.string().date().optional(),

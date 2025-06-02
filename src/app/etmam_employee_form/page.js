@@ -17,7 +17,7 @@ const defaultEmployee = {
   passportNo: "",
   passportExpDate: "",
   profession: "",
-  staffId: "",
+  companyStaff: "Etmam Staffs",
   department: "",
   contractStartDate: "",
   contractEndDate: "",
@@ -48,6 +48,17 @@ export default function EtmamEmployeeFormPage() {
     { key: "foodAllowance", label: "Food Allowance", percentage: null },
   ];
 
+  const departments = [
+    "Sales",
+    "Operations",
+    "HR",
+    "Finance",
+    "Talent Acquisition",
+    "Accomodation & Transportation",
+    "Manpower Affairs",
+    "Executive Management",
+  ];
+
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -68,9 +79,14 @@ export default function EtmamEmployeeFormPage() {
     }
 
     if (
-      ["basicSalary", "hra", "tra", "foodAllowance", "otherAllowance"].includes(
-        name
-      ) &&
+      [
+        "basicSalary",
+        "basicSalary",
+        "hra",
+        "tra",
+        "foodAllowance",
+        "otherAllowance",
+      ].includes(name) &&
       value !== "" &&
       parseFloat(value) < 0
     ) {
@@ -132,7 +148,7 @@ export default function EtmamEmployeeFormPage() {
     setMessageType("");
 
     // Client-side validation
-    if (!employee.name || !employee.staffId) {
+    if (!employee.name) {
       setMessage("Name and Staff ID are required");
       setMessageType("error");
       setLoading(false);
@@ -174,7 +190,7 @@ export default function EtmamEmployeeFormPage() {
         passport_no: employee.passportNo,
         passport_exp_date: employee.passportExpDate,
         profession: employee.profession,
-        staff_id: employee.staffId,
+        company_staff: employee.companyStaff,
         department: employee.department,
         contract_start_date: employee.contractStartDate,
         contract_end_date: employee.contractEndDate,
@@ -299,38 +315,54 @@ export default function EtmamEmployeeFormPage() {
                               {key1.replace(/([A-Z])/g, " $1").trim()}
                             </td>
                             <td className="p-1">
-                              <input
-                                type={
-                                  [
-                                    "dob",
-                                    "iqamaExpDate",
-                                    "passportExpDate",
-                                    "contractStartDate",
-                                    "contractEndDate",
-                                  ].includes(key1)
-                                    ? "date"
-                                    : "text"
-                                }
-                                name={key1}
-                                value={employee[key1]}
-                                onChange={handleChange}
-                                placeholder={`Enter ${key1
-                                  .replace(/([A-Z])/g, " $1")
-                                  .trim()}`}
-                                className={`w-full p-1 bg-gray-100 ${
-                                  [
-                                    "dob",
-                                    "iqamaExpDate",
-                                    "passportExpDate",
-                                    "contractStartDate",
-                                    "contractEndDate",
-                                    "email",
-                                  ].includes(key1)
-                                    ? "lowercase"
-                                    : "capitalize"
-                                } focus:outline-none focus:ring-2 focus:ring-blue-400`}
-                                required={["name", "staffId"].includes(key1)}
-                              />
+                              {key1 === "department" ? (
+                                <select
+                                  name="department"
+                                  value={employee.department}
+                                  onChange={handleChange}
+                                  className="w-full p-1 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                >
+                                  <option value="">Select Department</option>
+                                  {departments.map((dept, idx) => (
+                                    <option key={idx} value={dept}>
+                                      {dept}
+                                    </option>
+                                  ))}
+                                </select>
+                              ) : (
+                                <input
+                                  type={
+                                    [
+                                      "dob",
+                                      "iqamaExpDate",
+                                      "passportExpDate",
+                                      "contractStartDate",
+                                      "contractEndDate",
+                                    ].includes(key1)
+                                      ? "date"
+                                      : "text"
+                                  }
+                                  name={key1}
+                                  value={employee[key1]}
+                                  onChange={handleChange}
+                                  placeholder={`Enter ${key1
+                                    .replace(/([A-Z])/g, " $1")
+                                    .trim()}`}
+                                  className={`w-full p-1 bg-gray-100 ${
+                                    [
+                                      "dob",
+                                      "iqamaExpDate",
+                                      "passportExpDate",
+                                      "contractStartDate",
+                                      "contractEndDate",
+                                      "email",
+                                    ].includes(key1)
+                                      ? "lowercase"
+                                      : "capitalize"
+                                  } focus:outline-none focus:ring-2 focus:ring-blue-400`}
+                                  required={["name"].includes(key1)}
+                                />
+                              )}
                             </td>
                           </tr>
                         ))}

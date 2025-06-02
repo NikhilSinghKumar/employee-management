@@ -2,26 +2,48 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { supabase } from "@/utils/supabaseClient";
-import { calculateGrandTotal } from "@/utils/calculateGrandTotal";
+import Link from "next/link";
 
 const ClientTimesheetPage = () => {
   const [clientNumbers, setClientNumbers] = useState([]);
   const [selectedClient, setSelectedClient] = useState("");
-  const [allSummaryData, setAllSummaryData] = useState([]);
-  const [summaryData, setSummaryData] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
   const [month, setMonth] = useState("");
   const [year, setYear] = useState("");
-  const [totalAdjustedSalary, setTotalAdjustedSalary] = useState(0); // New state for total adjusted salary
+  const [summaryData, setSummaryData] = useState([]);
+  const [allSummaryData, setAllSummaryData] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [isTimesheetGenerated, setIsTimesheetGenerated] = useState(false);
+  const [checkLoading, setCheckLoading] = useState(false);
+  const [generateLoading, setGenerateLoading] = useState(false);
+  const [clientLoading, setClientLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const pageSize = 10;
   const router = useRouter();
 
-  const pageSize = 10;
+  // Combine month and year into a date string (e.g., "2024-01-01")
+  const getTimesheetDate = () => {
+    if (!month || !year) return null;
+    const paddedMonth = month.padStart(2, "0");
+    const dateStr = `${year}-${paddedMonth}-01`;
+    const date = new Date(dateStr);
+    if (
+      isNaN(date.getTime()) ||
+      parseInt(month) < 1 ||
+      parseInt(month) > 12 ||
+      parseInt(year) < 2000 ||
+      parseInt(year) > 9999
+    ) {
+      return null;
+    }
+    return dateStr;
+  };
 
+  // Fetch unique client numbers from employees table
   useEffect(() => {
     const fetchClientNumbers = async () => {
+      setClientLoading(true);
       const { data, error } = await supabase
         .from("employees")
         .select("client_number")
@@ -30,131 +52,219 @@ const ClientTimesheetPage = () => {
 
       if (error) {
         console.error("Error fetching client numbers:", error.message);
+        setError("Failed to load client numbers");
+        setClientLoading(false);
         return;
       }
 
       const uniqueClients = [...new Set(data.map((emp) => emp.client_number))];
+      if (uniqueClients.length === 0) {
+        setError("No clients found");
+      }
       setClientNumbers(uniqueClients);
+      setClientLoading(false);
     };
 
     fetchClientNumbers();
   }, []);
 
+  // Check if timesheet already exists for the selected combination via API
   useEffect(() => {
-    fetchSummaryData();
-  }, [selectedClient, month, year]); // Added dependencies to refresh data on filter change
+    const checkExistingTimesheet = async () => {
+      if (!selectedClient || !month || !year) {
+        setIsTimesheetGenerated(false);
+        setSummaryData([]);
+        setAllSummaryData([]);
+        setTotalPages(0);
+        setError(null);
+        return;
+      }
 
+      const timesheetDate = getTimesheetDate();
+      if (!timesheetDate) {
+        setError("Invalid month or year");
+        setIsTimesheetGenerated(false);
+        setSummaryData([]);
+        setAllSummaryData([]);
+        setTotalPages(0);
+        return;
+      }
+
+      setCheckLoading(true);
+      try {
+        const response = await fetch(
+          `/api/client_summary_table?client_number=${encodeURIComponent(
+            selectedClient
+          )}&timesheet_month=${encodeURIComponent(timesheetDate)}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
+          }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || "Failed to check timesheet");
+        }
+
+        const exists = result.exists;
+        setIsTimesheetGenerated(exists);
+        setError(null);
+
+        if (exists && result.data && result.data.length > 0) {
+          setAllSummaryData(result.data);
+          setTotalPages(Math.ceil(result.data.length / pageSize));
+        } else {
+          setSummaryData([]);
+          setAllSummaryData([]);
+          setTotalPages(0);
+        }
+      } catch (err) {
+        console.error("Error checking existing timesheet:", err.message);
+        setError("Error checking timesheet: " + err.message);
+      } finally {
+        setCheckLoading(false);
+      }
+    };
+
+    checkExistingTimesheet();
+  }, [selectedClient, month, year]);
+
+  // Paginate the data
   useEffect(() => {
-    // Paginate the grouped data on the client side
     const from = (currentPage - 1) * pageSize;
     const to = from + pageSize - 1;
     const paginatedData = allSummaryData.slice(from, to + 1);
     setSummaryData(paginatedData);
   }, [currentPage, allSummaryData]);
 
+  // Fetch employee data and calculate summary
   const fetchSummaryData = async () => {
-    let query = supabase
-      .from("timesheet")
-      .select(
-        `
-        client_number,
-        timesheet_month,
-        adjusted_salary,
-        total_cost,
-        employee_id,
-        employees(client_name)
-      `
-      )
-      .order("timesheet_month", { ascending: false })
-      .order("client_number", { ascending: true });
+    if (!selectedClient || !month || !year) return;
 
-    if (month && year) {
-      const timesheetMonthStart = `${year}-${month.padStart(2, "0")}-01`;
-      // Calculate the last day of the selected month
-      const lastDay = new Date(year, month, 0).getDate(); // month is 1-12, so month 0 gives the last day of the previous month
-      const timesheetMonthEnd = `${year}-${month.padStart(2, "0")}-${lastDay}`;
-      query = query
-        .gte("timesheet_month", timesheetMonthStart)
-        .lte("timesheet_month", timesheetMonthEnd);
-    }
-
-    if (selectedClient) {
-      query = query.eq("client_number", selectedClient);
-    }
-
-    const { data, error } = await query;
-
-    if (error) {
-      console.error("Error fetching timesheet summary:", error.message);
+    const timesheetDate = getTimesheetDate();
+    if (!timesheetDate) {
+      setError("Invalid month or year");
+      setGenerateLoading(false);
       return;
     }
 
-    // Calculate total adjusted salary across all records
-    const totalSalary = data.reduce(
-      (sum, row) => sum + (row.adjusted_salary || 0),
-      0
-    );
-    setTotalAdjustedSalary(totalSalary);
+    setGenerateLoading(true);
+    try {
+      const { data: employeeData, error: employeeError } = await supabase
+        .from("employees")
+        .select("client_number, client_name, total_salary")
+        .eq("client_number", selectedClient)
+        .eq("status", "active");
 
-    // Group data by client_number, year, month
-    const groupedData = data.reduce((acc, row) => {
-      const timesheetDate = new Date(row.timesheet_month);
-      const month = timesheetDate.getMonth() + 1;
-      const year = timesheetDate.getFullYear();
-      const key = `${row.client_number}-${year}-${month}`;
-
-      if (!acc[key]) {
-        acc[key] = {
-          client_number: row.client_number,
-          client_name: row.employees?.client_name || "Unknown",
-          month: month.toString().padStart(2, "0"),
-          year: year.toString(),
-          employee_ids: new Set(),
-          employeeData: {},
-        };
+      if (employeeError) {
+        throw new Error(employeeError.message);
       }
 
-      acc[key].employee_ids.add(row.employee_id);
-      acc[key].employeeData[row.employee_id] = {
-        totalCost: row.total_cost || 0,
-        adjusted_salary: row.adjusted_salary || 0,
-      };
+      if (!employeeData || employeeData.length === 0) {
+        setAllSummaryData([
+          {
+            client_number: selectedClient,
+            client_name: "Unknown",
+            timesheet_month: timesheetDate,
+            total_employees: 0,
+            total_salary: 0,
+            adjusted_salary: 0,
+            grand_total: 0,
+            status: "Pending",
+          },
+        ]);
+        setTotalPages(1);
+        setError(null);
+        return;
+      }
 
-      return acc;
-    }, {});
-
-    const rows = Object.values(groupedData).map((group) => {
-      const { grandTotal } = calculateGrandTotal(group.employeeData);
-      // Calculate total adjusted salary for the group
-      const groupAdjustedSalary = Object.values(group.employeeData).reduce(
-        (sum, emp) => sum + (emp.adjusted_salary || 0),
+      const totalEmployees = employeeData.length;
+      const totalSalary = employeeData.reduce(
+        (sum, emp) => sum + (emp.total_salary || 0),
         0
       );
-      return {
-        client_number: group.client_number,
-        client_name: group.client_name,
-        month: group.month,
-        year: group.year,
-        total_employees: group.employee_ids.size,
-        adjusted_salary: groupAdjustedSalary, // Fixed calculation
-        grand_total: grandTotal,
-        status: "Submitted",
-      };
-    });
+      const clientName = employeeData[0]?.client_name || "Unknown";
 
-    setAllSummaryData(rows);
-    setTotalPages(Math.ceil(rows.length / pageSize));
-    // Initial pagination
-    const from = (currentPage - 1) * pageSize;
-    const to = from + pageSize - 1;
-    setSummaryData(rows.slice(from, to + 1));
+      const summaryRow = {
+        client_number: selectedClient,
+        client_name: clientName,
+        timesheet_month: timesheetDate,
+        total_employees: totalEmployees,
+        total_salary: totalSalary,
+        adjusted_salary: 0,
+        grand_total: 0,
+        status: "Pending",
+      };
+
+      setAllSummaryData([summaryRow]);
+      setTotalPages(1);
+      setSummaryData([summaryRow]);
+      setError(null);
+    } catch (err) {
+      console.error("Error fetching employee data:", err.message);
+      setError("Error loading summary: " + err.message);
+    } finally {
+      setGenerateLoading(false);
+    }
   };
 
-  const handleSubmit = () => {
-    if (selectedClient && month && year) {
+  // Handle timesheet generation
+  const handleGenerateTimesheet = async () => {
+    if (!selectedClient || !month || !year) return;
+
+    setGenerateLoading(true);
+    try {
+      await fetchSummaryData();
+
+      const timesheetDate = getTimesheetDate();
+      if (!timesheetDate) {
+        setError("Invalid month or year");
+        setGenerateLoading(false);
+        return;
+      }
+
+      const summaryRow = allSummaryData[0] || {
+        client_number: selectedClient,
+        client_name: "Unknown",
+        timesheet_month: timesheetDate,
+        total_employees: 0,
+        total_salary: 0,
+        adjusted_salary: 0,
+        grand_total: 0,
+        status: "Pending",
+      };
+
+      const { error } = await supabase.from("client_summary_table").insert({
+        client_number: selectedClient,
+        timesheet_month: timesheetDate,
+        client_name: summaryRow.client_name,
+        total_employees: summaryRow.total_employees,
+        total_salary: summaryRow.total_salary,
+        sum_total_adjusted_salary: summaryRow.adjusted_salary,
+        grand_total: summaryRow.grand_total,
+        status: summaryRow.status,
+        created_at: new Date().toISOString(),
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      setIsTimesheetGenerated(true);
+      setError(null);
       router.push(
-        `/timesheet?client=${selectedClient}&month=${month}&year=${year}`
+        `/timesheet?client=${selectedClient}×heet_month=${timesheetDate}`
       );
+    } catch (err) {
+      console.error("Error saving timesheet summary:", err.message);
+      setError("Error generating timesheet: " + err.message);
+    } finally {
+      setGenerateLoading(false);
     }
   };
 
@@ -213,116 +323,162 @@ const ClientTimesheetPage = () => {
           </select>
         </div>
 
-        {/* Submit Button */}
+        {/* Generate Timesheet Button */}
         <div className="ml-4">
           <button
-            onClick={handleSubmit}
-            disabled={!selectedClient || !month || !year}
-            className="bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700 disabled:opacity-50 cursor-pointer"
+            onClick={handleGenerateTimesheet}
+            disabled={
+              !selectedClient ||
+              !month ||
+              !year ||
+              isTimesheetGenerated ||
+              generateLoading
+            }
+            className="bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700 disabled:opacity-70 cursor-pointer"
           >
-            Generate Timesheet
+            {generateLoading ? "Generating..." : "Generate Timesheet"}
           </button>
         </div>
       </div>
+
+      {/* Error Message */}
+      {error && <div className="text-center text-red-600 mb-4">{error}</div>}
+
+      {/* Message for Existing Timesheet */}
+      {isTimesheetGenerated && !error && (
+        <div className="text-center text-red-600 mb-4">
+          Timesheet already generated for this client, month, and year.
+        </div>
+      )}
+
+      {/* Loading Clients */}
+      {clientLoading && (
+        <div className="text-center text-gray-600 mb-4">Loading clients...</div>
+      )}
 
       {/* Summary Table */}
       <div className="w-full mt-20 p-4 mb-10">
         <h1 className="text-2xl font-bold text-center mb-6">
           Timesheet Summary
         </h1>
-        <div className="flex justify-center overflow-x-auto w-full">
-          <table className="table-auto w-max border-collapse border border-gray-200 text-sm">
-            <thead>
-              <tr className="bg-gray-100">
-                {[
-                  "S. No.",
-                  "Client Number",
-                  "Client Name",
-                  "Month",
-                  "Year",
-                  "Total Employees",
-                  "Total Adj Sal",
-                  "Grand Total",
-                  "Action",
-                  "Status",
-                ].map((col) => (
-                  <th key={col} className="border p-2">
-                    {col}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {summaryData.map((row, index) => (
-                <tr
-                  key={`${row.client_number}-${row.year}-${row.month}`}
-                  className="odd:bg-white even:bg-gray-50"
-                >
-                  <td className="p-2 border text-center">
-                    {(currentPage - 1) * pageSize + index + 1}
-                  </td>
-                  <td className="p-2 border text-center">
-                    {row.client_number}
-                  </td>
-                  <td className="p-2 border">{row.client_name}</td>
-                  <td className="p-2 border text-center">{row.month}</td>
-                  <td className="p-2 border text-center">{row.year}</td>
-                  <td className="p-2 border text-center">
-                    {row.total_employees}
-                  </td>
-                  <td className="p-2 border text-center">
-                    {row.adjusted_salary.toFixed(2)}
-                  </td>
-                  <td className="p-2 border text-center">
-                    {row.grand_total.toFixed(2)}
-                  </td>
-                  <td className="p-2 border text-center">
-                    <Link
-                      href={`/timesheet?client=${row.client_number}&month=${row.month}&year=${row.year}`}
-                      className="text-blue-600 hover:underline"
-                    >
-                      View Details
-                    </Link>
-                  </td>
-                  <td className="p-2 border text-center">{row.status}</td>
+        {summaryData.length === 0 &&
+          !isTimesheetGenerated &&
+          !checkLoading &&
+          !generateLoading &&
+          !error && (
+            <div className="text-center text-gray-600 mb-4">
+              Generate timesheet to display here
+            </div>
+          )}
+        {(checkLoading || generateLoading) && (
+          <div className="text-center text-gray-600 mb-4">Loading...</div>
+        )}
+        {summaryData.length > 0 && (
+          <div className="flex justify-center overflow-x-auto w-full">
+            <table className="table-auto w-max border-collapse border border-gray-200 text-sm">
+              <thead>
+                <tr className="bg-gray-100">
+                  {[
+                    "S. No.",
+                    "Client Number",
+                    "Client Name",
+                    "Timesheet Month",
+                    "Total Employees",
+                    "Total Salary",
+                    "Adjusted Salary",
+                    "Grand Total",
+                    "Action",
+                    "Status",
+                  ].map((col) => (
+                    <th key={col} className="border p-2">
+                      {col}
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {summaryData.map((row, index) => (
+                  <tr
+                    key={`${row.client_number}-${row.timesheet_month}`}
+                    className="odd:bg-white even:bg-gray-50"
+                  >
+                    <td className="p-2 border text-center">
+                      {(currentPage - 1) * pageSize + index + 1}
+                    </td>
+                    <td className="p-2 border text-center">
+                      {row.client_number}
+                    </td>
+                    <td className="p-2 border">{row.client_name}</td>
+                    <td className="p-2 border text-center">
+                      {new Date(row.timesheet_month).toLocaleString("default", {
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </td>
+                    <td className="p-2 border text-center">
+                      {row.total_employees}
+                    </td>
+                    <td className="p-2 border text-center">
+                      {row.total_salary.toFixed(2)}
+                    </td>
+                    <td className="p-2 border text-center">
+                      {row.adjusted_salary.toFixed(2)}
+                    </td>
+                    <td className="p-2 border text-center">
+                      {row.grand_total.toFixed(2)}
+                    </td>
+                    <td className="p-2 border text-center">
+                      <Link
+                        href={`/timesheet?client=${row.client_number}×heet_month=${row.timesheet_month}`}
+                        className="text-blue-600 hover:underline"
+                      >
+                        View Details
+                      </Link>
+                    </td>
+                    <td className="p-2 border text-center">{row.status}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {/* Pagination */}
-        <div className="flex justify-center mt-4 space-x-1 flex-wrap">
-          <button
-            className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-            disabled={currentPage === 1}
-          >
-            Prev
-          </button>
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-            (pageNum) => (
-              <button
-                key={pageNum}
-                onClick={() => setCurrentPage(pageNum)}
-                className={`px-3 py-1 rounded border ${
-                  currentPage === pageNum
-                    ? "font-bold bg-blue-100 border-blue-400"
-                    : "bg-white border-gray-300"
-                }`}
-              >
-                {pageNum}
-              </button>
-            )
-          )}
-          <button
-            className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-            onClick={() => setCurrentPage((p) => (p < totalPages ? p + 1 : p))}
-            disabled={currentPage >= totalPages}
-          >
-            Next
-          </button>
-        </div>
+        {summaryData.length > 0 && (
+          <div className="flex justify-center mt-4 space-x-1 flex-wrap">
+            <button
+              className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+              disabled={currentPage === 1}
+            >
+              Prev
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+              (pageNum) => (
+                <button
+                  key={pageNum}
+                  onClick={() => setCurrentPage(pageNum)}
+                  className={`px-3 py-1 rounded border ${
+                    currentPage === pageNum
+                      ? "font-bold bg-blue-100 border-blue-400"
+                      : "bg-white border-gray-300"
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              )
+            )}
+            <button
+              className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+              onClick={() =>
+                setCurrentPage((p) => (p < totalPages ? p + 1 : p))
+              }
+              disabled={currentPage >= totalPages}
+            >
+              Next
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
