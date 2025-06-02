@@ -11,6 +11,7 @@ export async function middleware(request) {
     "/edit_employee",
     "/all_timesheet",
     "/etmam_employee_form",
+    "/etmam_employees",
     "/timesheet",
   ];
   const authRoutes = ["/", "/register"];
@@ -57,5 +58,6 @@ export const config = {
     "/all_timesheet/:path*",
     "/timesheet/:path*",
     "/etmam_employee_form/:path*",
+    "/etmam_employees/:path",
   ],
 };

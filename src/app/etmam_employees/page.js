@@ -143,7 +143,7 @@ export default function EtmamEmployeesList() {
 
   return (
     <>
-      <div className="w-full pt-16 px-4 pb-4">
+      <div className="w-full pt-16 px-4 pb-4 mt-10">
         <h2 className="text-2xl text-center font-semibold m-4">
           All Staff Details
         </h2>

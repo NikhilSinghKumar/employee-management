@@ -15,6 +15,7 @@ export default function ClientLayout({ children }) {
     /^\/edit_employee(\/|$)/,
     /^\/all_timesheet(\/|$)/,
     /^\/timesheet(\/|$)/,
+    /^\/etmam_employees(\/|$)/,
   ];
   const showNavbar = allowedRoutes.some((pattern) => pattern.test(pathname));
   console.log("Current pathname:", pathname);
