@@ -41,8 +41,9 @@ export default function LoginForm() {
       const data = await res.json();
 
       if (res.status === 401) {
-        console.log("User not logged in yet");
-        return null;
+        setMessage({ text: "Wrong credentials", type: "error" });
+        setIsLoading(false);
+        return;
       }
 
       if (!res.ok) {
