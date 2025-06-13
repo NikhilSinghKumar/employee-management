@@ -1,4 +1,3 @@
-// all_timesheet/page.js
 "use client";
 
 import { useState, useEffect } from "react";
@@ -6,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 export default function TimesheetPage() {
   const [month, setMonth] = useState("");
-  const [year, setYear] = useState("");
+  const [year, setYear] = useState(new Date().getFullYear().toString());
   const [clientNumber, setClientNumber] = useState("");
   const [clientNumbers, setClientNumbers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -17,7 +16,7 @@ export default function TimesheetPage() {
   useEffect(() => {
     async function fetchClientNumbers() {
       const res = await fetch("/api/client_numbers", {
-        credentials: "include", // Include cookies in the request
+        credentials: "include",
       });
       const data = await res.json();
       if (res.ok) {
@@ -42,7 +41,7 @@ export default function TimesheetPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ month, year, clientNumber }),
-        credentials: "include", // Include cookies in the request
+        credentials: "include",
       });
 
       const result = await res.json();
@@ -62,12 +61,24 @@ export default function TimesheetPage() {
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Generate Timesheet</h1>
-      {error && <p className="text-red-500 mb-4">{error}</p>}
-      <form onSubmit={handleGenerateTimesheet} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium" htmlFor="month">
+    <div className="container mx-auto p-6 mt-16 max-w-5xl">
+      <h1 className="text-3xl font-bold text-gray-800 text-center mb-8">
+        All Client Timesheet
+      </h1>
+      {error && (
+        <p className="text-red-500 text-center bg-red-100 p-3 rounded-lg mb-6">
+          {error}
+        </p>
+      )}
+      <form
+        onSubmit={handleGenerateTimesheet}
+        className="flex flex-col sm:flex-row items-end justify-center gap-4 bg-gradient-to-br from-white via-gray-50 to-gray-100 p-6 rounded-2xl shadow-2xl ring-1 ring-gray-200 transition-all duration-300"
+      >
+        <div className="flex flex-col h-full justify-end w-full sm:w-auto">
+          <label
+            className="text-sm font-medium text-gray-700 mb-1"
+            htmlFor="month"
+          >
             Month
           </label>
           <select
@@ -75,7 +86,7 @@ export default function TimesheetPage() {
             value={month}
             onChange={(e) => setMonth(e.target.value)}
             required
-            className="mt-1 block w-full border rounded p-2"
+            className="block w-full sm:w-40 h-[42px] px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-black focus:ring-0 transition-all duration-200"
           >
             <option value="">Select Month</option>
             {Array.from({ length: 12 }, (_, i) => (
@@ -85,8 +96,12 @@ export default function TimesheetPage() {
             ))}
           </select>
         </div>
-        <div>
-          <label className="block text-sm font-medium" htmlFor="year">
+
+        <div className="flex flex-col h-full justify-end w-full sm:w-auto">
+          <label
+            className="text-sm font-medium text-gray-700 mb-1"
+            htmlFor="year"
+          >
             Year
           </label>
           <input
@@ -97,11 +112,15 @@ export default function TimesheetPage() {
             required
             min="2000"
             max="2100"
-            className="mt-1 block w-full border rounded p-2"
+            className="block w-full sm:w-40 h-[42px] px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-black focus:ring-0 transition-all duration-200"
           />
         </div>
-        <div>
-          <label className="block text-sm font-medium" htmlFor="clientNumber">
+
+        <div className="flex flex-col h-full justify-end w-full sm:w-auto">
+          <label
+            className="text-sm font-medium text-gray-700 mb-1"
+            htmlFor="clientNumber"
+          >
             Client Number
           </label>
           <select
@@ -109,9 +128,9 @@ export default function TimesheetPage() {
             value={clientNumber}
             onChange={(e) => setClientNumber(e.target.value)}
             required
-            className="mt-1 block w-full border rounded p-2"
+            className="block w-full sm:w-40 h-[42px] px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-black focus:ring-0 transition-all duration-200"
           >
-            <option value="">Select Client Number</option>
+            <option value="">Select Client</option>
             {clientNumbers.map((number) => (
               <option key={number} value={number}>
                 {number}
@@ -119,13 +138,16 @@ export default function TimesheetPage() {
             ))}
           </select>
         </div>
-        <button
-          type="submit"
-          disabled={loading}
-          className="bg-blue-500 text-white px-4 py-2 rounded disabled:bg-gray-400"
-        >
-          {loading ? "Generating..." : "Generate Timesheet"}
-        </button>
+
+        <div className="flex h-full items-end w-full sm:w-auto">
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full sm:w-auto h-[42px] px-6 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-semibold rounded-md hover:from-indigo-700 hover:to-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed shadow-md transition-all duration-200"
+          >
+            {loading ? "Generating..." : "Generate"}
+          </button>
+        </div>
       </form>
     </div>
   );

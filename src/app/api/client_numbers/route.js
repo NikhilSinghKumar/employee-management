@@ -27,7 +27,15 @@ export async function GET() {
 
     if (error) throw error;
 
-    const clientNumbers = [...new Set(data.map((item) => item.client_number))];
+    // ✅ Filter out null, undefined, and empty strings
+    const clientNumbers = [
+      ...new Set(
+        data
+          .map((item) => item.client_number)
+          .filter((num) => typeof num === "string" && num.trim() !== "")
+      ),
+    ];
+
     return NextResponse.json(clientNumbers, { status: 200 });
   } catch (err) {
     console.error("Error fetching client numbers:", err);
