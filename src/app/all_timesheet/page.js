@@ -12,6 +12,9 @@ export default function TimesheetPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [timesheetSummary, setTimesheetSummary] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 5;
   const router = useRouter();
 
   // Fetch client numbers
@@ -21,37 +24,27 @@ export default function TimesheetPage() {
         credentials: "include",
       });
       const data = await res.json();
-      if (res.ok) {
-        setClientNumbers(data);
-      } else {
-        setError(data.error);
-      }
+      if (res.ok) setClientNumbers(data);
+      else setError(data.error);
     }
     fetchClientNumbers();
   }, []);
 
-  // Handle form submission
+  // Handle Generate Timesheet
   const handleGenerateTimesheet = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-
     try {
       const res = await fetch("/api/generate_timesheet", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ month, year, clientNumber }),
         credentials: "include",
       });
-
       const result = await res.json();
-
-      if (!res.ok) {
+      if (!res.ok)
         throw new Error(result.error || "Failed to generate timesheet");
-      }
-
       alert("Timesheet generated successfully!");
       router.push("/timesheet/history");
     } catch (err) {
@@ -62,25 +55,29 @@ export default function TimesheetPage() {
     }
   };
 
-  // Fetch timesheet summary
+  // Fetch paginated timesheet summary
   useEffect(() => {
+    const from = (currentPage - 1) * pageSize;
+    const to = from + pageSize - 1;
+
     async function fetchTimesheetSummary() {
-      const { data, error } = await supabase
+      const { data, error, count } = await supabase
         .from("generated_timesheet_summary")
-        .select("*")
-        .order("timesheet_month", { ascending: false });
+        .select("*", { count: "exact" })
+        .order("timesheet_month", { ascending: false })
+        .range(from, to);
 
       if (error) {
         console.error("Error fetching summary:", error.message);
-      } else {
-        setTimesheetSummary(data);
+        return;
       }
+      setTimesheetSummary(data || []);
+      setTotalCount(count || 0);
     }
 
     fetchTimesheetSummary();
-  }, []);
+  }, [currentPage]);
 
-  // Format month and year
   const formatMonthYear = (dateString) => {
     const date = new Date(dateString);
     return {
@@ -89,25 +86,51 @@ export default function TimesheetPage() {
     };
   };
 
+  const getPaginationPages = () => {
+    const totalPages = Math.ceil(totalCount / pageSize);
+    const pages = [];
+
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+
+      if (currentPage > 3) pages.push("...");
+
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+
+      for (let i = start; i <= end; i++) pages.push(i);
+
+      if (currentPage < totalPages - 2) pages.push("...");
+      pages.push(totalPages);
+    }
+
+    return pages;
+  };
+
   return (
     <>
       <div className="container mx-auto p-6 mt-16 max-w-5xl">
         <h1 className="text-3xl font-bold text-gray-800 text-center mb-8">
           All Client Timesheet
         </h1>
+
         {error && (
           <p className="text-red-500 text-center bg-red-100 p-3 rounded-lg mb-6">
             {error}
           </p>
         )}
+
         <form
           onSubmit={handleGenerateTimesheet}
-          className="flex flex-col sm:flex-row items-end justify-center gap-4 bg-gradient-to-br from-white via-gray-50 to-gray-100 p-6 rounded-2xl shadow-2xl ring-1 ring-gray-200 transition-all duration-300"
+          className="flex flex-col sm:flex-row items-end justify-center gap-4 bg-gradient-to-br from-white via-gray-50 to-gray-100 p-6 rounded-2xl shadow-2xl ring-1 ring-gray-200"
         >
+          {/* Month */}
           <div className="flex flex-col h-full justify-end w-full sm:w-auto">
             <label
-              className="text-sm font-medium text-gray-700 mb-1"
               htmlFor="month"
+              className="text-sm font-medium text-gray-700 mb-1"
             >
               Month
             </label>
@@ -116,7 +139,7 @@ export default function TimesheetPage() {
               value={month}
               onChange={(e) => setMonth(e.target.value)}
               required
-              className="block w-full sm:w-40 h-[42px] px-4 py-2 border border-gray-200 rounded-md shadow-sm focus:outline-black focus:ring-0 transition-all duration-200"
+              className="block w-full sm:w-40 h-[42px] px-4 py-2 border border-gray-200 rounded-md shadow-sm focus:outline-black"
             >
               <option value="">Select Month</option>
               {Array.from({ length: 12 }, (_, i) => (
@@ -127,10 +150,11 @@ export default function TimesheetPage() {
             </select>
           </div>
 
+          {/* Year */}
           <div className="flex flex-col h-full justify-end w-full sm:w-auto">
             <label
-              className="text-sm font-medium text-gray-700 mb-1"
               htmlFor="year"
+              className="text-sm font-medium text-gray-700 mb-1"
             >
               Year
             </label>
@@ -142,14 +166,15 @@ export default function TimesheetPage() {
               required
               min="2000"
               max="2100"
-              className="block w-full sm:w-40 h-[42px] px-4 py-2 border border-gray-200 rounded-md shadow-sm focus:outline-black focus:ring-0 transition-all duration-200"
+              className="block w-full sm:w-40 h-[42px] px-4 py-2 border border-gray-200 rounded-md shadow-sm focus:outline-black"
             />
           </div>
 
+          {/* Client Number */}
           <div className="flex flex-col h-full justify-end w-full sm:w-auto">
             <label
-              className="text-sm font-medium text-gray-700 mb-1"
               htmlFor="clientNumber"
+              className="text-sm font-medium text-gray-700 mb-1"
             >
               Client Number
             </label>
@@ -158,7 +183,7 @@ export default function TimesheetPage() {
               value={clientNumber}
               onChange={(e) => setClientNumber(e.target.value)}
               required
-              className="block w-full sm:w-40 h-[42px] px-4 py-2 border border-gray-200 rounded-md shadow-sm focus:outline-black focus:ring-0 transition-all duration-200"
+              className="block w-full sm:w-40 h-[42px] px-4 py-2 border border-gray-200 rounded-md shadow-sm focus:outline-black"
             >
               <option value="">Select Client</option>
               {clientNumbers.map((number) => (
@@ -169,43 +194,36 @@ export default function TimesheetPage() {
             </select>
           </div>
 
+          {/* Submit Button */}
           <div className="flex h-full items-end w-full sm:w-auto">
             <button
               type="submit"
               disabled={loading}
-              className="w-full sm:w-auto h-[42px] px-6 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-semibold rounded-md hover:from-indigo-700 hover:to-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed shadow-md transition-all duration-200 cursor-pointer"
+              className="w-full sm:w-auto h-[42px] px-6 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-semibold rounded-md hover:from-indigo-700 hover:to-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
               {loading ? "Generating..." : "Generate"}
             </button>
           </div>
         </form>
       </div>
+
+      {/* Table */}
       <div className="mt-10 overflow-x-auto w-full">
         <div className="mx-auto max-w-7xl">
           <table className="table-auto w-max border-collapse border border-gray-300 text-sm">
             <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
               <tr className="border border-gray-300">
-                <th className="px-4 py-3 border border-gray-300">S.No</th>
-                <th className="px-4 py-3 border border-gray-300">
-                  Client Number
-                </th>
-                <th className="px-4 py-3 border border-gray-300">
-                  Client Name
-                </th>
-                <th className="px-4 py-3 border border-gray-300">Month</th>
-                <th className="px-4 py-3 border border-gray-300">Year</th>
-                <th className="px-4 py-3 border border-gray-300">
-                  Total Employees
-                </th>
-                <th className="px-4 py-3 border border-gray-300">Net Salary</th>
-                <th className="px-4 py-3 border border-gray-300">
-                  Net Adjusted Salary
-                </th>
-                <th className="px-4 py-3 border border-gray-300">
-                  Grand Total
-                </th>
-                <th className="px-4 py-3 border border-gray-300">Action</th>
-                <th className="px-4 py-3 border border-gray-300">Status</th>
+                <th className="px-4 py-3 border">S.No</th>
+                <th className="px-4 py-3 border">Client Number</th>
+                <th className="px-4 py-3 border">Client Name</th>
+                <th className="px-4 py-3 border">Month</th>
+                <th className="px-4 py-3 border">Year</th>
+                <th className="px-4 py-3 border">Total Employees</th>
+                <th className="px-4 py-3 border">Net Salary</th>
+                <th className="px-4 py-3 border">Net Adjusted Salary</th>
+                <th className="px-4 py-3 border">Grand Total</th>
+                <th className="px-4 py-3 border">Action</th>
+                <th className="px-4 py-3 border">Status</th>
               </tr>
             </thead>
             <tbody className="bg-white">
@@ -213,32 +231,26 @@ export default function TimesheetPage() {
                 const { month, year } = formatMonthYear(entry.timesheet_month);
                 return (
                   <tr key={entry.uid} className="border border-gray-300">
-                    <td className="px-4 py-2 border border-gray-300 text-center">
-                      {index + 1}
+                    <td className="px-4 py-2 border text-center">
+                      {(currentPage - 1) * pageSize + index + 1}
                     </td>
-                    <td className="px-4 py-2 border border-gray-300">
-                      {entry.client_number}
-                    </td>
-                    <td className="px-4 py-2 border border-gray-300">
-                      {entry.client_name}
-                    </td>
-                    <td className="px-4 py-2 border border-gray-300">
-                      {month}
-                    </td>
-                    <td className="px-4 py-2 border border-gray-300">{year}</td>
-                    <td className="px-4 py-2 border border-gray-300 text-center">
+                    <td className="px-4 py-2 border">{entry.client_number}</td>
+                    <td className="px-4 py-2 border">{entry.client_name}</td>
+                    <td className="px-4 py-2 border">{month}</td>
+                    <td className="px-4 py-2 border">{year}</td>
+                    <td className="px-4 py-2 border text-center">
                       {entry.employee_count}
                     </td>
-                    <td className="px-4 py-2 border border-gray-300">
+                    <td className="px-4 py-2 border">
                       SAR {entry.total_salary_sum.toFixed(2)}
                     </td>
-                    <td className="px-4 py-2 border border-gray-300">
+                    <td className="px-4 py-2 border">
                       SAR {entry.adjusted_salary_sum.toFixed(2)}
                     </td>
-                    <td className="px-4 py-2 font-semibold text-blue-700 border border-gray-300">
+                    <td className="px-4 py-2 font-semibold text-blue-700 border">
                       SAR {entry.grand_total.toFixed(2)}
                     </td>
-                    <td className="px-4 py-2 space-x-2 border border-gray-300">
+                    <td className="px-4 py-2 space-x-2 border">
                       <button className="px-3 py-1 bg-indigo-500 text-white rounded hover:bg-indigo-600 text-xs">
                         View
                       </button>
@@ -246,7 +258,7 @@ export default function TimesheetPage() {
                         Edit
                       </button>
                     </td>
-                    <td className="px-4 py-2 space-x-2 border border-gray-300">
+                    <td className="px-4 py-2 space-x-2 border">
                       <button className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-xs">
                         Submit
                       </button>
@@ -260,6 +272,49 @@ export default function TimesheetPage() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Pagination */}
+      <div className="flex justify-center mt-4 space-x-1 flex-wrap">
+        <button
+          className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+          onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+          disabled={currentPage === 1}
+        >
+          Prev
+        </button>
+
+        {getPaginationPages().map((page, idx) =>
+          page === "..." ? (
+            <span key={idx} className="px-3 py-1">
+              ...
+            </span>
+          ) : (
+            <button
+              key={idx}
+              onClick={() => setCurrentPage(page)}
+              className={`px-3 py-1 rounded border ${
+                currentPage === page
+                  ? "font-bold bg-blue-100 border-blue-400"
+                  : "bg-white border-gray-300"
+              }`}
+            >
+              {page}
+            </button>
+          )
+        )}
+
+        <button
+          className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+          onClick={() =>
+            setCurrentPage((p) =>
+              p < Math.ceil(totalCount / pageSize) ? p + 1 : p
+            )
+          }
+          disabled={currentPage >= Math.ceil(totalCount / pageSize)}
+        >
+          Next
+        </button>
       </div>
     </>
   );
