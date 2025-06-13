@@ -16,7 +16,7 @@ export default function TimesheetPage() {
   const [allEmployeeData, setAllEmployeeData] = useState({});
   const [totalCount, setTotalCount] = useState(0);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const pageSize = 5;
+  const pageSize = 10;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -167,9 +167,6 @@ export default function TimesheetPage() {
       });
       return;
     }
-
-    console.log("Fetched employees:", data);
-    console.log("Current allEmployeeData:", allEmployeeData);
 
     setTotalCount(count);
     setClientName(data[0]?.client_name || "");

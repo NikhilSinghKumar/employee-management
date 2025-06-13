@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { supabase } from "@/utils/supabaseClient";
 
 export default function TimesheetPage() {
@@ -14,8 +13,8 @@ export default function TimesheetPage() {
   const [timesheetSummary, setTimesheetSummary] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const pageSize = 5;
-  const router = useRouter();
+  const [successMessage, setSuccessMessage] = useState("");
+  const pageSize = 10;
 
   // Fetch client numbers
   useEffect(() => {
@@ -45,8 +44,12 @@ export default function TimesheetPage() {
       const result = await res.json();
       if (!res.ok)
         throw new Error(result.error || "Failed to generate timesheet");
-      alert("Timesheet generated successfully!");
-      router.push("/timesheet/history");
+      setSuccessMessage("Timesheet generated successfully!");
+      setTimeout(() => setSuccessMessage(""), 3000);
+
+      // Refetch summary after successful generation
+      await fetchTimesheetSummary(1); // Reset to first page to show new row
+      setCurrentPage(1); // Optionally reset pagination
     } catch (err) {
       setError(err.message || "Unexpected error");
       console.error(err);
@@ -57,26 +60,25 @@ export default function TimesheetPage() {
 
   // Fetch paginated timesheet summary
   useEffect(() => {
-    const from = (currentPage - 1) * pageSize;
-    const to = from + pageSize - 1;
-
-    async function fetchTimesheetSummary() {
-      const { data, error, count } = await supabase
-        .from("generated_timesheet_summary")
-        .select("*", { count: "exact" })
-        .order("timesheet_month", { ascending: false })
-        .range(from, to);
-
-      if (error) {
-        console.error("Error fetching summary:", error.message);
-        return;
-      }
-      setTimesheetSummary(data || []);
-      setTotalCount(count || 0);
-    }
-
     fetchTimesheetSummary();
   }, [currentPage]);
+
+  async function fetchTimesheetSummary() {
+    const from = (currentPage - 1) * pageSize;
+    const to = from + pageSize - 1;
+    const { data, error, count } = await supabase
+      .from("generated_timesheet_summary")
+      .select("*", { count: "exact" })
+      .order("timesheet_month", { ascending: false })
+      .range(from, to);
+
+    if (error) {
+      console.error("Error fetching summary:", error.message);
+      return;
+    }
+    setTimesheetSummary(data || []);
+    setTotalCount(count || 0);
+  }
 
   const formatMonthYear = (dateString) => {
     const date = new Date(dateString);
@@ -121,10 +123,14 @@ export default function TimesheetPage() {
             {error}
           </p>
         )}
-
+        {successMessage && (
+          <p className="text-green-600 text-center bg-green-100 p-3 rounded-lg mb-6 shadow-md">
+            {successMessage}
+          </p>
+        )}
         <form
           onSubmit={handleGenerateTimesheet}
-          className="flex flex-col sm:flex-row items-end justify-center gap-4 bg-gradient-to-br from-white via-gray-50 to-gray-100 p-6 rounded-2xl shadow-2xl ring-1 ring-gray-200"
+          className="flex flex-col sm:flex-row items-end justify-center gap-4 bg-gradient-to-br from-white via-gray-50 to-gray-100 p-6 rounded-2xl shadow-2xl ring-1 ring-gray-300"
         >
           {/* Month */}
           <div className="flex flex-col h-full justify-end w-full sm:w-auto">
@@ -139,7 +145,7 @@ export default function TimesheetPage() {
               value={month}
               onChange={(e) => setMonth(e.target.value)}
               required
-              className="block w-full sm:w-40 h-[42px] px-4 py-2 border border-gray-200 rounded-md shadow-sm focus:outline-black"
+              className="block w-full sm:w-40 h-[42px] px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-black"
             >
               <option value="">Select Month</option>
               {Array.from({ length: 12 }, (_, i) => (
@@ -166,7 +172,7 @@ export default function TimesheetPage() {
               required
               min="2000"
               max="2100"
-              className="block w-full sm:w-40 h-[42px] px-4 py-2 border border-gray-200 rounded-md shadow-sm focus:outline-black"
+              className="block w-full sm:w-40 h-[42px] px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-black"
             />
           </div>
 
@@ -183,7 +189,7 @@ export default function TimesheetPage() {
               value={clientNumber}
               onChange={(e) => setClientNumber(e.target.value)}
               required
-              className="block w-full sm:w-40 h-[42px] px-4 py-2 border border-gray-200 rounded-md shadow-sm focus:outline-black"
+              className="block w-full sm:w-40 h-[42px] px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-black"
             >
               <option value="">Select Client</option>
               {clientNumbers.map((number) => (
@@ -247,7 +253,7 @@ export default function TimesheetPage() {
                     <td className="px-4 py-2 border">
                       SAR {entry.adjusted_salary_sum.toFixed(2)}
                     </td>
-                    <td className="px-4 py-2 font-semibold text-blue-700 border">
+                    <td className="px-4 py-2 font-semibold border">
                       SAR {entry.grand_total.toFixed(2)}
                     </td>
                     <td className="px-4 py-2 space-x-2 border">
@@ -277,7 +283,7 @@ export default function TimesheetPage() {
       {/* Pagination */}
       <div className="flex justify-center mt-4 space-x-1 flex-wrap">
         <button
-          className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+          className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
           onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
           disabled={currentPage === 1}
         >
@@ -305,7 +311,7 @@ export default function TimesheetPage() {
         )}
 
         <button
-          className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+          className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
           onClick={() =>
             setCurrentPage((p) =>
               p < Math.ceil(totalCount / pageSize) ? p + 1 : p
