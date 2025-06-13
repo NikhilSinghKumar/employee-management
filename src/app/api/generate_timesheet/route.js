@@ -118,8 +118,21 @@ export async function POST(req) {
 
     if (insertError) {
       console.error("Insert error:", insertError);
+
+      let userFriendlyError = "Something went wrong. Please try again.";
+
+      if (
+        insertError.message.includes("duplicate key value") &&
+        insertError.message.includes(
+          "generated_timesheet_employee_id_timesheet_month_key"
+        )
+      ) {
+        userFriendlyError =
+          "Timesheet already exists for the selected month and client.";
+      }
+
       return NextResponse.json(
-        { error: `Failed to insert timesheet records: ${insertError.message}` },
+        { error: userFriendlyError, technical: insertError.message },
         { status: 500 }
       );
     }

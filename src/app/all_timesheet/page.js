@@ -111,6 +111,16 @@ export default function TimesheetPage() {
     return pages;
   };
 
+  // Auto-hide error message after 3 seconds
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => {
+        setError(null);
+      }, 3000);
+      return () => clearTimeout(timer); // Clean up if component unmounts or error changes
+    }
+  }, [error]);
+
   return (
     <>
       <div className="container mx-auto p-6 mt-16 max-w-5xl">
@@ -118,16 +128,6 @@ export default function TimesheetPage() {
           All Client Timesheet
         </h1>
 
-        {error && (
-          <p className="text-red-500 text-center bg-red-100 p-3 rounded-lg mb-6">
-            {error}
-          </p>
-        )}
-        {successMessage && (
-          <p className="text-green-600 text-center bg-green-100 p-3 rounded-lg mb-6 shadow-md">
-            {successMessage}
-          </p>
-        )}
         <form
           onSubmit={handleGenerateTimesheet}
           className="flex flex-col sm:flex-row items-end justify-center gap-4 bg-gradient-to-br from-white via-gray-50 to-gray-100 p-6 rounded-2xl shadow-2xl ring-1 ring-gray-300"
@@ -211,10 +211,23 @@ export default function TimesheetPage() {
             </button>
           </div>
         </form>
+        <div className="h-12 mb-4 mt-1">
+          {error ? (
+            <p className="text-red-600 text-center bg-red-100 p-3 rounded-lg shadow-md transition-opacity duration-300 ease-in-out opacity-100">
+              {error}
+            </p>
+          ) : successMessage ? (
+            <p className="text-green-600 text-center bg-green-100 p-3 rounded-lg shadow-md">
+              {successMessage}
+            </p>
+          ) : (
+            <div className="h-full"></div> // empty filler to preserve height
+          )}
+        </div>
       </div>
 
       {/* Table */}
-      <div className="mt-10 overflow-x-auto w-full">
+      <div className="overflow-x-auto w-full">
         <div className="mx-auto max-w-7xl">
           <table className="table-auto w-max border-collapse border border-gray-300 text-sm">
             <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
@@ -257,18 +270,18 @@ export default function TimesheetPage() {
                       SAR {entry.grand_total.toFixed(2)}
                     </td>
                     <td className="px-4 py-2 space-x-2 border">
-                      <button className="px-3 py-1 bg-indigo-500 text-white rounded hover:bg-indigo-600 text-xs">
+                      <button className="px-3 py-1 bg-indigo-500 text-white rounded hover:bg-indigo-600 text-xs cursor-pointer">
                         View
                       </button>
-                      <button className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-xs">
+                      <button className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-xs cursor-pointer">
                         Edit
                       </button>
                     </td>
                     <td className="px-4 py-2 space-x-2 border">
-                      <button className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-xs">
+                      <button className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-xs cursor-pointer">
                         Submit
                       </button>
-                      <button className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs">
+                      <button className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs cursor-pointer">
                         Closed
                       </button>
                     </td>
@@ -283,7 +296,7 @@ export default function TimesheetPage() {
       {/* Pagination */}
       <div className="flex justify-center mt-4 space-x-1 flex-wrap">
         <button
-          className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
+          className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50 cursor-pointer"
           onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
           disabled={currentPage === 1}
         >
@@ -299,7 +312,7 @@ export default function TimesheetPage() {
             <button
               key={idx}
               onClick={() => setCurrentPage(page)}
-              className={`px-3 py-1 rounded border ${
+              className={`px-3 py-1 rounded border cursor-pointer ${
                 currentPage === page
                   ? "font-bold bg-blue-100 border-blue-400"
                   : "bg-white border-gray-300"
@@ -311,7 +324,7 @@ export default function TimesheetPage() {
         )}
 
         <button
-          className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
+          className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50 cursor-pointer"
           onClick={() =>
             setCurrentPage((p) =>
               p < Math.ceil(totalCount / pageSize) ? p + 1 : p

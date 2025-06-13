@@ -74,8 +74,21 @@ export async function GET(request) {
 
     if (error) {
       console.error("Supabase query failed:", error.message);
+
+      let userFriendlyError = "Something went wrong. Please try again.";
+
+      if (
+        error.message.includes("duplicate key value") &&
+        error.message.includes(
+          "generated_timesheet_employee_id_timesheet_month_key"
+        )
+      ) {
+        userFriendlyError =
+          "Timesheet already exists for the selected month and client.";
+      }
+
       return NextResponse.json(
-        { error: "Failed to check timesheet", details: error.message },
+        { error: userFriendlyError, technical: error.message },
         { status: 500 }
       );
     }
