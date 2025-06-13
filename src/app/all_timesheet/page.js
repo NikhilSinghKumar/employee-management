@@ -213,13 +213,11 @@ export default function TimesheetPage() {
         </form>
         <div className="h-12 mb-4 mt-1">
           {error ? (
-            <p className="text-red-600 text-center bg-red-100 p-3 rounded-lg shadow-md transition-opacity duration-300 ease-in-out opacity-100">
+            <p className="text-red-600 text-center transition-opacity duration-300 ease-in-out opacity-100">
               {error}
             </p>
           ) : successMessage ? (
-            <p className="text-green-600 text-center bg-green-100 p-3 rounded-lg shadow-md">
-              {successMessage}
-            </p>
+            <p className="text-green-600 text-center ">{successMessage}</p>
           ) : (
             <div className="h-full"></div> // empty filler to preserve height
           )}
