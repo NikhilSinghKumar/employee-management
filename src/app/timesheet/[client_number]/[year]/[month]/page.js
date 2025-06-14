@@ -48,10 +48,9 @@ export default function ClientTimesheetPage() {
       <h1 className="text-2xl font-bold text-center mb-6">
         {clientName || "Loading..."} — Timesheet — {month}-{year}
       </h1>
-
-      <div className="overflow-x-auto">
-        <table className="min-w-full border border-gray-300 text-sm">
-          <thead className="bg-gray-100">
+      <div className="overflow-x-auto w-full flex justify-center">
+        <table className="table-auto w-max border-collapse border border-gray-300 text-sm">
+          <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
             <tr>
               <th className="border px-4 py-2">S.No</th>
               <th className="border px-4 py-2">Iqama Number</th>
