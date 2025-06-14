@@ -134,12 +134,6 @@ export default function TimesheetPage() {
         >
           {/* Month */}
           <div className="flex flex-col h-full justify-end w-full sm:w-auto">
-            <label
-              htmlFor="month"
-              className="text-sm font-medium text-gray-700 mb-1"
-            >
-              Month
-            </label>
             <select
               id="month"
               value={month}
@@ -158,12 +152,6 @@ export default function TimesheetPage() {
 
           {/* Year */}
           <div className="flex flex-col h-full justify-end w-full sm:w-auto">
-            <label
-              htmlFor="year"
-              className="text-sm font-medium text-gray-700 mb-1"
-            >
-              Year
-            </label>
             <input
               id="year"
               type="number"
@@ -178,12 +166,6 @@ export default function TimesheetPage() {
 
           {/* Client Number */}
           <div className="flex flex-col h-full justify-end w-full sm:w-auto">
-            <label
-              htmlFor="clientNumber"
-              className="text-sm font-medium text-gray-700 mb-1"
-            >
-              Client Number
-            </label>
             <select
               id="clientNumber"
               value={clientNumber}
@@ -268,7 +250,7 @@ export default function TimesheetPage() {
                       SAR {entry.grand_total.toFixed(2)}
                     </td>
                     <td className="px-4 py-2 space-x-2 border">
-                      <button className="px-3 py-1 text-gray rounded hover:bg-indigo-600 text-xs cursor-pointer">
+                      <button className="px-3 py-1 text-gray rounded hover:bg-indigo-600 hover:text-white text-xs cursor-pointer">
                         View
                       </button>
                       <button className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-xs cursor-pointer">
@@ -276,7 +258,7 @@ export default function TimesheetPage() {
                       </button>
                     </td>
                     <td className="px-4 py-2 space-x-2 border">
-                      <button className="px-3 py-1 text-green hover:bg-green-600 text-xs cursor-pointer">
+                      <button className="px-3 py-1 text-green hover:bg-green-600 hover:text-white text-xs cursor-pointer">
                         Submit
                       </button>
                       <button className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs cursor-pointer">
