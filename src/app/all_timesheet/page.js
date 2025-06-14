@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/utils/supabaseClient";
+import { useRouter } from "next/navigation";
 
 export default function TimesheetPage() {
   const [month, setMonth] = useState("");
@@ -15,6 +16,7 @@ export default function TimesheetPage() {
   const [totalCount, setTotalCount] = useState(0);
   const [successMessage, setSuccessMessage] = useState("");
   const pageSize = 10;
+  const router = useRouter();
 
   // Fetch client numbers
   useEffect(() => {
@@ -250,7 +252,16 @@ export default function TimesheetPage() {
                       SAR {entry.grand_total.toFixed(2)}
                     </td>
                     <td className="px-4 py-2 space-x-2 border">
-                      <button className="px-3 py-1 text-gray rounded hover:bg-indigo-600 hover:text-white text-xs cursor-pointer">
+                      <button
+                        onClick={() =>
+                          router.push(
+                            `/timesheet/${
+                              entry.client_number
+                            }/${year}/${entry.timesheet_month.slice(5, 7)}`
+                          )
+                        }
+                        className="px-3 py-1 text-gray rounded hover:bg-indigo-600 hover:text-white text-xs cursor-pointer"
+                      >
                         View
                       </button>
                       <button className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-xs cursor-pointer">
