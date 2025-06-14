@@ -268,7 +268,7 @@ export default function TimesheetPage() {
                       SAR {entry.grand_total.toFixed(2)}
                     </td>
                     <td className="px-4 py-2 space-x-2 border">
-                      <button className="px-3 py-1 bg-indigo-500 text-white rounded hover:bg-indigo-600 text-xs cursor-pointer">
+                      <button className="px-3 py-1 text-gray rounded hover:bg-indigo-600 text-xs cursor-pointer">
                         View
                       </button>
                       <button className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-xs cursor-pointer">
@@ -276,7 +276,7 @@ export default function TimesheetPage() {
                       </button>
                     </td>
                     <td className="px-4 py-2 space-x-2 border">
-                      <button className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-xs cursor-pointer">
+                      <button className="px-3 py-1 text-green hover:bg-green-600 text-xs cursor-pointer">
                         Submit
                       </button>
                       <button className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs cursor-pointer">

@@ -300,26 +300,82 @@ export default function EmployeeList() {
                     </tbody>
                   </table>
                 </div>
-                {totalCount > 0 && !searchQuery && (
-                  <div className="flex justify-center items-center gap-2 mt-6 flex-wrap">
-                    {Array.from(
-                      { length: Math.ceil(totalCount / pageSize) },
-                      (_, i) => (
+                {totalCount > 0 &&
+                  !searchQuery &&
+                  (() => {
+                    const totalPages = Math.ceil(totalCount / pageSize);
+                    const pages = [];
+
+                    // Always include first page
+                    if (totalPages > 0) pages.push(1);
+
+                    // Add middle pages with ellipsis logic
+                    if (currentPage > 4) pages.push("...");
+
+                    for (
+                      let i = Math.max(2, currentPage - 1);
+                      i <= Math.min(totalPages - 1, currentPage + 1);
+                      i++
+                    ) {
+                      pages.push(i);
+                    }
+
+                    if (currentPage + 2 < totalPages) pages.push("...");
+
+                    // Always include last page (if not already)
+                    if (totalPages > 1) pages.push(totalPages);
+
+                    return (
+                      <div className="flex justify-center items-center gap-1 mt-6 flex-wrap">
                         <button
-                          key={i + 1}
-                          onClick={() => setCurrentPage(i + 1)}
-                          className={`px-3 py-1 rounded cursor-pointer ${
-                            currentPage === i + 1
-                              ? "bg-blue-600 text-white"
+                          disabled={currentPage === 1}
+                          onClick={() => setCurrentPage((prev) => prev - 1)}
+                          className={`px-3 py-1 rounded ${
+                            currentPage === 1
+                              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                               : "bg-gray-200 text-gray-700 hover:bg-blue-100"
                           }`}
                         >
-                          {i + 1}
+                          Prev
                         </button>
-                      )
-                    )}
-                  </div>
-                )}
+
+                        {pages.map((page, idx) =>
+                          page === "..." ? (
+                            <span
+                              key={`ellipsis-${idx}`}
+                              className="px-2 py-1 text-gray-500"
+                            >
+                              ...
+                            </span>
+                          ) : (
+                            <button
+                              key={page}
+                              onClick={() => setCurrentPage(page)}
+                              className={`px-3 py-1 rounded cursor-pointer ${
+                                currentPage === page
+                                  ? "bg-blue-600 text-white"
+                                  : "bg-gray-200 text-gray-700 hover:bg-blue-100"
+                              }`}
+                            >
+                              {page}
+                            </button>
+                          )
+                        )}
+
+                        <button
+                          disabled={currentPage === totalPages}
+                          onClick={() => setCurrentPage((prev) => prev + 1)}
+                          className={`px-3 py-1 rounded ${
+                            currentPage === totalPages
+                              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                              : "bg-gray-200 text-gray-700 hover:bg-blue-100"
+                          }`}
+                        >
+                          Next
+                        </button>
+                      </div>
+                    );
+                  })()}
               </>
             )}
           </>
