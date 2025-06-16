@@ -18,6 +18,8 @@ export default function TimesheetPage() {
   const pageSize = 10;
   const router = useRouter();
 
+  const totalPages = Math.ceil(totalCount / pageSize);
+
   // Fetch client numbers
   useEffect(() => {
     async function fetchClientNumbers() {
@@ -76,6 +78,7 @@ export default function TimesheetPage() {
 
     if (error) {
       console.error("Error fetching summary:", error.message);
+      setError(error.message || "Failed to fetch timesheet summary");
       return;
     }
     setTimesheetSummary(data || []);
@@ -91,7 +94,6 @@ export default function TimesheetPage() {
   };
 
   const getPaginationPages = () => {
-    const totalPages = Math.ceil(totalCount / pageSize);
     const pages = [];
 
     if (totalPages <= 5) {
@@ -209,123 +211,139 @@ export default function TimesheetPage() {
       </div>
 
       {/* Table */}
+      {/* Table or No Data Message */}
       <div className="overflow-x-auto w-full">
         <div className="mx-auto max-w-7xl">
-          <table className="table-auto w-max border-collapse border border-gray-300 text-sm">
-            <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
-              <tr className="border border-gray-300">
-                <th className="px-4 py-3 border">S.No</th>
-                <th className="px-4 py-3 border">Client Number</th>
-                <th className="px-4 py-3 border">Client Name</th>
-                <th className="px-4 py-3 border">Month</th>
-                <th className="px-4 py-3 border">Year</th>
-                <th className="px-4 py-3 border">Total Employees</th>
-                <th className="px-4 py-3 border">Net Salary</th>
-                <th className="px-4 py-3 border">Net Adjusted Salary</th>
-                <th className="px-4 py-3 border">Grand Total</th>
-                <th className="px-4 py-3 border">Action</th>
-                <th className="px-4 py-3 border">Status</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white">
-              {timesheetSummary.map((entry, index) => {
-                const { month, year } = formatMonthYear(entry.timesheet_month);
-                return (
-                  <tr key={entry.uid} className="border border-gray-300">
-                    <td className="px-4 py-2 border text-center">
-                      {(currentPage - 1) * pageSize + index + 1}
-                    </td>
-                    <td className="px-4 py-2 border">{entry.client_number}</td>
-                    <td className="px-4 py-2 border">{entry.client_name}</td>
-                    <td className="px-4 py-2 border">{month}</td>
-                    <td className="px-4 py-2 border">{year}</td>
-                    <td className="px-4 py-2 border text-center">
-                      {entry.employee_count}
-                    </td>
-                    <td className="px-4 py-2 border">
-                      SAR {entry.total_salary_sum.toFixed(2)}
-                    </td>
-                    <td className="px-4 py-2 border">
-                      SAR {entry.adjusted_salary_sum.toFixed(2)}
-                    </td>
-                    <td className="px-4 py-2 font-semibold border">
-                      SAR {entry.grand_total.toFixed(2)}
-                    </td>
-                    <td className="px-4 py-2 space-x-2 border">
-                      <button
-                        onClick={() =>
-                          router.push(
-                            `/timesheet/${
-                              entry.client_number
-                            }/${year}/${entry.timesheet_month.slice(5, 7)}`
-                          )
-                        }
-                        className="px-3 py-1 text-gray rounded hover:bg-indigo-600 hover:text-white text-xs cursor-pointer"
-                      >
-                        View
-                      </button>
-                      <button className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-xs cursor-pointer">
-                        Edit
-                      </button>
-                    </td>
-                    <td className="px-4 py-2 space-x-2 border">
-                      <button className="px-3 py-1 text-green hover:bg-green-600 hover:text-white text-xs cursor-pointer">
-                        Submit
-                      </button>
-                      <button className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs cursor-pointer">
-                        Closed
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          {timesheetSummary.length === 0 ? (
+            <p className="text-center text-gray-500 text-lg py-10">
+              No timesheet data available.
+            </p>
+          ) : (
+            <table className="table-auto w-max border-collapse border border-gray-300 text-sm">
+              <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
+                <tr className="border border-gray-300">
+                  <th className="px-4 py-3 border">S.No</th>
+                  <th className="px-4 py-3 border">Client Number</th>
+                  <th className="px-4 py-3 border">Client Name</th>
+                  <th className="px-4 py-3 border">Month</th>
+                  <th className="px-4 py-3 border">Year</th>
+                  <th className="px-4 py-3 border">Total Employees</th>
+                  <th className="px-4 py-3 border">Net Salary</th>
+                  <th className="px-4 py-3 border">Net Adjusted Salary</th>
+                  <th className="px-4 py-3 border">Grand Total</th>
+                  <th className="px-4 py-3 border">Action</th>
+                  <th className="px-4 py-3 border">Status</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white">
+                {timesheetSummary.map((entry, index) => {
+                  const { month, year } = formatMonthYear(
+                    entry.timesheet_month
+                  );
+                  return (
+                    <tr key={entry.uid} className="border border-gray-300">
+                      <td className="px-4 py-2 border text-center">
+                        {(currentPage - 1) * pageSize + index + 1}
+                      </td>
+                      <td className="px-4 py-2 border">
+                        {entry.client_number}
+                      </td>
+                      <td className="px-4 py-2 border">{entry.client_name}</td>
+                      <td className="px-4 py-2 border">{month}</td>
+                      <td className="px-4 py-2 border">{year}</td>
+                      <td className="px-4 py-2 border text-center">
+                        {entry.employee_count}
+                      </td>
+                      <td className="px-4 py-2 border">
+                        SAR {entry.total_salary_sum.toFixed(2)}
+                      </td>
+                      <td className="px-4 py-2 border">
+                        SAR {entry.adjusted_salary_sum.toFixed(2)}
+                      </td>
+                      <td className="px-4 py-2 font-semibold border">
+                        SAR {entry.grand_total.toFixed(2)}
+                      </td>
+                      <td className="px-4 py-2 space-x-2 border">
+                        <button
+                          onClick={() =>
+                            router.push(
+                              `/timesheet/${
+                                entry.client_number
+                              }/${year}/${entry.timesheet_month.slice(5, 7)}`
+                            )
+                          }
+                          className="px-3 py-1 text-gray rounded hover:bg-indigo-600 hover:text-white text-xs cursor-pointer"
+                        >
+                          View
+                        </button>
+                        <button className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-xs cursor-pointer">
+                          Edit
+                        </button>
+                      </td>
+                      <td className="px-4 py-2 space-x-2 border">
+                        <button className="px-3 py-1 text-green hover:bg-green-600 hover:text-white text-xs cursor-pointer">
+                          Submit
+                        </button>
+                        <button className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs cursor-pointer">
+                          Closed
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
 
       {/* Pagination */}
-      <div className="flex justify-center mt-4 space-x-1 flex-wrap">
-        <button
-          className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50 cursor-pointer"
-          onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-          disabled={currentPage === 1}
-        >
-          Prev
-        </button>
+      {timesheetSummary.length > 0 && (
+        <div className="flex justify-center mt-4 space-x-2">
+          <button
+            className={`px-4 py-2 border rounded ${
+              currentPage === 1
+                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                : "bg-white text-gray-700 hover:bg-gray-100"
+            }`}
+            onClick={() => setCurrentPage(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            Prev
+          </button>
 
-        {getPaginationPages().map((page, idx) =>
-          page === "..." ? (
-            <span key={idx} className="px-3 py-1">
-              ...
-            </span>
-          ) : (
-            <button
-              key={idx}
-              onClick={() => setCurrentPage(page)}
-              className={`px-3 py-1 rounded border cursor-pointer ${
-                currentPage === page
-                  ? "font-bold bg-blue-100 border-blue-400"
-                  : "bg-white border-gray-300"
-              }`}
-            >
-              {page}
-            </button>
-          )
-        )}
-
-        <button
-          className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50 cursor-pointer"
-          onClick={() =>
-            setCurrentPage((p) =>
-              p < Math.ceil(totalCount / pageSize) ? p + 1 : p
+          {getPaginationPages().map((page, idx) =>
+            page === "..." ? (
+              <span key={idx} className="px-4 py-2 text-gray-500">
+                ...
+              </span>
+            ) : (
+              <button
+                key={idx}
+                className={`px-4 py-2 border rounded ${
+                  currentPage === page
+                    ? "bg-indigo-600 text-white"
+                    : "bg-white text-gray-700 hover:bg-gray-100"
+                }`}
+                onClick={() => setCurrentPage(page)}
+              >
+                {page}
+              </button>
             )
-          }
-          disabled={currentPage >= Math.ceil(totalCount / pageSize)}
-        >
-          Next
-        </button>
-      </div>
+          )}
+          <button
+            className={`px-4 py-2 border rounded ${
+              currentPage === totalPages || totalPages === 0
+                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                : "bg-white text-gray-700 hover:bg-gray-100"
+            }`}
+            onClick={() => setCurrentPage(currentPage + 1)}
+            disabled={currentPage === totalPages || totalPages === 0}
+          >
+            Next
+          </button>
+        </div>
+      )}
     </>
   );
 }
