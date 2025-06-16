@@ -5,8 +5,6 @@ import { supabase } from "@/utils/supabaseClient";
 import { useRouter } from "next/navigation";
 
 export default function TimesheetPage() {
-  const [month, setMonth] = useState("");
-  const [year, setYear] = useState(new Date().getFullYear().toString());
   const [clientNumber, setClientNumber] = useState("");
   const [clientNumbers, setClientNumbers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -15,10 +13,36 @@ export default function TimesheetPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [successMessage, setSuccessMessage] = useState("");
+  const [currentDate, setCurrentDate] = useState(new Date()); // State for current date
   const pageSize = 10;
   const router = useRouter();
 
+  // Derive month and year from currentDate
+  const currentMonth = String(currentDate.getMonth() + 1).padStart(2, "0"); // Month is 0-based, so +1
+  const currentYear = currentDate.getFullYear().toString();
+  const formattedMonth = currentDate.toLocaleString("default", {
+    month: "long",
+  });
+
   const totalPages = Math.ceil(totalCount / pageSize);
+
+  // Automatic update for month/year
+  useEffect(() => {
+    const checkDate = () => {
+      const now = new Date();
+      // Check if month or year has changed
+      if (
+        now.getMonth() !== currentDate.getMonth() ||
+        now.getFullYear() !== currentDate.getFullYear()
+      ) {
+        setCurrentDate(new Date()); // Update date to trigger re-render
+      }
+    };
+
+    // Check every minute (or adjust interval as needed)
+    const timer = setInterval(checkDate, 60 * 1000); // 60 seconds
+    return () => clearInterval(timer); // Cleanup on unmount
+  }, [currentDate]);
 
   // Fetch client numbers
   useEffect(() => {
@@ -42,7 +66,11 @@ export default function TimesheetPage() {
       const res = await fetch("/api/generate_timesheet", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ month, year, clientNumber }),
+        body: JSON.stringify({
+          month: currentMonth,
+          year: currentYear,
+          clientNumber,
+        }),
         credentials: "include",
       });
       const result = await res.json();
@@ -53,7 +81,7 @@ export default function TimesheetPage() {
 
       // Refetch summary after successful generation
       await fetchTimesheetSummary(1); // Reset to first page to show new row
-      setCurrentPage(1); // Optionally reset pagination
+      setCurrentPage(1); // Reset pagination
     } catch (err) {
       setError(err.message || "Unexpected error");
       console.error(err);
@@ -67,8 +95,8 @@ export default function TimesheetPage() {
     fetchTimesheetSummary();
   }, [currentPage]);
 
-  async function fetchTimesheetSummary() {
-    const from = (currentPage - 1) * pageSize;
+  async function fetchTimesheetSummary(page = currentPage) {
+    const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
     const { data, error, count } = await supabase
       .from("generated_timesheet_summary")
@@ -121,7 +149,7 @@ export default function TimesheetPage() {
       const timer = setTimeout(() => {
         setError(null);
       }, 3000);
-      return () => clearTimeout(timer); // Clean up if component unmounts or error changes
+      return () => clearTimeout(timer);
     }
   }, [error]);
 
@@ -136,36 +164,16 @@ export default function TimesheetPage() {
           onSubmit={handleGenerateTimesheet}
           className="flex flex-col sm:flex-row items-end justify-center gap-4 bg-gradient-to-br from-white via-gray-50 to-gray-100 p-6 rounded-2xl shadow-2xl ring-1 ring-gray-300"
         >
-          {/* Month */}
+          {/* Month and Year Display */}
           <div className="flex flex-col h-full justify-end w-full sm:w-auto">
-            <select
-              id="month"
-              value={month}
-              onChange={(e) => setMonth(e.target.value)}
-              required
-              className="block w-full sm:w-40 h-[42px] px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-black"
-            >
-              <option value="">Select Month</option>
-              {Array.from({ length: 12 }, (_, i) => (
-                <option key={i + 1} value={String(i + 1).padStart(2, "0")}>
-                  {new Date(0, i).toLocaleString("default", { month: "long" })}
-                </option>
-              ))}
-            </select>
+            <div className="block w-full flex items-center justify-center sm:w-40 h-[42px] px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-700">
+              {formattedMonth}
+            </div>
           </div>
-
-          {/* Year */}
           <div className="flex flex-col h-full justify-end w-full sm:w-auto">
-            <input
-              id="year"
-              type="number"
-              value={year}
-              onChange={(e) => setYear(e.target.value)}
-              required
-              min="2000"
-              max="2100"
-              className="block w-full sm:w-40 h-[42px] px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-black"
-            />
+            <div className="block w-full flex items-center justify-center sm:w-40 h-[42px] px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-700">
+              {currentYear}
+            </div>
           </div>
 
           {/* Client Number */}
@@ -203,15 +211,14 @@ export default function TimesheetPage() {
               {error}
             </p>
           ) : successMessage ? (
-            <p className="text-green-600 text-center ">{successMessage}</p>
+            <p className="text-green-600 text-center">{successMessage}</p>
           ) : (
-            <div className="h-full"></div> // empty filler to preserve height
+            <div className="h-full"></div>
           )}
         </div>
       </div>
 
       {/* Table */}
-      {/* Table or No Data Message */}
       <div className="overflow-x-auto w-full">
         <div className="mx-auto max-w-7xl">
           {timesheetSummary.length === 0 ? (

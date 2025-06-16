@@ -95,8 +95,6 @@ export async function POST(req) {
         { status: 404 }
       );
     }
-
-    console.log("userId typeof:", typeof userId, userId);
     // Prepare timesheet records
     const timesheetRecords = employees.map((emp) => ({
       employee_id: emp.id,
@@ -111,7 +109,6 @@ export async function POST(req) {
       generated_by: userId,
       edited_by: userId,
     }));
-    console.log("Prepared timesheetRecords:", timesheetRecords);
     // Insert timesheet records
     const { error: insertError } = await supabase
       .from("generated_timesheet")
