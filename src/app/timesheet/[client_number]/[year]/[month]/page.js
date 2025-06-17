@@ -84,13 +84,11 @@ export default function ClientTimesheetPage() {
                   </td>
                   <td className="border px-4 py-2">{item.employees.name}</td>
                   <td className="border px-4 py-2">
-                    SAR {(item.basic_salary ?? 0).toFixed(2)}
+                    {(item.basic_salary ?? 0).toFixed(2)}
                   </td>
+                  <td className="border px-4 py-2">{allowance.toFixed(2)}</td>
                   <td className="border px-4 py-2">
-                    SAR {allowance.toFixed(2)}
-                  </td>
-                  <td className="border px-4 py-2">
-                    SAR {(item.total_salary ?? 0).toFixed(2)}
+                    {(item.total_salary ?? 0).toFixed(2)}
                   </td>
                   <td className="border px-4 py-2 text-center">
                     {item.working_days}
@@ -102,19 +100,19 @@ export default function ClientTimesheetPage() {
                     {item.absent_hrs}
                   </td>
                   <td className="border px-4 py-2 text-center">
-                    SAR {(item.incentive ?? 0).toFixed(2)}
+                    {(item.incentive ?? 0).toFixed(2)}
                   </td>
                   <td className="border px-4 py-2">
-                    SAR {(item.deductions ?? 0).toFixed(2)}
+                    {(item.deductions ?? 0).toFixed(2)}
                   </td>
                   <td className="border px-4 py-2">
-                    SAR {(item.adjusted_salary ?? 0).toFixed(2)}
+                    {(item.adjusted_salary ?? 0).toFixed(2)}
                   </td>
                   <td className="border px-4 py-2">
-                    SAR {(item.etmam_cost ?? 0).toFixed(2)}
+                    {(item.etmam_cost ?? 0).toFixed(2)}
                   </td>
                   <td className="border px-4 py-2 font-semibold">
-                    SAR {(item.net_cost ?? 0).toFixed(2)}
+                    {(item.net_cost ?? 0).toFixed(2)}
                   </td>
                 </tr>
               );

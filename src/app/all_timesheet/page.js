@@ -262,13 +262,13 @@ export default function TimesheetPage() {
                         {entry.employee_count}
                       </td>
                       <td className="px-4 py-2 border">
-                        SAR {entry.total_salary_sum.toFixed(2)}
+                        {entry.total_salary_sum.toFixed(2)}
                       </td>
                       <td className="px-4 py-2 border">
-                        SAR {entry.adjusted_salary_sum.toFixed(2)}
+                        {entry.adjusted_salary_sum.toFixed(2)}
                       </td>
                       <td className="px-4 py-2 font-semibold border">
-                        SAR {entry.grand_total.toFixed(2)}
+                        {entry.grand_total.toFixed(2)}
                       </td>
                       <td className="px-4 py-2 space-x-2 border">
                         <button
