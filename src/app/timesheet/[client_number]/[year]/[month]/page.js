@@ -8,11 +8,11 @@ export default function ClientTimesheetPage() {
   const { client_number, year, month } = useParams();
   const [timesheetData, setTimesheetData] = useState([]);
   const [clientName, setClientName] = useState("");
+  const [summaryData, setSummaryData] = useState(null);
 
   useEffect(() => {
     async function fetchTimesheetData() {
       const fromDate = `${year}-${month}-01`;
-      const toDate = `${year}-${month}-31`;
 
       const { data, error } = await supabase
         .from("generated_timesheet")
@@ -31,14 +31,32 @@ export default function ClientTimesheetPage() {
       }
 
       setTimesheetData(data || []);
-
-      // Get client name from first employee (assuming all are same client)
       if (data && data.length > 0) {
         setClientName(data[0].employees.client_name);
       }
     }
 
+    async function fetchSummaryData() {
+      const fromDate = `${year}-${month}-01`;
+
+      const { data, error } = await supabase
+        .from("generated_timesheet_summary")
+        .select(
+          "working_days_count, total_salary_sum, total_cost_sum, vat_sum, grand_total"
+        )
+        .eq("client_number", client_number)
+        .eq("timesheet_month", fromDate)
+        .single();
+
+      if (error) {
+        console.error("Summary fetch error:", error);
+      } else {
+        setSummaryData(data);
+      }
+    }
+
     fetchTimesheetData();
+    fetchSummaryData();
   }, [client_number, year, month]);
 
   const monthYear = `${month}-${year}`;
@@ -48,7 +66,9 @@ export default function ClientTimesheetPage() {
       <h1 className="text-2xl font-bold text-center mb-6">
         {clientName || "Loading..."} — Timesheet — {month}-{year}
       </h1>
-      <div className="overflow-x-auto w-full flex justify-center">
+
+      {/* Main Timesheet Table */}
+      <div className="overflow-x-auto w-full flex justify-center mb-10">
         <table className="table-auto w-max border-collapse border border-gray-300 text-sm">
           <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
             <tr>
@@ -65,7 +85,7 @@ export default function ClientTimesheetPage() {
               <th className="border px-4 py-2">Deductions</th>
               <th className="border px-4 py-2">Adjusted Salary</th>
               <th className="border px-4 py-2">Etmam Cost</th>
-              <th className="border px-4 py-2">Net Cost</th>
+              <th className="border px-4 py-2 font-semibold">Total Cost</th>
             </tr>
           </thead>
           <tbody>
@@ -112,7 +132,7 @@ export default function ClientTimesheetPage() {
                     {(item.etmam_cost ?? 0).toFixed(2)}
                   </td>
                   <td className="border px-4 py-2 font-semibold">
-                    {(item.net_cost ?? 0).toFixed(2)}
+                    {(item.total_cost ?? 0).toFixed(2)}
                   </td>
                 </tr>
               );
@@ -126,6 +146,53 @@ export default function ClientTimesheetPage() {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* ✅ Timesheet Summary Table */}
+      <div className="mt-10">
+        <h2 className="text-xl font-semibold text-center mb-4">
+          Timesheet Summary
+        </h2>
+        <div className="overflow-x-auto flex justify-center">
+          <table className="table-auto border-collapse border border-gray-300 text-sm w-max">
+            <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
+              <tr>
+                <th className="border px-4 py-2">Total Working Days</th>
+                <th className="border px-4 py-2">Net Salary</th>
+                <th className="border px-4 py-2">Net Cost Total</th>
+                <th className="border px-4 py-2">VAT</th>
+                <th className="border px-4 py-2">Grand Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {summaryData ? (
+                <tr className="text-center">
+                  <td className="border px-4 py-2">
+                    {summaryData.working_days_count ?? 0}
+                  </td>
+                  <td className="border px-4 py-2">
+                    {summaryData.total_salary_sum?.toFixed(2) ?? "0.00"}
+                  </td>
+                  <td className="border px-4 py-2">
+                    {summaryData.total_cost_sum?.toFixed(2) ?? "0.00"}
+                  </td>
+                  <td className="border px-4 py-2">
+                    {summaryData.vat_sum?.toFixed(2) ?? "0.00"}
+                  </td>
+                  <td className="border px-4 py-2 font-bold">
+                    {summaryData.grand_total?.toFixed(2) ?? "0.00"}
+                  </td>
+                </tr>
+              ) : (
+                <tr>
+                  <td colSpan="5" className="text-center py-4">
+                    No summary data available.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
