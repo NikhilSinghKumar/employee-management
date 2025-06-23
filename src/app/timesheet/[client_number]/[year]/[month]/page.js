@@ -81,6 +81,7 @@ export default function ClientTimesheetPage() {
               <th className="border px-4 py-2">Working Days</th>
               <th className="border px-4 py-2">Overtime Hrs</th>
               <th className="border px-4 py-2">Absent Hrs</th>
+              <th className="border px-4 py-2">Overtime</th>
               <th className="border px-4 py-2">Incentives</th>
               <th className="border px-4 py-2">Deductions</th>
               <th className="border px-4 py-2">Adjusted Salary</th>
@@ -118,6 +119,9 @@ export default function ClientTimesheetPage() {
                   </td>
                   <td className="border px-4 py-2 text-center">
                     {item.absent_hrs}
+                  </td>
+                  <td className="border px-4 py-2 text-center">
+                    {item.overtime}
                   </td>
                   <td className="border px-4 py-2 text-center">
                     {(item.incentive ?? 0).toFixed(2)}

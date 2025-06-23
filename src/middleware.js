@@ -13,6 +13,7 @@ export async function middleware(request) {
     "/etmam_employee_form",
     "/etmam_employees",
     "/timesheet",
+    "/edit_timesheet",
   ];
   const authRoutes = ["/", "/register"];
   const pathname = request.nextUrl.pathname;
@@ -58,6 +59,7 @@ export const config = {
     "/all_timesheet/:path*",
     "/timesheet/:path*",
     "/etmam_employee_form/:path*",
-    "/etmam_employees/:path",
+    "/etmam_employees/:path*",
+    "/edit_timesheet/:path*",
   ],
 };

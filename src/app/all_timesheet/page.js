@@ -283,7 +283,16 @@ export default function TimesheetPage() {
                         >
                           View
                         </button>
-                        <button className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-xs cursor-pointer">
+                        <button
+                          onClick={() =>
+                            router.push(
+                              `/edit_timesheet/${
+                                entry.client_number
+                              }/${year}/${entry.timesheet_month.slice(5, 7)}`
+                            )
+                          }
+                          className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-xs cursor-pointer"
+                        >
                           Edit
                         </button>
                       </td>
