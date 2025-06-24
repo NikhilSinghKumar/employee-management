@@ -2,16 +2,18 @@
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/utils/supabaseClient";
+import { useRouter } from "next/navigation";
 
 export default function EditTimesheetPage() {
   const { client_number, year, month } = useParams();
   const [timesheetData, setTimesheetData] = useState([]);
   const [clientName, setClientName] = useState("");
   const [summaryData, setSummaryData] = useState(null);
-  const [editRowId, setEditRowId] = useState(null); // Track which row is being edited
   const [editedValues, setEditedValues] = useState({}); // Store edited values
+  const [originalValues, setOriginalValues] = useState({}); // Store original values for cancel
   const [error, setError] = useState(null); // Track errors
   const [success, setSuccess] = useState(null); // Track success messages
+  const router = useRouter();
 
   // Fetch timesheet and summary data
   useEffect(() => {
@@ -26,13 +28,26 @@ export default function EditTimesheetPage() {
         .eq("employees.client_number", client_number);
 
       if (error) {
-        console.error("Fetch error details:", error); // Log full error
+        console.error("Fetch error details:", error);
         setError(`Failed to fetch timesheet data: ${error.message}`);
         return;
       }
       setTimesheetData(data || []);
       if (data && data.length > 0) {
         setClientName(data[0].employees.client_name);
+        // Initialize edited and original values
+        const initialValues = {};
+        data.forEach((item) => {
+          initialValues[item.uid] = {
+            working_days: item.working_days || 0,
+            overtime_hrs: item.overtime_hrs || 0,
+            absent_hrs: item.absent_hrs || 0,
+            incentive: item.incentive || 0,
+            etmam_cost: item.etmam_cost || 0,
+          };
+        });
+        setEditedValues(initialValues);
+        setOriginalValues(initialValues);
       }
     }
 
@@ -70,78 +85,54 @@ export default function EditTimesheetPage() {
     }));
   };
 
-  // Handle edit button click
-  const handleEditClick = (timesheetUid) => {
-    if (!timesheetUid) {
-      console.warn("timesheetUid is undefined, using fallback logic");
-      return;
-    }
-    setEditRowId(timesheetUid);
-    const item = timesheetData.find((item) => item.uid === timesheetUid);
-    setEditedValues((prev) => ({
-      ...prev,
-      [timesheetUid]: {
-        working_days: item?.working_days || 0,
-        overtime_hrs: item?.overtime_hrs || 0,
-        absent_hrs: item?.absent_hrs || 0,
-        incentive: item?.incentive || 0,
-        etmam_cost: item?.etmam_cost || 0,
-      },
-    }));
-  };
-
   // Handle save button click
-  const handleSaveClick = async (timesheetUid) => {
-    if (!timesheetUid) {
-      console.warn("timesheetUid is undefined, cannot save");
-      setError("Invalid timesheet UID.");
-      return;
-    }
+  const handleSaveClick = async () => {
     setError(null);
     setSuccess(null);
 
-    const updates = editedValues[timesheetUid];
-    if (!updates) {
-      setError("No changes to save.");
-      return;
-    }
-
-    // Validate inputs
-    for (const field of [
-      "working_days",
-      "overtime_hrs",
-      "absent_hrs",
-      "incentive",
-      "etmam_cost",
-    ]) {
-      if (
-        updates[field] !== undefined &&
-        (isNaN(updates[field]) || updates[field] < 0)
-      ) {
-        setError(`${field.replace("_", " ")} must be a non-negative number.`);
-        return;
+    // Validate all edited values
+    for (const timesheetUid in editedValues) {
+      const updates = editedValues[timesheetUid];
+      for (const field of [
+        "working_days",
+        "overtime_hrs",
+        "absent_hrs",
+        "incentive",
+        "etmam_cost",
+      ]) {
+        if (
+          updates[field] !== undefined &&
+          (isNaN(updates[field]) || updates[field] < 0)
+        ) {
+          setError(`${field.replace("_", " ")} must be a non-negative number.`);
+          return;
+        }
       }
     }
 
     try {
-      const response = await fetch("/api/generate_timesheet", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          timesheetId: timesheetUid,
-          updates,
-        }),
-        credentials: "include",
-      });
+      // Send all updates in a single batch
+      const updatePromises = Object.keys(editedValues).map((timesheetUid) =>
+        fetch("/api/generate_timesheet", {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            timesheetId: timesheetUid,
+            updates: editedValues[timesheetUid],
+          }),
+          credentials: "include",
+        }).then(async (response) => {
+          const result = await response.json();
+          if (!response.ok) {
+            throw new Error(result.error || "Failed to update timesheet.");
+          }
+          return result;
+        })
+      );
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        setError(result.error || "Failed to update timesheet.");
-        return;
-      }
+      await Promise.all(updatePromises);
 
       // Refetch timesheet data to reflect changes
       const fromDate = `${year}-${month}-01`;
@@ -161,6 +152,18 @@ export default function EditTimesheetPage() {
         if (updatedTimesheets && updatedTimesheets.length > 0) {
           setClientName(updatedTimesheets[0].employees.client_name);
         }
+        // Update original values to reflect saved changes
+        const newOriginalValues = {};
+        updatedTimesheets.forEach((item) => {
+          newOriginalValues[item.uid] = {
+            working_days: item.working_days || 0,
+            overtime_hrs: item.overtime_hrs || 0,
+            absent_hrs: item.absent_hrs || 0,
+            incentive: item.incentive || 0,
+            etmam_cost: item.etmam_cost || 0,
+          };
+        });
+        setOriginalValues(newOriginalValues);
       }
 
       // Refetch summary data to reflect changes
@@ -181,11 +184,17 @@ export default function EditTimesheetPage() {
       }
 
       setSuccess("Timesheet updated successfully!");
-      setEditRowId(null); // Exit edit mode
     } catch (error) {
       console.error("Error updating timesheet:", error);
       setError("Server error. Please try again.");
     }
+  };
+
+  // Handle cancel button click
+  const handleCancelClick = () => {
+    setEditedValues(originalValues); // Reset to original values
+    setError(null);
+    setSuccess(null);
   };
 
   // Set timeout for error and success messages
@@ -238,7 +247,6 @@ export default function EditTimesheetPage() {
               <th className="border px-4 py-2">Adjusted Salary</th>
               <th className="border px-4 py-2">Etmam Cost</th>
               <th className="border px-4 py-2 font-semibold">Total Cost</th>
-              <th className="border px-4 py-2">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -248,7 +256,6 @@ export default function EditTimesheetPage() {
                 (item.employees.tra ?? 0) +
                 (item.employees.food_allowance ?? 0) +
                 (item.employees.other_allowance ?? 0);
-              const isEditing = editRowId === item.uid;
 
               return (
                 <tr key={item.uid || `row-${index}`} className="border">
@@ -265,94 +272,78 @@ export default function EditTimesheetPage() {
                     {(item.total_salary ?? 0).toFixed(2)}
                   </td>
                   <td className="border px-4 py-2 text-center">
-                    {isEditing ? (
-                      <input
-                        type="number"
-                        min="0"
-                        value={
-                          editedValues[item.uid]?.working_days ??
-                          item.working_days
-                        }
-                        onChange={(e) =>
-                          handleInputChange(
-                            item.uid || index,
-                            "working_days",
-                            parseInt(e.target.value) || 0
-                          )
-                        }
-                        className="w-16 text-center border rounded"
-                      />
-                    ) : (
-                      item.working_days
-                    )}
+                    <input
+                      type="number"
+                      min="0"
+                      value={
+                        editedValues[item.uid]?.working_days ??
+                        item.working_days
+                      }
+                      onChange={(e) =>
+                        handleInputChange(
+                          item.uid || index,
+                          "working_days",
+                          parseInt(e.target.value) || 0
+                        )
+                      }
+                      className="w-16 text-center border rounded"
+                    />
                   </td>
                   <td className="border px-4 py-2 text-center">
-                    {isEditing ? (
-                      <input
-                        type="number"
-                        min="0"
-                        value={
-                          editedValues[item.uid]?.overtime_hrs ??
-                          item.overtime_hrs
-                        }
-                        onChange={(e) =>
-                          handleInputChange(
-                            item.uid || index,
-                            "overtime_hrs",
-                            parseInt(e.target.value) || 0
-                          )
-                        }
-                        className="w-16 text-center border rounded"
-                      />
-                    ) : (
-                      item.overtime_hrs
-                    )}
+                    <input
+                      type="number"
+                      min="0"
+                      value={
+                        editedValues[item.uid]?.overtime_hrs ??
+                        item.overtime_hrs
+                      }
+                      onChange={(e) =>
+                        handleInputChange(
+                          item.uid || index,
+                          "overtime_hrs",
+                          parseInt(e.target.value) || 0
+                        )
+                      }
+                      className="w-16 text-center border rounded"
+                    />
                   </td>
                   <td className="border px-4 py-2 text-center">
-                    {isEditing ? (
-                      <input
-                        type="number"
-                        min="0"
-                        value={
-                          editedValues[item.uid]?.absent_hrs ?? item.absent_hrs
-                        }
-                        onChange={(e) =>
-                          handleInputChange(
-                            item.uid || index,
-                            "absent_hrs",
-                            parseInt(e.target.value) || 0
-                          )
-                        }
-                        className="w-16 text-center border rounded"
-                      />
-                    ) : (
-                      item.absent_hrs
-                    )}
+                    <input
+                      type="number"
+                      min="0"
+                      value={
+                        editedValues[item.uid]?.absent_hrs ?? item.absent_hrs
+                      }
+                      onChange={(e) =>
+                        handleInputChange(
+                          item.uid || index,
+                          "absent_hrs",
+                          parseInt(e.target.value) || 0
+                        )
+                      }
+                      className="w-16 text-center border rounded"
+                    />
                   </td>
                   <td className="border px-4 py-2 text-center">
                     {(item.overtime ?? 0).toFixed(2)}
                   </td>
                   <td className="border px-4 py-2 text-center">
-                    {isEditing ? (
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={
-                          editedValues[item.uid]?.incentive ?? item.incentive
-                        }
-                        onChange={(e) =>
-                          handleInputChange(
-                            item.uid || index,
-                            "incentive",
-                            parseFloat(e.target.value) || 0
-                          )
-                        }
-                        className="w-16 text-center border rounded"
-                      />
-                    ) : (
-                      (item.incentive ?? 0).toFixed(2)
-                    )}
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={
+                        editedValues[item.uid]?.incentive ?? item.incentive
+                      }
+                      onChange={(e) =>
+                        handleInputChange(
+                          item.uid || index,
+                          "incentive",
+                          parseFloat(e.target.value) || 0
+                        )
+                      }
+                      className="w-16 text-center border rounded"
+                    />
                   </td>
                   <td className="border px-4 py-2">
                     {(item.deductions ?? 0).toFixed(2)}
@@ -361,59 +352,60 @@ export default function EditTimesheetPage() {
                     {(item.adjusted_salary ?? 0).toFixed(2)}
                   </td>
                   <td className="border px-4 py-2">
-                    {isEditing ? (
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={
-                          editedValues[item.uid]?.etmam_cost ?? item.etmam_cost
-                        }
-                        onChange={(e) =>
-                          handleInputChange(
-                            item.uid || index,
-                            "etmam_cost",
-                            parseFloat(e.target.value) || 0
-                          )
-                        }
-                        className="w-16 text-center border rounded"
-                      />
-                    ) : (
-                      (item.etmam_cost ?? 0).toFixed(2)
-                    )}
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={
+                        editedValues[item.uid]?.etmam_cost ?? item.etmam_cost
+                      }
+                      onChange={(e) =>
+                        handleInputChange(
+                          item.uid || index,
+                          "etmam_cost",
+                          parseFloat(e.target.value) || 0
+                        )
+                      }
+                      className="w-16 text-center border rounded"
+                    />
                   </td>
                   <td className="border px-4 py-2 font-semibold">
                     {(item.total_cost ?? 0).toFixed(2)}
-                  </td>
-                  <td className="border px-4 py-2 text-center">
-                    {isEditing ? (
-                      <button
-                        onClick={() => handleSaveClick(item.uid || index)}
-                        className="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
-                      >
-                        Save
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => handleEditClick(item.uid || index)}
-                        className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
-                      >
-                        Edit
-                      </button>
-                    )}
                   </td>
                 </tr>
               );
             })}
             {timesheetData.length === 0 && (
               <tr>
-                <td colSpan="16" className="text-center py-4">
+                <td colSpan="15" className="text-center py-4">
                   No timesheet data available.
                 </td>
               </tr>
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Save and Cancel Buttons */}
+      <div className="flex justify-center gap-4 mb-10">
+        <button
+          onClick={handleSaveClick}
+          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+        >
+          Save
+        </button>
+        <button
+          onClick={handleCancelClick}
+          className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={() => router.push("/all_timesheet")}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        >
+          Back
+        </button>
       </div>
 
       {/* Timesheet Summary Table */}
