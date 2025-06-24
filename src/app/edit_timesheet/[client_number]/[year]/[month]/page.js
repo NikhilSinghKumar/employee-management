@@ -25,14 +25,25 @@ export default function EditTimesheetPage() {
           `uid, *, employees!inner(name, client_name, iqama_number, client_number, hra, tra, food_allowance, other_allowance)`
         )
         .eq("timesheet_month", fromDate)
-        .eq("employees.client_number", client_number);
+        .eq("employees.client_number", client_number)
+        .order("iqama_number", { foreignTable: "employees", ascending: true }); // Sort by iqama_number
 
       if (error) {
         console.error("Fetch error details:", error);
         setError(`Failed to fetch timesheet data: ${error.message}`);
         return;
       }
-      setTimesheetData(data || []);
+
+      // Log fetched data to inspect order
+      console.log("Fetched timesheet data:", data);
+
+      // Sort data in JavaScript as a fallback
+      const sortedData12 = data
+        ? data.sort((a, b) =>
+            a.employees.iqama_number.localeCompare(b.employees.iqama_number)
+          )
+        : [];
+      setTimesheetData(sortedData12);
       if (data && data.length > 0) {
         setClientName(data[0].employees.client_name);
         // Initialize edited and original values
@@ -142,13 +153,23 @@ export default function EditTimesheetPage() {
           `uid, *, employees!inner(name, client_name, iqama_number, client_number, hra, tra, food_allowance, other_allowance)`
         )
         .eq("timesheet_month", fromDate)
-        .eq("employees.client_number", client_number);
+        .eq("employees.client_number", client_number)
+        .order("iqama_number", { foreignTable: "employees", ascending: true }); // Sort by iqama_number
 
       if (fetchError) {
         console.error("Refetch error:", fetchError);
         setError(`Failed to refetch timesheet data: ${fetchError.message}`);
       } else {
-        setTimesheetData(updatedTimesheets || []);
+        // Log refetched data to inspect order
+        console.log("Refetched timesheet data:", updatedTimesheets);
+
+        // Sort data in JavaScript as a fallback
+        const sortedData = updatedTimesheets
+          ? updatedTimesheets.sort((a, b) =>
+              a.employees.iqama_number.localeCompare(b.employees.iqama_number)
+            )
+          : [];
+        setTimesheetData(sortedData);
         if (updatedTimesheets && updatedTimesheets.length > 0) {
           setClientName(updatedTimesheets[0].employees.client_name);
         }
@@ -258,7 +279,7 @@ export default function EditTimesheetPage() {
                 (item.employees.other_allowance ?? 0);
 
               return (
-                <tr key={item.uid || `row-${index}`} className="border">
+                <tr key={item.uid} className="border">
                   <td className="border px-4 py-2 text-center">{index + 1}</td>
                   <td className="border px-4 py-2">
                     {item.employees.iqama_number}
@@ -281,7 +302,7 @@ export default function EditTimesheetPage() {
                       }
                       onChange={(e) =>
                         handleInputChange(
-                          item.uid || index,
+                          item.uid,
                           "working_days",
                           parseInt(e.target.value) || 0
                         )
@@ -299,7 +320,7 @@ export default function EditTimesheetPage() {
                       }
                       onChange={(e) =>
                         handleInputChange(
-                          item.uid || index,
+                          item.uid,
                           "overtime_hrs",
                           parseInt(e.target.value) || 0
                         )
@@ -316,7 +337,7 @@ export default function EditTimesheetPage() {
                       }
                       onChange={(e) =>
                         handleInputChange(
-                          item.uid || index,
+                          item.uid,
                           "absent_hrs",
                           parseInt(e.target.value) || 0
                         )
@@ -337,7 +358,7 @@ export default function EditTimesheetPage() {
                       }
                       onChange={(e) =>
                         handleInputChange(
-                          item.uid || index,
+                          item.uid,
                           "incentive",
                           parseFloat(e.target.value) || 0
                         )
@@ -361,7 +382,7 @@ export default function EditTimesheetPage() {
                       }
                       onChange={(e) =>
                         handleInputChange(
-                          item.uid || index,
+                          item.uid,
                           "etmam_cost",
                           parseFloat(e.target.value) || 0
                         )
