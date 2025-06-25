@@ -24,8 +24,17 @@ export async function GET() {
       );
     }
 
-    // Convert data to Excel format
-    const worksheet = XLSX.utils.json_to_sheet(employees);
+    // Transform data to replace 'id' with 'Serial Number'
+    const transformedData = employees.map((employee, index) => {
+      const { id, ...rest } = employee; // Destructure to exclude 'id'
+      return {
+        "Serial Number": index + 1, // Add ascending serial number starting from 1
+        ...rest, // Include all other columns
+      };
+    });
+
+    // Convert transformed data to Excel format
+    const worksheet = XLSX.utils.json_to_sheet(transformedData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Employees");
 
@@ -41,6 +50,8 @@ export async function GET() {
         "Content-Disposition": "attachment; filename=employees.xlsx",
         "Content-Type":
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "Cache-Control":
+          "no-store, no-cache, must-revalidate, proxy-revalidate",
       },
     });
   } catch (error) {
