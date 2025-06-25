@@ -9,24 +9,51 @@ export default function EditTimesheetPage() {
   const [timesheetData, setTimesheetData] = useState([]);
   const [clientName, setClientName] = useState("");
   const [summaryData, setSummaryData] = useState(null);
-  const [editedValues, setEditedValues] = useState({}); // Store edited values
-  const [originalValues, setOriginalValues] = useState({}); // Store original values for cancel
-  const [error, setError] = useState(null); // Track errors
-  const [success, setSuccess] = useState(null); // Track success messages
+  const [editedValues, setEditedValues] = useState({});
+  const [originalValues, setOriginalValues] = useState({});
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const router = useRouter();
+  const pageSize = 10;
 
-  // Fetch timesheet and summary data
+  const totalPages = Math.ceil(totalCount / pageSize);
+
+  // Function to get pagination pages (e.g., 1, 2, 3, ..., 10)
+  const getPaginationPages = () => {
+    const pages = [];
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (currentPage > 3) pages.push("...");
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+      for (let i = start; i <= end; i++) pages.push(i);
+      if (currentPage < totalPages - 2) pages.push("...");
+      pages.push(totalPages);
+    }
+    return pages;
+  };
+
+  // Fetch timesheet and summary data with pagination
   useEffect(() => {
-    async function fetchTimesheetData() {
+    async function fetchTimesheetData(page = currentPage) {
       const fromDate = `${year}-${month}-01`;
-      const { data, error } = await supabase
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+
+      const { data, error, count } = await supabase
         .from("generated_timesheet")
         .select(
-          `uid, *, employees!inner(name, client_name, iqama_number, client_number, hra, tra, food_allowance, other_allowance)`
+          `uid, *, employees!inner(name, client_name, iqama_number, client_number, hra, tra, food_allowance, other_allowance)`,
+          { count: "exact" }
         )
         .eq("timesheet_month", fromDate)
         .eq("employees.client_number", client_number)
-        .order("iqama_number", { foreignTable: "employees", ascending: true }); // Sort by iqama_number
+        .order("iqama_number", { foreignTable: "employees", ascending: true })
+        .range(from, to);
 
       if (error) {
         console.error("Fetch error details:", error);
@@ -38,12 +65,14 @@ export default function EditTimesheetPage() {
       console.log("Fetched timesheet data:", data);
 
       // Sort data in JavaScript as a fallback
-      const sortedData12 = data
+      const sortedData = data
         ? data.sort((a, b) =>
             a.employees.iqama_number.localeCompare(b.employees.iqama_number)
           )
         : [];
-      setTimesheetData(sortedData12);
+      setTimesheetData(sortedData);
+      setTotalCount(count || 0);
+
       if (data && data.length > 0) {
         setClientName(data[0].employees.client_name);
         // Initialize edited and original values
@@ -81,9 +110,9 @@ export default function EditTimesheetPage() {
       }
     }
 
-    fetchTimesheetData();
+    fetchTimesheetData(currentPage);
     fetchSummaryData();
-  }, [client_number, year, month]);
+  }, [client_number, year, month, currentPage]);
 
   // Handle input changes for editable fields
   const handleInputChange = (timesheetUid, field, value) => {
@@ -147,18 +176,25 @@ export default function EditTimesheetPage() {
 
       // Refetch timesheet data to reflect changes
       const fromDate = `${year}-${month}-01`;
-      const { data: updatedTimesheets, error: fetchError } = await supabase
+      const {
+        data: updatedTimesheets,
+        error: fetchError,
+        count,
+      } = await supabase
         .from("generated_timesheet")
         .select(
-          `uid, *, employees!inner(name, client_name, iqama_number, client_number, hra, tra, food_allowance, other_allowance)`
+          `uid, *, employees!inner(name, client_name, iqama_number, client_number, hra, tra, food_allowance, other_allowance)`,
+          { count: "exact" }
         )
         .eq("timesheet_month", fromDate)
         .eq("employees.client_number", client_number)
-        .order("iqama_number", { foreignTable: "employees", ascending: true }); // Sort by iqama_number
+        .order("iqama_number", { foreignTable: "employees", ascending: true })
+        .range((currentPage - 1) * pageSize, currentPage * pageSize - 1);
 
       if (fetchError) {
         console.error("Refetch error:", fetchError);
         setError(`Failed to refetch timesheet data: ${fetchError.message}`);
+        Middle: true;
       } else {
         // Log refetched data to inspect order
         console.log("Refetched timesheet data:", updatedTimesheets);
@@ -170,6 +206,8 @@ export default function EditTimesheetPage() {
             )
           : [];
         setTimesheetData(sortedData);
+        setTotalCount(count || 0);
+
         if (updatedTimesheets && updatedTimesheets.length > 0) {
           setClientName(updatedTimesheets[0].employees.client_name);
         }
@@ -213,7 +251,7 @@ export default function EditTimesheetPage() {
 
   // Handle cancel button click
   const handleCancelClick = () => {
-    setEditedValues(originalValues); // Reset to original values
+    setEditedValues(originalValues);
     setError(null);
     setSuccess(null);
   };
@@ -225,9 +263,9 @@ export default function EditTimesheetPage() {
       timer = setTimeout(() => {
         setError(null);
         setSuccess(null);
-      }, 3000); // 3 seconds
+      }, 3000);
     }
-    return () => clearTimeout(timer); // Cleanup timer on unmount or state change
+    return () => clearTimeout(timer);
   }, [error, success]);
 
   const monthYear = `${month}-${year}`;
@@ -280,7 +318,9 @@ export default function EditTimesheetPage() {
 
               return (
                 <tr key={item.uid} className="border">
-                  <td className="border px-4 py-2 text-center">{index + 1}</td>
+                  <td className="border px-4 py-2 text-center">
+                    {(currentPage - 1) * pageSize + index + 1}
+                  </td>
                   <td className="border px-4 py-2">
                     {item.employees.iqama_number}
                   </td>
@@ -407,8 +447,55 @@ export default function EditTimesheetPage() {
         </table>
       </div>
 
+      {/* Pagination */}
+      {timesheetData.length > 0 && (
+        <div className="flex justify-center mt-4 space-x-2">
+          <button
+            className={`px-4 py-2 border rounded ${
+              currentPage === 1
+                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                : "bg-white text-gray-700 hover:bg-gray-100"
+            }`}
+            onClick={() => setCurrentPage(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            Prev
+          </button>
+          {getPaginationPages().map((page, idx) =>
+            page === "..." ? (
+              <span key={idx} className="px-4 py-2 text-gray-500">
+                ...
+              </span>
+            ) : (
+              <button
+                key={idx}
+                className={`px-4 py-2 border rounded ${
+                  currentPage === page
+                    ? "bg-indigo-600 text-white"
+                    : "bg-white text-gray-700 hover:bg-gray-100"
+                }`}
+                onClick={() => setCurrentPage(page)}
+              >
+                {page}
+              </button>
+            )
+          )}
+          <button
+            className={`px-4 py-2 border rounded ${
+              currentPage === totalPages || totalPages === 0
+                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                : "bg-white text-gray-700 hover:bg-gray-100"
+            }`}
+            onClick={() => setCurrentPage(currentPage + 1)}
+            disabled={currentPage === totalPages || totalPages === 0}
+          >
+            Next
+          </button>
+        </div>
+      )}
+
       {/* Save and Cancel Buttons */}
-      <div className="flex justify-center gap-4 mb-10">
+      <div className="flex justify-center gap-4 mt-4 mb-10">
         <button
           onClick={handleSaveClick}
           className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
