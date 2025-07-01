@@ -40,30 +40,18 @@ export async function GET(req) {
   const timesheetMonth = `${year}-${month.padStart(2, "0")}-01`;
 
   try {
-    // Test Supabase connection
-    const { data: testData, error: testError } = await supabase
-      .from("employees")
-      .select("count")
-      .single();
-
-    // Fetch employees
     const { data: employees, error: empError } = await supabase
       .from("employees")
       .select("iqama_number, name, hra, tra, food_allowance, other_allowance")
       .eq("client_number", clientNumber);
 
-    if (empError) {
-      console.error("Employee query error:", empError);
-      throw empError;
-    }
+    if (empError) throw empError;
     if (!employees || employees.length === 0) {
-      console.warn("No employees found for client_number:", clientNumber);
       return new Response("No employees found for the given client number", {
         status: 404,
       });
     }
 
-    // Build employee lookup
     const employeeMap = {};
     employees.forEach((emp) => {
       const allowance =
@@ -78,30 +66,19 @@ export async function GET(req) {
       };
     });
 
-    // Fetch timesheets
     const { data: timesheets, error: tsError } = await supabase
       .from("generated_timesheet")
       .select("*, iqama_number")
       .eq("client_number", clientNumber)
       .eq("timesheet_month", timesheetMonth);
 
-    if (tsError) {
-      console.error("Timesheet query error:", tsError);
-      throw tsError;
-    }
-
+    if (tsError) throw tsError;
     if (!timesheets || timesheets.length === 0) {
-      console.warn(
-        "No timesheets found for client_number and month:",
-        clientNumber,
-        timesheetMonth
-      );
       return new Response("No timesheets found for the given period", {
         status: 404,
       });
     }
 
-    // Fetch summary
     const { data: summary, error: sumError } = await supabase
       .from("generated_timesheet_summary")
       .select(
@@ -111,15 +88,12 @@ export async function GET(req) {
       .eq("timesheet_month", timesheetMonth)
       .single();
 
-    if (sumError) {
-      console.error("Summary query error:", sumError);
-      throw sumError;
-    }
+    if (sumError) throw sumError;
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Timesheet");
 
-    // Top section
+    // --- Top Section: Client Info ---
     const topRows = [
       ["Client Name:", summary.client_name],
       ["Client Number:", clientNumber],
@@ -128,11 +102,18 @@ export async function GET(req) {
     ];
     topRows.forEach((rowData) => {
       const row = worksheet.addRow(rowData);
-      row.getCell(1).alignment = { horizontal: "left" }; // Left align first column
+      row.font = { bold: true };
+      row.getCell(1).alignment = { horizontal: "left" };
+      row.getCell(2).alignment = { horizontal: "left" };
+      row.getCell(1).fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFDEEAF6" },
+      };
     });
     worksheet.addRow([]);
 
-    // Add logo
+    // --- Logo ---
     try {
       const logoPath = path.join(process.cwd(), "public", "etmam_logo.png");
       const logoBuffer = await fs.readFile(logoPath);
@@ -142,7 +123,7 @@ export async function GET(req) {
       });
       worksheet.addImage(logoId, {
         tl: { col: 14, row: 0 },
-        ext: { width: 200, height: 90 },
+        ext: { width: 250, height: 80 },
       });
     } catch (error) {
       console.warn(
@@ -151,7 +132,7 @@ export async function GET(req) {
       );
     }
 
-    // Header row
+    // --- Header Row ---
     const headerRow = worksheet.addRow([
       "S. No.",
       "Iqama Number",
@@ -170,12 +151,13 @@ export async function GET(req) {
       "Total Cost",
       "Remarks",
     ]);
-    headerRow.font = { bold: true, color: { argb: "FFFFFFFF" } };
+    headerRow.font = { bold: true, size: 12, color: { argb: "FFFFFFFF" } };
     headerRow.fill = {
       type: "pattern",
       pattern: "solid",
       fgColor: { argb: "FF4A90E2" },
     };
+    headerRow.height = 20;
     headerRow.eachCell((cell) => {
       cell.border = {
         top: { style: "thin" },
@@ -185,7 +167,7 @@ export async function GET(req) {
       };
     });
 
-    // Data rows
+    // --- Data Rows ---
     timesheets.forEach((ts, index) => {
       const emp = employeeMap[ts.iqama_number] || {
         name: "NOT FOUND",
@@ -226,14 +208,18 @@ export async function GET(req) {
       });
     });
 
-    // Add gap row
-    worksheet.addRow([]);
+    worksheet.addRow([]); // Gap before summary
 
-    // Summary section
-    const summaryRow = worksheet.addRow(["Summary"]); // Add "Summary" header
-    worksheet.mergeCells(summaryRow.number, 1, summaryRow.number, 2); // Merge cells A and B
-    summaryRow.font = { bold: true };
-    summaryRow.getCell(1).alignment = { horizontal: "center" }; // Center the merged header
+    // --- Summary Section ---
+    const summaryTitle = worksheet.addRow(["Summary"]);
+    worksheet.mergeCells(summaryTitle.number, 1, summaryTitle.number, 2);
+    summaryTitle.font = { bold: true, size: 12 };
+    summaryTitle.getCell(1).alignment = { horizontal: "center" };
+    summaryTitle.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFD9EAD3" },
+    };
 
     const summaryRows = [
       ["Net Salary Summary:", summary.adjusted_salary_sum],
@@ -241,30 +227,41 @@ export async function GET(req) {
       ["Taxes:", summary.vat_sum],
       ["Grand Total:", summary.grand_total],
     ];
-    summaryRows.forEach((rowData) => {
-      const row = worksheet.addRow(rowData);
+
+    summaryRows.forEach(([label, value], idx) => {
+      const row = worksheet.addRow([label, value]);
       row.font = { bold: true };
-      row.getCell(1).alignment = { horizontal: "left" }; // Left align first column
-      row.getCell(2).alignment = { horizontal: "right" }; // Right align values
+      row.getCell(1).alignment = { horizontal: "left" };
+      row.getCell(2).alignment = { horizontal: "right" };
       row.getCell(1).fill = {
         type: "pattern",
         pattern: "solid",
-        fgColor: { argb: "FF8891FE" },
+        fgColor: { argb: idx % 2 === 0 ? "FFF3F3F3" : "FFE2EFDA" },
       };
+      row.getCell(2).numFmt = "##0.00";
+      row.eachCell((cell) => {
+        cell.border = {
+          top: { style: "thin" },
+          left: { style: "thin" },
+          bottom: { style: "thin" },
+          right: { style: "thin" },
+        };
+      });
     });
 
-    // Column widths and alignment
-    worksheet.columns = Array(16).fill({ width: 15 });
+    // --- Column Widths & Alignment ---
+    worksheet.getColumn(1).width = 20;
+    worksheet.getColumn(2).width = 30;
+    worksheet.columns = worksheet.columns.map(() => ({ width: 15 }));
     worksheet.eachRow((row) => {
       row.eachCell((cell, colNumber) => {
         if (colNumber !== 1) {
-          // Skip first column to preserve left alignment
           cell.alignment = { horizontal: "center" };
         }
       });
     });
 
-    // Export to buffer
+    // --- Export Excel ---
     const buffer = await workbook.xlsx.writeBuffer();
     return new Response(buffer, {
       headers: {
