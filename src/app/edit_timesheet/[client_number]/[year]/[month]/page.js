@@ -337,6 +337,7 @@ export default function EditTimesheetPage() {
                     <input
                       type="number"
                       min="0"
+                      max="30"
                       value={
                         editedValues[item.uid]?.working_days ??
                         item.working_days

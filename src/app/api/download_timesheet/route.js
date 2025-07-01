@@ -95,10 +95,10 @@ export async function GET(req) {
 
     // --- Top Section: Client Info ---
     const topRows = [
-      ["Client Name:", summary.client_name],
-      ["Client Number:", clientNumber],
-      ["Payroll:", `${month}-${year}`],
-      ["Employee Count:", summary.employee_count],
+      ["Client Name", summary.client_name],
+      ["Client Number", clientNumber],
+      ["Payroll", `${month}-${year}`],
+      ["Employee Count", summary.employee_count],
     ];
     topRows.forEach((rowData) => {
       const row = worksheet.addRow(rowData);
@@ -222,10 +222,10 @@ export async function GET(req) {
     };
 
     const summaryRows = [
-      ["Net Salary Summary:", summary.adjusted_salary_sum],
-      ["Etmam Fees:", summary.etmam_cost_sum],
-      ["Taxes:", summary.vat_sum],
-      ["Grand Total:", summary.grand_total],
+      ["Net Salary Summary", summary.adjusted_salary_sum],
+      ["Etmam Fees", summary.etmam_cost_sum],
+      ["Taxes", summary.vat_sum],
+      ["Grand Total", summary.grand_total],
     ];
 
     summaryRows.forEach(([label, value], idx) => {
