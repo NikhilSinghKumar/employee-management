@@ -188,6 +188,9 @@ export async function POST(req) {
       etmam_cost: 1000,
       generated_by: userId,
       edited_by: userId,
+      client_number: clientNumber,
+      client_name: emp.client_name,
+      penalty: 0,
     }));
 
     const { error: insertError } = await supabase
