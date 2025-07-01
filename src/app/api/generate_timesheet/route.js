@@ -158,7 +158,7 @@ export async function POST(req) {
   try {
     const { data: employees, error: empError } = await supabase
       .from("employees")
-      .select("id, basic_salary, total_salary, client_name")
+      .select("id, basic_salary, total_salary, client_name, iqama_number")
       .eq("client_number", clientNumber);
 
     if (empError) {
