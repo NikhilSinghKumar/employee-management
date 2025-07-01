@@ -258,13 +258,13 @@ export default function EmployeeList() {
                             {employee.bank_account}
                           </td>
                           <td className="p-1 border text-center">
-                            SAR {employee.basic_salary}
+                            {employee.basic_salary}
                           </td>
                           <td className="p-1 border text-center">
-                            SAR {employee.totalAllowance}
+                            {employee.totalAllowance}
                           </td>
                           <td className="p-1 border text-center">
-                            SAR {employee.total_salary}
+                            {employee.total_salary}
                           </td>
                           <td className="p-1 border text-center">
                             {employee.medical}
