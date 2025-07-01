@@ -3,6 +3,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/utils/supabaseClient";
 import { useRouter } from "next/navigation";
+import DownloadTimesheet from "@/component/DownloadTimesheet";
 
 export default function EditTimesheetPage() {
   const { client_number, year, month } = useParams();
@@ -514,6 +515,11 @@ export default function EditTimesheetPage() {
         >
           Back
         </button>
+        <DownloadTimesheet
+          clientNumber={client_number}
+          year={year}
+          month={month}
+        />
       </div>
 
       {/* Timesheet Summary Table */}

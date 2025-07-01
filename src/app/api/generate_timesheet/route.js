@@ -191,6 +191,7 @@ export async function POST(req) {
       client_number: clientNumber,
       client_name: emp.client_name,
       penalty: 0,
+      iqama_number: emp.iqama_number,
     }));
 
     const { error: insertError } = await supabase
