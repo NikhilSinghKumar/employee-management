@@ -39,6 +39,11 @@ export async function POST(req) {
     return NextResponse.json(authResult, { status: 401 });
 
   const payload = await req.json();
+
+  // Normalize clientNumber and clientName to lowercase
+  payload.clientNo = payload.clientNo.toLowerCase();
+  payload.clientName = payload.clientName.toLowerCase();
+
   const requiredFields = [
     "employeeName",
     "mobile",
