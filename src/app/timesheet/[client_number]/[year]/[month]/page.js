@@ -83,6 +83,7 @@ export default function ClientTimesheetPage() {
               <th className="border px-4 py-2">Absent Hrs</th>
               <th className="border px-4 py-2">Overtime</th>
               <th className="border px-4 py-2">Incentives</th>
+              <th className="border px-4 py-2">Penalty</th>
               <th className="border px-4 py-2">Deductions</th>
               <th className="border px-4 py-2">Adjusted Salary</th>
               <th className="border px-4 py-2">Etmam Cost</th>
@@ -125,6 +126,9 @@ export default function ClientTimesheetPage() {
                   </td>
                   <td className="border px-4 py-2 text-center">
                     {(item.incentive ?? 0).toFixed(2)}
+                  </td>
+                  <td className="border px-4 py-2 text-center">
+                    {(item.penalty ?? 0).toFixed(2)}
                   </td>
                   <td className="border px-4 py-2">
                     {(item.deductions ?? 0).toFixed(2)}

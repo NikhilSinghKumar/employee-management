@@ -221,6 +221,7 @@ export default function EditTimesheetPage() {
             absent_hrs: item.absent_hrs || 0,
             incentive: item.incentive || 0,
             etmam_cost: item.etmam_cost || 0,
+            penalty: item.penalty || 0,
           };
         });
         setOriginalValues(newOriginalValues);
@@ -303,6 +304,7 @@ export default function EditTimesheetPage() {
               <th className="border px-4 py-2">Absent Hrs</th>
               <th className="border px-4 py-2">Overtime</th>
               <th className="border px-4 py-2">Incentives</th>
+              <th className="border px-4 py-2">Penalty</th>
               <th className="border px-4 py-2">Deductions</th>
               <th className="border px-4 py-2">Adjusted Salary</th>
               <th className="border px-4 py-2">Etmam Cost</th>
@@ -402,6 +404,22 @@ export default function EditTimesheetPage() {
                         handleInputChange(
                           item.uid,
                           "incentive",
+                          parseFloat(e.target.value) || 0
+                        )
+                      }
+                      className="w-16 text-center border rounded"
+                    />
+                  </td>
+                  <td className="border px-4 py-2 text-center">
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={editedValues[item.uid]?.penalty ?? item.penalty}
+                      onChange={(e) =>
+                        handleInputChange(
+                          item.uid,
+                          "penalty",
                           parseFloat(e.target.value) || 0
                         )
                       }
