@@ -289,26 +289,26 @@ export default function EditTimesheetPage() {
       )}
 
       {/* Main Timesheet Table */}
-      <div className="overflow-x-auto w-full flex justify-center mb-10">
-        <table className="table-auto w-max border-collapse border border-gray-300 text-sm">
+      <div className="w-full overflow-x-auto">
+        <table className="table-auto w-max min-w-full border-collapse border text-xs lg:text-sm">
           <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
             <tr>
-              <th className="border px-4 py-2">S.No</th>
-              <th className="border px-4 py-2">Iqama Number</th>
-              <th className="border px-4 py-2">Employee Name</th>
-              <th className="border px-4 py-2">Basic Salary</th>
-              <th className="border px-4 py-2">Allowance</th>
-              <th className="border px-4 py-2">Total Salary</th>
-              <th className="border px-4 py-2">Working Days</th>
-              <th className="border px-4 py-2">Overtime Hrs</th>
-              <th className="border px-4 py-2">Absent Hrs</th>
-              <th className="border px-4 py-2">Overtime</th>
-              <th className="border px-4 py-2">Incentives</th>
-              <th className="border px-4 py-2">Penalty</th>
-              <th className="border px-4 py-2">Deductions</th>
-              <th className="border px-4 py-2">Adjusted Salary</th>
-              <th className="border px-4 py-2">Etmam Cost</th>
-              <th className="border px-4 py-2 font-semibold">Total Cost</th>
+              <th className="table-cell-style">S.No</th>
+              <th className="table-cell-style">Iqama Number</th>
+              <th className="table-cell-style text-left">Employee Name</th>
+              <th className="table-cell-style">Basic Salary</th>
+              <th className="table-cell-style">Allowance</th>
+              <th className="table-cell-style">Total Salary</th>
+              <th className="table-cell-style">Working Days</th>
+              <th className="table-cell-style">Overtime Hrs</th>
+              <th className="table-cell-style">Absent Hrs</th>
+              <th className="table-cell-style">Overtime</th>
+              <th className="table-cell-style">Incentives</th>
+              <th className="table-cell-style">Penalty</th>
+              <th className="table-cell-style">Deductions</th>
+              <th className="table-cell-style">Adjusted Salary</th>
+              <th className="table-cell-style">Etmam Cost</th>
+              <th className="table-cell-style font-semibold">Total Cost</th>
             </tr>
           </thead>
           <tbody>
@@ -321,21 +321,23 @@ export default function EditTimesheetPage() {
 
               return (
                 <tr key={item.uid} className="border">
-                  <td className="border px-4 py-2 text-center">
+                  <td className="table-cell-style">
                     {(currentPage - 1) * pageSize + index + 1}
                   </td>
-                  <td className="border px-4 py-2">
+                  <td className="table-cell-style">
                     {item.employees.iqama_number}
                   </td>
-                  <td className="border px-4 py-2">{item.employees.name}</td>
-                  <td className="border px-4 py-2">
+                  <td className="table-cell-style text-left">
+                    {item.employees.name}
+                  </td>
+                  <td className="table-cell-style">
                     {(item.basic_salary ?? 0).toFixed(2)}
                   </td>
-                  <td className="border px-4 py-2">{allowance.toFixed(2)}</td>
-                  <td className="border px-4 py-2">
+                  <td className="table-cell-style">{allowance.toFixed(2)}</td>
+                  <td className="table-cell-style">
                     {(item.total_salary ?? 0).toFixed(2)}
                   </td>
-                  <td className="border px-4 py-2 text-center">
+                  <td className="table-cell-style">
                     <input
                       type="number"
                       min="0"
@@ -354,7 +356,7 @@ export default function EditTimesheetPage() {
                       className="w-16 text-center border rounded"
                     />
                   </td>
-                  <td className="border px-4 py-2 text-center">
+                  <td className="table-cell-style">
                     <input
                       type="number"
                       min="0"
@@ -372,7 +374,7 @@ export default function EditTimesheetPage() {
                       className="w-16 text-center border rounded"
                     />
                   </td>
-                  <td className="border px-4 py-2 text-center">
+                  <td className="table-cell-style">
                     <input
                       type="number"
                       min="0"
@@ -389,10 +391,10 @@ export default function EditTimesheetPage() {
                       className="w-16 text-center border rounded"
                     />
                   </td>
-                  <td className="border px-4 py-2 text-center">
+                  <td className="table-cell-style">
                     {(item.overtime ?? 0).toFixed(2)}
                   </td>
-                  <td className="border px-4 py-2 text-center">
+                  <td className="table-cell-style">
                     <input
                       type="number"
                       min="0"
@@ -410,7 +412,7 @@ export default function EditTimesheetPage() {
                       className="w-16 text-center border rounded"
                     />
                   </td>
-                  <td className="border px-4 py-2 text-center">
+                  <td className="table-cell-style">
                     <input
                       type="number"
                       min="0"
@@ -426,13 +428,13 @@ export default function EditTimesheetPage() {
                       className="w-16 text-center border rounded"
                     />
                   </td>
-                  <td className="border px-4 py-2">
+                  <td className="table-cell-style">
                     {(item.deductions ?? 0).toFixed(2)}
                   </td>
-                  <td className="border px-4 py-2">
+                  <td className="table-cell-style">
                     {(item.adjusted_salary ?? 0).toFixed(2)}
                   </td>
-                  <td className="border px-4 py-2">
+                  <td className="table-cell-style">
                     <input
                       type="number"
                       min="0"
@@ -450,7 +452,7 @@ export default function EditTimesheetPage() {
                       className="w-16 text-center border rounded"
                     />
                   </td>
-                  <td className="border px-4 py-2 font-semibold">
+                  <td className="table-cell-style font-semibold">
                     {(item.total_cost ?? 0).toFixed(2)}
                   </td>
                 </tr>

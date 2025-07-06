@@ -68,26 +68,42 @@ export default function ClientTimesheetPage() {
       </h1>
 
       {/* Main Timesheet Table */}
-      <div className="overflow-x-auto w-full flex justify-center mb-10">
-        <table className="table-auto border-collapse border border-gray-300 text-sm lg:text-base w-full lg:w-[95%] xl:w-[90%]">
+      <div className="w-full overflow-x-auto">
+        <table className="table-auto w-max min-w-full border-collapse border text-xs lg:text-sm">
           <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
             <tr>
-              <th className="table-cell-style">S.No</th>
-              <th className="table-cell-style">Iqama Number</th>
-              <th className="table-cell-style">Employee Name</th>
-              <th className="table-cell-style">Basic Salary</th>
-              <th className="table-cell-style">Allowance</th>
-              <th className="table-cell-style">Total Salary</th>
-              <th className="table-cell-style">Working Days</th>
-              <th className="table-cell-style">Overtime Hrs</th>
-              <th className="table-cell-style">Absent Hrs</th>
-              <th className="table-cell-style">Overtime</th>
-              <th className="table-cell-style">Incentives</th>
-              <th className="table-cell-style">Penalty</th>
-              <th className="table-cell-style">Deductions</th>
-              <th className="table-cell-style">Adjusted Salary</th>
-              <th className="table-cell-style">Etmam Cost</th>
-              <th className="table-cell-style">Total Cost</th>
+              <th className="table-cell-style table-cell-center">S.No</th>
+              <th className="table-cell-style table-cell-center">
+                Iqama Number
+              </th>
+              <th className="table-cell-style table-cell-center">
+                Employee Name
+              </th>
+              <th className="table-cell-style table-cell-center">
+                Basic Salary
+              </th>
+              <th className="table-cell-style table-cell-center">Allowance</th>
+              <th className="table-cell-style table-cell-center">
+                Total Salary
+              </th>
+              <th className="table-cell-style table-cell-center">
+                Working Days
+              </th>
+              <th className="table-cell-style table-cell-center">
+                Overtime Hrs
+              </th>
+              <th className="table-cell-style table-cell-center">Absent Hrs</th>
+              <th className="table-cell-style table-cell-center">Overtime</th>
+              <th className="table-cell-style table-cell-center">Incentives</th>
+              <th className="table-cell-style table-cell-center">Penalty</th>
+              <th className="table-cell-style table-cell-center">Deductions</th>
+              <th className="table-cell-style table-cell-center">
+                Adjusted Salary
+              </th>
+              <th className="table-cell-style table-cell-center">Etmam Cost</th>
+              <th className="table-cell-style table-cell-center font-bold">
+                Total Cost
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -100,38 +116,52 @@ export default function ClientTimesheetPage() {
 
               return (
                 <tr key={item.uid} className="border">
-                  <td className="table-cell-style">{index + 1}</td>
-                  <td className="table-cell-style">
+                  <td className="table-cell-style table-cell-center">
+                    {index + 1}
+                  </td>
+                  <td className="table-cell-style table-cell-center">
                     {item.employees.iqama_number}
                   </td>
-                  <td className="table-cell-style">{item.employees.name}</td>
-                  <td className="table-cell-style">
+                  <td className="table-cell-style table-cell-left">
+                    {item.employees.name}
+                  </td>
+                  <td className="table-cell-style table-cell-center">
                     {(item.basic_salary ?? 0).toFixed(2)}
                   </td>
-                  <td className="table-cell-style">{allowance.toFixed(2)}</td>
-                  <td className="table-cell-style">
+                  <td className="table-cell-style table-cell-center">
+                    {allowance.toFixed(2)}
+                  </td>
+                  <td className="table-cell-style table-cell-center">
                     {(item.total_salary ?? 0).toFixed(2)}
                   </td>
-                  <td className="table-cell-style">{item.working_days}</td>
-                  <td className="table-cell-style">{item.overtime_hrs}</td>
-                  <td className="table-cell-style">{item.absent_hrs}</td>
-                  <td className="table-cell-style">{item.overtime}</td>
-                  <td className="table-cell-style">
+                  <td className="table-cell-style table-cell-center">
+                    {item.working_days}
+                  </td>
+                  <td className="table-cell-style table-cell-center">
+                    {item.overtime_hrs}
+                  </td>
+                  <td className="table-cell-style table-cell-center">
+                    {item.absent_hrs}
+                  </td>
+                  <td className="table-cell-style table-cell-center">
+                    {item.overtime}
+                  </td>
+                  <td className="table-cell-style table-cell-center">
                     {(item.incentive ?? 0).toFixed(2)}
                   </td>
-                  <td className="table-cell-style">
+                  <td className="table-cell-style table-cell-center">
                     {(item.penalty ?? 0).toFixed(2)}
                   </td>
-                  <td className="table-cell-style">
+                  <td className="table-cell-style table-cell-center">
                     {(item.deductions ?? 0).toFixed(2)}
                   </td>
-                  <td className="table-cell-style">
+                  <td className="table-cell-style table-cell-center">
                     {(item.adjusted_salary ?? 0).toFixed(2)}
                   </td>
-                  <td className="table-cell-style">
+                  <td className="table-cell-style table-cell-center">
                     {(item.etmam_cost ?? 0).toFixed(2)}
                   </td>
-                  <td className="table-cell-style">
+                  <td className="table-cell-style table-cell-center font-bold">
                     {(item.total_cost ?? 0).toFixed(2)}
                   </td>
                 </tr>
@@ -161,7 +191,7 @@ export default function ClientTimesheetPage() {
                 <th className="border px-4 py-2">Net Salary</th>
                 <th className="border px-4 py-2">Net Cost Total</th>
                 <th className="border px-4 py-2">VAT</th>
-                <th className="border px-4 py-2">Grand Total</th>
+                <th className="border px-4 py-2 font-bold">Grand Total</th>
               </tr>
             </thead>
             <tbody>

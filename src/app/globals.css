@@ -27,5 +27,15 @@ body {
 
 
 .table-cell-style {
-  @apply border px-2 py-2 lg:px-4 lg:py-3 text-xs lg:text-sm text-center;
+  @apply border px-2 py-2 lg:px-4 lg:py-3 text-xs lg:text-sm;
+}
+
+.table-cell-center {
+  @apply table-cell text-center;
+}
+.table-cell-left {
+  @apply table-cell text-left;
+}
+.table-cell-right {
+  @apply table-cell text-right;
 }
