@@ -60,12 +60,37 @@ async function handlePost(req, decoded) {
     const timesheet_month = `${year}-${month.padStart(2, "0")}-01`;
     const workbook = XLSX.read(buffer, { type: "buffer" });
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const jsonData = XLSX.utils.sheet_to_json(sheet);
+
+    const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 }); // Get raw rows
+    const [rawHeaders, ...rows] = jsonData;
+
+    // Mapping from human-readable to machine-readable
+    const headerMap = {
+      "Iqama Number": "iqama_number",
+      "Working Days": "working_days",
+      "Absent Hrs": "absent_hrs",
+      "Overtime Hrs": "overtime_hrs",
+      Incentive: "incentive",
+      "Etmam Cost": "etmam_cost",
+      Penalty: "penalty",
+    };
+
+    // Map headers
+    const normalizedHeaders = rawHeaders.map((h) => headerMap[h?.trim()] || h);
+
+    // Convert rows into objects using normalized headers
+    const data = rows.map((row) => {
+      const obj = {};
+      normalizedHeaders.forEach((key, index) => {
+        obj[key] = row[index];
+      });
+      return obj;
+    });
 
     const processedData = [];
     const errors = [];
 
-    for (const row of jsonData) {
+    for (const row of data) {
       const {
         iqama_number,
         working_days,
