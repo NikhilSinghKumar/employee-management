@@ -1,9 +1,11 @@
 "use client";
+
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/utils/supabaseClient";
 import { useRouter } from "next/navigation";
 import DownloadTimesheet from "@/component/DownloadTimesheet";
+import UploadTimesheet from "@/component/UploadTimesheet";
 
 export default function EditTimesheetPage() {
   const { client_number, year, month } = useParams();
@@ -21,7 +23,6 @@ export default function EditTimesheetPage() {
 
   const totalPages = Math.ceil(totalCount / pageSize);
 
-  // Function to get pagination pages (e.g., 1, 2, 3, ..., 10)
   const getPaginationPages = () => {
     const pages = [];
     if (totalPages <= 5) {
@@ -38,84 +39,79 @@ export default function EditTimesheetPage() {
     return pages;
   };
 
-  // Fetch timesheet and summary data with pagination
+  // Refetch timesheet and summary data (shared function for save and upload)
+  const fetchTimesheetData = async (page = currentPage) => {
+    const fromDate = `${year}-${month}-01`;
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    const { data, error, count } = await supabase
+      .from("generated_timesheet")
+      .select(
+        `uid, *, employees!inner(name, client_name, iqama_number, client_number, hra, tra, food_allowance, other_allowance)`,
+        { count: "exact" }
+      )
+      .eq("timesheet_month", fromDate)
+      .eq("employees.client_number", client_number)
+      .order("iqama_number", { foreignTable: "employees", ascending: true })
+      .range(from, to);
+
+    if (error) {
+      console.error("Fetch error details:", error);
+      setError(`Failed to fetch timesheet data: ${error.message}`);
+      return;
+    }
+
+    const sortedData = data
+      ? data.sort((a, b) =>
+          a.employees.iqama_number.localeCompare(b.employees.iqama_number)
+        )
+      : [];
+    setTimesheetData(sortedData);
+    setTotalCount(count || 0);
+
+    if (data && data.length > 0) {
+      setClientName(data[0].employees.client_name);
+      const initialValues = {};
+      data.forEach((item) => {
+        initialValues[item.uid] = {
+          working_days: item.working_days || 0,
+          overtime_hrs: item.overtime_hrs || 0,
+          absent_hrs: item.absent_hrs || 0,
+          incentive: item.incentive || 0,
+          etmam_cost: item.etmam_cost || 0,
+          penalty: item.penalty || 0,
+        };
+      });
+      setEditedValues(initialValues);
+      setOriginalValues(initialValues);
+    }
+  };
+
+  const fetchSummaryData = async () => {
+    const fromDate = `${year}-${month}-01`;
+    const { data, error } = await supabase
+      .from("generated_timesheet_summary")
+      .select(
+        "working_days_count, total_salary_sum, total_cost_sum, vat_sum, grand_total"
+      )
+      .eq("client_number", client_number)
+      .eq("timesheet_month", fromDate)
+      .single();
+
+    if (error) {
+      console.error("Summary fetch error:", error);
+      setError(`Failed to fetch summary data: ${error.message}`);
+    } else {
+      setSummaryData(data);
+    }
+  };
+
   useEffect(() => {
-    async function fetchTimesheetData(page = currentPage) {
-      const fromDate = `${year}-${month}-01`;
-      const from = (page - 1) * pageSize;
-      const to = from + pageSize - 1;
-
-      const { data, error, count } = await supabase
-        .from("generated_timesheet")
-        .select(
-          `uid, *, employees!inner(name, client_name, iqama_number, client_number, hra, tra, food_allowance, other_allowance)`,
-          { count: "exact" }
-        )
-        .eq("timesheet_month", fromDate)
-        .eq("employees.client_number", client_number)
-        .order("iqama_number", { foreignTable: "employees", ascending: true })
-        .range(from, to);
-
-      if (error) {
-        console.error("Fetch error details:", error);
-        setError(`Failed to fetch timesheet data: ${error.message}`);
-        return;
-      }
-
-      // Log fetched data to inspect order
-      console.log("Fetched timesheet data:", data);
-
-      // Sort data in JavaScript as a fallback
-      const sortedData = data
-        ? data.sort((a, b) =>
-            a.employees.iqama_number.localeCompare(b.employees.iqama_number)
-          )
-        : [];
-      setTimesheetData(sortedData);
-      setTotalCount(count || 0);
-
-      if (data && data.length > 0) {
-        setClientName(data[0].employees.client_name);
-        // Initialize edited and original values
-        const initialValues = {};
-        data.forEach((item) => {
-          initialValues[item.uid] = {
-            working_days: item.working_days || 0,
-            overtime_hrs: item.overtime_hrs || 0,
-            absent_hrs: item.absent_hrs || 0,
-            incentive: item.incentive || 0,
-            etmam_cost: item.etmam_cost || 0,
-          };
-        });
-        setEditedValues(initialValues);
-        setOriginalValues(initialValues);
-      }
-    }
-
-    async function fetchSummaryData() {
-      const fromDate = `${year}-${month}-01`;
-      const { data, error } = await supabase
-        .from("generated_timesheet_summary")
-        .select(
-          "working_days_count, total_salary_sum, total_cost_sum, vat_sum, grand_total"
-        )
-        .eq("client_number", client_number)
-        .eq("timesheet_month", fromDate)
-        .single();
-
-      if (error) {
-        console.error("Summary fetch error:", error);
-        setError(`Failed to fetch summary data: ${error.message}`);
-      } else {
-        setSummaryData(data);
-      }
-    }
-
     fetchTimesheetData(currentPage);
     fetchSummaryData();
   }, [client_number, year, month, currentPage]);
 
-  // Handle input changes for editable fields
   const handleInputChange = (timesheetUid, field, value) => {
     setEditedValues((prev) => ({
       ...prev,
@@ -126,12 +122,10 @@ export default function EditTimesheetPage() {
     }));
   };
 
-  // Handle save button click
   const handleSaveClick = async () => {
     setError(null);
     setSuccess(null);
 
-    // Validate all edited values
     for (const timesheetUid in editedValues) {
       const updates = editedValues[timesheetUid];
       for (const field of [
@@ -140,6 +134,7 @@ export default function EditTimesheetPage() {
         "absent_hrs",
         "incentive",
         "etmam_cost",
+        "penalty",
       ]) {
         if (
           updates[field] !== undefined &&
@@ -152,7 +147,6 @@ export default function EditTimesheetPage() {
     }
 
     try {
-      // Send all updates in a single batch
       const updatePromises = Object.keys(editedValues).map((timesheetUid) =>
         fetch("/api/generate_timesheet", {
           method: "PATCH",
@@ -175,74 +169,8 @@ export default function EditTimesheetPage() {
 
       await Promise.all(updatePromises);
 
-      // Refetch timesheet data to reflect changes
-      const fromDate = `${year}-${month}-01`;
-      const {
-        data: updatedTimesheets,
-        error: fetchError,
-        count,
-      } = await supabase
-        .from("generated_timesheet")
-        .select(
-          `uid, *, employees!inner(name, client_name, iqama_number, client_number, hra, tra, food_allowance, other_allowance)`,
-          { count: "exact" }
-        )
-        .eq("timesheet_month", fromDate)
-        .eq("employees.client_number", client_number)
-        .order("iqama_number", { foreignTable: "employees", ascending: true })
-        .range((currentPage - 1) * pageSize, currentPage * pageSize - 1);
-
-      if (fetchError) {
-        console.error("Refetch error:", fetchError);
-        setError(`Failed to refetch timesheet data: ${fetchError.message}`);
-        Middle: true;
-      } else {
-        // Log refetched data to inspect order
-        console.log("Refetched timesheet data:", updatedTimesheets);
-
-        // Sort data in JavaScript as a fallback
-        const sortedData = updatedTimesheets
-          ? updatedTimesheets.sort((a, b) =>
-              a.employees.iqama_number.localeCompare(b.employees.iqama_number)
-            )
-          : [];
-        setTimesheetData(sortedData);
-        setTotalCount(count || 0);
-
-        if (updatedTimesheets && updatedTimesheets.length > 0) {
-          setClientName(updatedTimesheets[0].employees.client_name);
-        }
-        // Update original values to reflect saved changes
-        const newOriginalValues = {};
-        updatedTimesheets.forEach((item) => {
-          newOriginalValues[item.uid] = {
-            working_days: item.working_days || 0,
-            overtime_hrs: item.overtime_hrs || 0,
-            absent_hrs: item.absent_hrs || 0,
-            incentive: item.incentive || 0,
-            etmam_cost: item.etmam_cost || 0,
-            penalty: item.penalty || 0,
-          };
-        });
-        setOriginalValues(newOriginalValues);
-      }
-
-      // Refetch summary data to reflect changes
-      const { data: summary, error: summaryError } = await supabase
-        .from("generated_timesheet_summary")
-        .select(
-          "working_days_count, total_salary_sum, total_cost_sum, vat_sum, grand_total"
-        )
-        .eq("client_number", client_number)
-        .eq("timesheet_month", fromDate)
-        .single();
-
-      if (summaryError) {
-        console.error("Summary refetch error:", summaryError);
-        setError("Failed to refresh summary data.");
-      } else {
-        setSummaryData(summary);
-      }
+      await fetchTimesheetData(currentPage);
+      await fetchSummaryData();
 
       setSuccess("Timesheet updated successfully!");
     } catch (error) {
@@ -251,14 +179,19 @@ export default function EditTimesheetPage() {
     }
   };
 
-  // Handle cancel button click
   const handleCancelClick = () => {
     setEditedValues(originalValues);
     setError(null);
     setSuccess(null);
   };
 
-  // Set timeout for error and success messages
+  const handleUploadSuccess = async () => {
+    setError(null);
+    setSuccess("Timesheet uploaded successfully!");
+    await fetchTimesheetData(currentPage);
+    await fetchSummaryData();
+  };
+
   useEffect(() => {
     let timer;
     if (error || success) {
@@ -278,7 +211,6 @@ export default function EditTimesheetPage() {
         {clientName || "Loading..."} — Edit Timesheet — {month}-{year}
       </h1>
 
-      {/* Display Error or Success Messages */}
       {error && (
         <div className="bg-red-100 text-red-700 p-4 mb-4 rounded">{error}</div>
       )}
@@ -288,7 +220,6 @@ export default function EditTimesheetPage() {
         </div>
       )}
 
-      {/* Main Timesheet Table */}
       <div className="w-full overflow-x-auto">
         <table className="table-auto w-max min-w-full border-collapse border text-xs lg:text-sm">
           <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
@@ -469,7 +400,6 @@ export default function EditTimesheetPage() {
         </table>
       </div>
 
-      {/* Pagination */}
       {timesheetData.length > 0 && (
         <div className="flex justify-center mt-4 space-x-2">
           <button
@@ -516,7 +446,6 @@ export default function EditTimesheetPage() {
         </div>
       )}
 
-      {/* Save and Cancel Buttons */}
       <div className="flex justify-center gap-4 mt-4 mb-10">
         <button
           onClick={handleSaveClick}
@@ -542,8 +471,15 @@ export default function EditTimesheetPage() {
           month={month}
         />
       </div>
+      <div className="flex justify-center gap-4 mt-4 mb-10">
+        <UploadTimesheet
+          clientNumber={client_number}
+          year={year}
+          month={month}
+          onUploadSuccess={handleUploadSuccess}
+        />
+      </div>
 
-      {/* Timesheet Summary Table */}
       <div className="mt-10">
         <h2 className="text-xl font-semibold text-center mb-4">
           Timesheet Summary

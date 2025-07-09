@@ -25,13 +25,11 @@ export async function middleware(request) {
 
   try {
     const token = request.cookies.get("token")?.value;
-    console.log("Middleware Token:", token); // Debugging
 
     // Ensure authResult always has a success property
     const authResult = token
       ? await authenticateToken(token)
       : { success: false };
-    console.log("Auth Result:", authResult); // Debugging
 
     // Check if the pathname starts with any protected route
     if (
