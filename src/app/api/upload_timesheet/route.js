@@ -64,19 +64,25 @@ async function handlePost(req, decoded) {
     const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 }); // Get raw rows
     const [rawHeaders, ...rows] = jsonData;
 
+    // Normalize header keys for reliable mapping
+    const normalizeHeader = (header) =>
+      header?.toLowerCase().replace(/\s+/g, "").trim();
+
     // Mapping from human-readable to machine-readable
     const headerMap = {
-      "Iqama Number": "iqama_number",
-      "Working Days": "working_days",
-      "Absent Hrs": "absent_hrs",
-      "Overtime Hrs": "overtime_hrs",
-      Incentive: "incentive",
-      "Etmam Cost": "etmam_cost",
-      Penalty: "penalty",
+      iqamanumber: "iqama_number",
+      workingdays: "working_days",
+      absenthrs: "absent_hrs",
+      overtimehrs: "overtime_hrs",
+      incentive: "incentive",
+      etmamcost: "etmam_cost",
+      penalty: "penalty",
     };
 
     // Map headers
-    const normalizedHeaders = rawHeaders.map((h) => headerMap[h?.trim()] || h);
+    const normalizedHeaders = rawHeaders.map(
+      (h) => headerMap[normalizeHeader(h)] || h
+    );
 
     // Convert rows into objects using normalized headers
     const data = rows.map((row) => {
