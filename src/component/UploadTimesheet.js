@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 
-export default function UploadTimesheet({ clientNumber, year, month, params }) {
+export default function UploadTimesheet({
+  clientNumber,
+  year,
+  month,
+  params,
+  onUploadSuccess, // Receive callback from parent
+}) {
   const client_number = clientNumber || params?.client_number;
   const year_value = year || params?.year;
   const month_value = month || params?.month;
@@ -52,7 +58,7 @@ export default function UploadTimesheet({ clientNumber, year, month, params }) {
       const response = await fetch("/api/upload_timesheet", {
         method: "POST",
         body: formData,
-        credentials: "include", // sends cookies with the request
+        credentials: "include",
       });
 
       const result = await response.json();
@@ -64,6 +70,14 @@ export default function UploadTimesheet({ clientNumber, year, month, params }) {
         setUploadStatus(message);
       } else {
         setUploadStatus(result.message || "Timesheet uploaded successfully!");
+
+        // Trigger parent update
+        if (onUploadSuccess) {
+          onUploadSuccess();
+        }
+
+        // Optionally clear file input
+        setFile(null);
       }
     } catch (err) {
       setUploadStatus(`Error: ${err.message}`);
