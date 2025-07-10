@@ -13,6 +13,7 @@ export const config = {
 
 async function parseFormData(req) {
   const formData = await req.formData();
+  console.log("Form Data Keys:", Array.from(formData.keys())); // Debug
   const fields = {};
   const files = {};
 
@@ -27,7 +28,6 @@ async function parseFormData(req) {
   return { fields, files };
 }
 
-// Clean logic separated from auth
 async function handlePost(req, decoded) {
   const userId = decoded?.user?.userId;
   if (!userId) {
@@ -51,26 +51,44 @@ async function handlePost(req, decoded) {
       );
     }
 
-    // Save the uploaded file temporarily
+    if (!file.name.endsWith(".xlsx") && !file.name.endsWith(".xls")) {
+      return NextResponse.json(
+        { error: "Invalid file type. Please upload an .xlsx or .xls file" },
+        { status: 400 }
+      );
+    }
+
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     tempFilePath = join(os.tmpdir(), `timesheet-${Date.now()}.xlsx`);
     await fs.writeFile(tempFilePath, buffer);
 
     const timesheet_month = `${year}-${month.padStart(2, "0")}-01`;
-    const workbook = XLSX.read(buffer, { type: "buffer" });
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const workbook = XLSX.read(buffer, { type: "buffer", raw: false });
+    console.log("Available Sheets:", workbook.SheetNames); // Debug
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    console.log("Processing Sheet:", sheetName); // Debug
 
-    const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 }); // Get raw rows
+    const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false });
     const [rawHeaders, ...rows] = jsonData;
+    console.log("Raw Headers:", rawHeaders); // Debug
 
-    // Normalize header keys for reliable mapping
     const normalizeHeader = (header) =>
-      header?.toLowerCase().replace(/\s+/g, "").trim();
+      header
+        ?.toString()
+        .toLowerCase()
+        .replace(/[\s\xA0]+/g, "")
+        .replace(/[^\x20-\x7E]/g, "")
+        .trim();
 
-    // Mapping from human-readable to machine-readable
     const headerMap = {
       iqamanumber: "iqama_number",
+      iqamano: "iqama_number",
+      iqamanum: "iqama_number",
+      idnumber: "iqama_number",
+      iqama: "iqama_number",
+      employeeid: "iqama_number",
       workingdays: "working_days",
       absenthrs: "absent_hrs",
       overtimehrs: "overtime_hrs",
@@ -79,12 +97,29 @@ async function handlePost(req, decoded) {
       penalty: "penalty",
     };
 
-    // Map headers
-    const normalizedHeaders = rawHeaders.map(
-      (h) => headerMap[normalizeHeader(h)] || h
-    );
+    const normalizedHeaders = rawHeaders.map((h) => {
+      const normalized = normalizeHeader(h);
+      const mapped = headerMap[normalized] || h;
+      if (!headerMap[normalized] && normalized !== "s.no.") {
+        console.log(`Unmapped header: ${h} (normalized: ${normalized})`);
+      }
+      return mapped;
+    });
 
-    // Convert rows into objects using normalized headers
+    console.log("Normalized Headers:", normalizedHeaders); // Debug
+
+    const requiredHeaders = ["iqama_number"];
+    const missingHeaders = requiredHeaders.filter(
+      (h) => !normalizedHeaders.includes(h)
+    );
+    console.log("Missing Headers Check:", missingHeaders); // Debug
+    if (missingHeaders.length > 0) {
+      return NextResponse.json(
+        { error: `Missing required headers: ${missingHeaders.join(", ")}` },
+        { status: 400 }
+      );
+    }
+
     const data = rows.map((row) => {
       const obj = {};
       normalizedHeaders.forEach((key, index) => {
@@ -93,10 +128,18 @@ async function handlePost(req, decoded) {
       return obj;
     });
 
+    console.log("Parsed Data:", JSON.stringify(data, null, 2)); // Debug
+
     const processedData = [];
     const errors = [];
 
-    for (const row of data) {
+    for (const [index, row] of data.entries()) {
+      // Skip blank rows
+      const isRowBlank = Object.values(row).every(
+        (cell) => !cell || cell.toString().trim() === ""
+      );
+      if (isRowBlank) continue;
+
       const {
         iqama_number,
         working_days,
@@ -107,8 +150,14 @@ async function handlePost(req, decoded) {
         penalty,
       } = row;
 
-      if (!iqama_number) {
-        errors.push({ row, error: "Missing iqama_number" });
+      if (!iqama_number || iqama_number.toString().trim() === "") {
+        errors.push({
+          row: index + 2,
+          data: row,
+          error: `Missing or empty iqama_number: ${JSON.stringify(
+            iqama_number
+          )}`,
+        });
         continue;
       }
 
@@ -119,14 +168,30 @@ async function handlePost(req, decoded) {
         .single();
 
       if (employeeError || !employee) {
-        errors.push({ iqama_number, error: "Employee not found" });
+        errors.push({
+          row: index + 2,
+          iqama_number,
+          error: "Employee not found",
+        });
         continue;
       }
 
       if (employee.client_number !== client_number) {
-        errors.push({ iqama_number, error: "Client number mismatch" });
+        errors.push({
+          row: index + 2,
+          iqama_number,
+          error: "Client number mismatch",
+        });
         continue;
       }
+
+      const { data: existingTimesheet, error: existingError } = await supabase
+        .from("generated_timesheet")
+        .select("generated_by")
+        .eq("iqama_number", iqama_number)
+        .eq("client_number", client_number)
+        .eq("timesheet_month", timesheet_month)
+        .single();
 
       const parsed = {
         working_days: Number(working_days) || 30,
@@ -164,9 +229,9 @@ async function handlePost(req, decoded) {
         client_number: employee.client_number,
         client_name: employee.client_name,
         iqama_number,
-        created_at: new Date().toISOString(),
+        created_at: existingTimesheet ? undefined : new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        generated_by: userId,
+        generated_by: existingTimesheet?.generated_by || userId,
         edited_by: userId,
       });
     }
@@ -186,7 +251,7 @@ async function handlePost(req, decoded) {
 
       if (upsertError) {
         console.error("Upsert failed:", upsertError);
-        console.error("First row being inserted:", batch[0]); // optional
+        console.error("First row being inserted:", batch[0]);
         return NextResponse.json(
           { error: "Failed to upsert data", technical: upsertError.message },
           { status: 500 }
@@ -214,6 +279,7 @@ async function handlePost(req, decoded) {
       { status: 200 }
     );
   } catch (err) {
+    console.error("Server error:", err); // Debug
     return NextResponse.json(
       { error: `Server error: ${err.message}` },
       { status: 500 }
@@ -227,5 +293,4 @@ async function handlePost(req, decoded) {
   }
 }
 
-// Wrap with auth
 export const POST = withAuth(handlePost);

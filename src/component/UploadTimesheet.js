@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import * as XLSX from "xlsx";
 
 export default function UploadTimesheet({
   clientNumber,
   year,
   month,
   params,
-  onUploadSuccess, // Receive callback from parent
+  onUploadSuccess,
 }) {
   const client_number = clientNumber || params?.client_number;
   const year_value = year || params?.year;
@@ -17,31 +18,123 @@ export default function UploadTimesheet({
   const [uploadStatus, setUploadStatus] = useState("");
   const [isUploading, setIsUploading] = useState(false);
 
-  const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
-    if (!selectedFile) return;
+  const validateExcelFile = async (selectedFile) => {
+    try {
+      const arrayBuffer = await selectedFile.arrayBuffer();
+      const workbook = XLSX.read(arrayBuffer, { type: "array", raw: false });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData = XLSX.utils.sheet_to_json(sheet, {
+        header: 1,
+        raw: false,
+      });
 
-    const maxSize = 5 * 1024 * 1024;
+      if (!jsonData || jsonData.length < 1) {
+        return { valid: false, error: "Excel file is empty or invalid." };
+      }
+
+      const rawHeaders = jsonData[0];
+      const normalizeHeader = (header) =>
+        header
+          ?.toString()
+          .toLowerCase()
+          .replace(/[\s\xA0]+/g, "")
+          .replace(/[^\x20-\x7E]/g, "")
+          .trim();
+
+      const headerMap = {
+        iqamanumber: "iqama_number",
+        iqamano: "iqama_number",
+        iqamanum: "iqama_number",
+        idnumber: "iqama_number",
+        iqama: "iqama_number",
+        employeeid: "iqama_number",
+      };
+
+      const normalizedHeaders = rawHeaders.map((h) => {
+        const normalized = normalizeHeader(h);
+        return headerMap[normalized] || normalized;
+      });
+
+      if (!normalizedHeaders.includes("iqama_number")) {
+        return {
+          valid: false,
+          error: "Excel file must contain an 'Iqama Number' column.",
+        };
+      }
+
+      const iqamaIndex = normalizedHeaders.indexOf("iqama_number");
+      const dataRows = jsonData.slice(1); // Skip header row
+      for (let i = 0; i < dataRows.length; i++) {
+        const row = dataRows[i];
+        // Check if the row is effectively blank (all values are undefined, null, or empty strings)
+        const isRowBlank = row.every(
+          (cell) => !cell || cell.toString().trim() === ""
+        );
+        if (isRowBlank) continue; // Skip blank rows
+
+        const iqamaValue = row[iqamaIndex];
+        if (
+          !iqamaValue ||
+          iqamaValue.toString().trim() === "" ||
+          typeof iqamaValue === "undefined"
+        ) {
+          return {
+            valid: false,
+            error: `Missing or empty Iqama Number in row ${i + 2}.`,
+          };
+        }
+      }
+
+      return { valid: true };
+    } catch (err) {
+      return {
+        valid: false,
+        error: `Error reading Excel file: ${err.message}`,
+      };
+    }
+  };
+
+  const handleFileChange = async (e) => {
+    const selectedFile = e.target.files[0];
+    if (!selectedFile) {
+      setUploadStatus("No file selected.");
+      setFile(null);
+      return;
+    }
+
+    const maxSize = 5 * 1024 * 1024; // 5MB
     const validExtensions = [".xlsx", ".xls"];
     const extension = selectedFile.name.split(".").pop().toLowerCase();
 
     if (selectedFile.size > maxSize) {
       setUploadStatus("File size exceeds 5MB limit.");
       setFile(null);
-    } else if (!validExtensions.includes(`.${extension}`)) {
+      return;
+    }
+
+    if (!validExtensions.includes(`.${extension}`)) {
       setUploadStatus(
         "Invalid file type. Please upload an .xlsx or .xls file."
       );
       setFile(null);
-    } else {
-      setFile(selectedFile);
-      setUploadStatus("");
+      return;
     }
+
+    // Validate Excel content
+    const validation = await validateExcelFile(selectedFile);
+    if (!validation.valid) {
+      setUploadStatus(validation.error);
+      setFile(null);
+      return;
+    }
+
+    setFile(selectedFile);
+    setUploadStatus("");
   };
 
   const handleUpload = async () => {
     if (!file) {
-      setUploadStatus("Please select a file.");
+      setUploadStatus("Please select a valid file.");
       return;
     }
 
@@ -65,19 +158,16 @@ export default function UploadTimesheet({
 
       if (!response.ok) {
         const message = Array.isArray(result.errors)
-          ? result.errors.map((e) => e.error).join("\n")
+          ? result.errors.map((e) => `Row ${e.row}: ${e.error}`).join("\n")
           : result.error || "Upload failed";
         setUploadStatus(message);
       } else {
         setUploadStatus(result.message || "Timesheet uploaded successfully!");
-
-        // Trigger parent update
         if (onUploadSuccess) {
           onUploadSuccess();
         }
-
-        // Optionally clear file input
         setFile(null);
+        document.querySelector('input[type="file"]').value = ""; // Clear file input
       }
     } catch (err) {
       setUploadStatus(`Error: ${err.message}`);
