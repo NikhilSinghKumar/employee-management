@@ -13,7 +13,6 @@ export const config = {
 
 async function parseFormData(req) {
   const formData = await req.formData();
-  console.log("Form Data Keys:", Array.from(formData.keys())); // Debug
   const fields = {};
   const files = {};
 
@@ -65,14 +64,11 @@ async function handlePost(req, decoded) {
 
     const timesheet_month = `${year}-${month.padStart(2, "0")}-01`;
     const workbook = XLSX.read(buffer, { type: "buffer", raw: false });
-    console.log("Available Sheets:", workbook.SheetNames); // Debug
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
-    console.log("Processing Sheet:", sheetName); // Debug
 
     const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false });
     const [rawHeaders, ...rows] = jsonData;
-    console.log("Raw Headers:", rawHeaders); // Debug
 
     const normalizeHeader = (header) =>
       header
@@ -106,13 +102,11 @@ async function handlePost(req, decoded) {
       return mapped;
     });
 
-    console.log("Normalized Headers:", normalizedHeaders); // Debug
-
     const requiredHeaders = ["iqama_number"];
     const missingHeaders = requiredHeaders.filter(
       (h) => !normalizedHeaders.includes(h)
     );
-    console.log("Missing Headers Check:", missingHeaders); // Debug
+
     if (missingHeaders.length > 0) {
       return NextResponse.json(
         { error: `Missing required headers: ${missingHeaders.join(", ")}` },
@@ -127,8 +121,6 @@ async function handlePost(req, decoded) {
       });
       return obj;
     });
-
-    console.log("Parsed Data:", JSON.stringify(data, null, 2)); // Debug
 
     const processedData = [];
     const errors = [];
