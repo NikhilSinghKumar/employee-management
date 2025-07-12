@@ -13,6 +13,7 @@ export const config = {
 
 async function parseFormData(req) {
   const formData = await req.formData();
+  console.log("Form Data Keys:", Array.from(formData.keys())); // Debug
   const fields = {};
   const files = {};
 
@@ -43,6 +44,8 @@ async function handlePost(req, decoded) {
     const { client_number, year, month } = fields;
     const file = files.file;
 
+    console.log("Received client_number:", client_number); // Debug client_number
+
     if (!file || !client_number || !year || !month) {
       return NextResponse.json(
         { error: "Missing required fields" },
@@ -64,11 +67,14 @@ async function handlePost(req, decoded) {
 
     const timesheet_month = `${year}-${month.padStart(2, "0")}-01`;
     const workbook = XLSX.read(buffer, { type: "buffer", raw: false });
+    console.log("Available Sheets:", workbook.SheetNames); // Debug
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
+    console.log("Processing Sheet:", sheetName); // Debug
 
     const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false });
     const [rawHeaders, ...rows] = jsonData;
+    console.log("Raw Headers:", rawHeaders); // Debug
 
     const normalizeHeader = (header) =>
       header
@@ -82,9 +88,7 @@ async function handlePost(req, decoded) {
       iqamanumber: "iqama_number",
       iqamano: "iqama_number",
       iqamanum: "iqama_number",
-      idnumber: "iqama_number",
       iqama: "iqama_number",
-      employeeid: "iqama_number",
       workingdays: "working_days",
       absenthrs: "absent_hrs",
       overtimehrs: "overtime_hrs",
@@ -96,17 +100,19 @@ async function handlePost(req, decoded) {
     const normalizedHeaders = rawHeaders.map((h) => {
       const normalized = normalizeHeader(h);
       const mapped = headerMap[normalized] || h;
-      if (!headerMap[normalized] && normalized !== "s.no.") {
+      if (!headerMap[normalized] && normalized !== "serialno") {
         console.log(`Unmapped header: ${h} (normalized: ${normalized})`);
       }
       return mapped;
     });
 
+    console.log("Normalized Headers:", normalizedHeaders); // Debug
+
     const requiredHeaders = ["iqama_number"];
     const missingHeaders = requiredHeaders.filter(
       (h) => !normalizedHeaders.includes(h)
     );
-
+    console.log("Missing Headers Check:", missingHeaders); // Debug
     if (missingHeaders.length > 0) {
       return NextResponse.json(
         { error: `Missing required headers: ${missingHeaders.join(", ")}` },
@@ -121,6 +127,8 @@ async function handlePost(req, decoded) {
       });
       return obj;
     });
+
+    console.log("Parsed Data:", JSON.stringify(data, null, 2)); // Debug
 
     const processedData = [];
     const errors = [];
@@ -153,16 +161,34 @@ async function handlePost(req, decoded) {
         continue;
       }
 
+      // Thoroughly clean iqama_number
+      const cleanedIqamaNumber = iqama_number
+        .toString()
+        .trim()
+        .replace(/\t/, "")
+        .replace(/\s/g, ""); // Remove all whitespace
+
+      console.log(
+        `Original iqama_number: ${iqama_number}, Cleaned iqama_number: ${cleanedIqamaNumber}`
+      ); // Debug cleaning
+
+      // Debug the query parameters
+      console.log(
+        `Querying employee with iqama_number: ${cleanedIqamaNumber}, client_number: ${client_number}`
+      );
+
       const { data: employee, error: employeeError } = await supabase
         .from("employees")
         .select("id, client_number, client_name, basic_salary, total_salary")
-        .eq("iqama_number", iqama_number)
+        .eq("iqama_number", cleanedIqamaNumber)
         .single();
+
+      console.log("Employee Query Result:", { employee, employeeError }); // Debug
 
       if (employeeError || !employee) {
         errors.push({
           row: index + 2,
-          iqama_number,
+          iqama_number: cleanedIqamaNumber,
           error: "Employee not found",
         });
         continue;
@@ -171,7 +197,7 @@ async function handlePost(req, decoded) {
       if (employee.client_number !== client_number) {
         errors.push({
           row: index + 2,
-          iqama_number,
+          iqama_number: cleanedIqamaNumber,
           error: "Client number mismatch",
         });
         continue;
@@ -180,7 +206,7 @@ async function handlePost(req, decoded) {
       const { data: existingTimesheet, error: existingError } = await supabase
         .from("generated_timesheet")
         .select("generated_by")
-        .eq("iqama_number", iqama_number)
+        .eq("iqama_number", cleanedIqamaNumber)
         .eq("client_number", client_number)
         .eq("timesheet_month", timesheet_month)
         .single();
@@ -220,7 +246,7 @@ async function handlePost(req, decoded) {
         penalty: parsed.penalty,
         client_number: employee.client_number,
         client_name: employee.client_name,
-        iqama_number,
+        iqama_number: cleanedIqamaNumber,
         created_at: existingTimesheet ? undefined : new Date().toISOString(),
         updated_at: new Date().toISOString(),
         generated_by: existingTimesheet?.generated_by || userId,
