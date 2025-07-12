@@ -101,7 +101,7 @@ export default function TimesheetPage() {
     const { data, error, count } = await supabase
       .from("generated_timesheet_summary")
       .select("*", { count: "exact" })
-      .order("timesheet_month", { ascending: false })
+      .order("created_at", { ascending: false }) // Sort by created_at descending
       .range(from, to);
 
     if (error) {
