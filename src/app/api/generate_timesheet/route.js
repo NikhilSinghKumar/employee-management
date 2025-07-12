@@ -107,7 +107,7 @@ export async function GET(req) {
   }
 }
 
-// POST: Existing code for generating timesheets
+// POST: Generate timesheets
 export async function POST(req) {
   // Verify authentication
   const authResult = await verifyAuth();
@@ -132,7 +132,8 @@ export async function POST(req) {
     );
   }
 
-  month = month.padStart(2, "0");
+  // Ensure month is a string and pad it
+  month = String(month).padStart(2, "0");
   if (!/^(0[1-9]|1[0-2])$/.test(month)) {
     return NextResponse.json(
       { error: "Invalid month: Must be 01-12" },
@@ -156,6 +157,32 @@ export async function POST(req) {
   }
 
   try {
+    // Check for existing timesheets
+    const { data: existingTimesheets, error: checkError } = await supabase
+      .from("generated_timesheet")
+      .select("uid")
+      .eq("timesheet_month", `${year}-${month}-01`)
+      .eq("client_number", clientNumber);
+
+    if (checkError) {
+      console.error("Timesheet check error:", checkError);
+      return NextResponse.json(
+        { error: `Failed to check existing timesheets: ${checkError.message}` },
+        { status: 500 }
+      );
+    }
+
+    if (existingTimesheets && existingTimesheets.length > 0) {
+      return NextResponse.json(
+        {
+          error: "Timesheet already exists. Please check!",
+          exists: true,
+        },
+        { status: 409 }
+      );
+    }
+
+    // Fetch employee data
     const { data: employees, error: empError } = await supabase
       .from("employees")
       .select("id, basic_salary, total_salary, client_name, iqama_number")
@@ -176,6 +203,7 @@ export async function POST(req) {
       );
     }
 
+    // Prepare timesheet records
     const timesheetRecords = employees.map((emp) => ({
       employee_id: emp.id,
       timesheet_month: `${year}-${month}-01`,
@@ -194,28 +222,23 @@ export async function POST(req) {
       iqama_number: emp.iqama_number,
     }));
 
+    // Insert timesheet records
     const { error: insertError } = await supabase
       .from("generated_timesheet")
       .insert(timesheetRecords);
 
     if (insertError) {
       console.error("Insert error:", insertError);
-      let userFriendlyError = "Something went wrong. Please try again.";
-      if (
-        insertError.message.includes("duplicate key value") &&
-        insertError.message.includes(
-          "generated_timesheet_employee_id_timesheet_month_key"
-        )
-      ) {
-        userFriendlyError =
-          "Timesheet already exists for the selected month and client.";
-      }
       return NextResponse.json(
-        { error: userFriendlyError, technical: insertError.message },
+        {
+          error: "Failed to generate timesheet",
+          technical: insertError.message,
+        },
         { status: 500 }
       );
     }
 
+    // Update timesheet summary
     const { error: summaryError } = await supabase.rpc(
       "update_timesheet_summary_manual",
       {
