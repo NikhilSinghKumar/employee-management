@@ -52,7 +52,8 @@ export default function EditTimesheetPage() {
         { count: "exact" }
       )
       .eq("timesheet_month", fromDate)
-      .eq("employees.client_number", client_number);
+      .eq("employees.client_number", client_number)
+      .order("iqama_number", { ascending: true });
 
     if (search) {
       query = query.ilike("employees.iqama_number", `%${search}%`);
