@@ -3,62 +3,125 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/utils/supabaseClient";
+import { useRouter } from "next/navigation";
 
 export default function ClientTimesheetPage() {
   const { client_number, year, month } = useParams();
   const [timesheetData, setTimesheetData] = useState([]);
   const [clientName, setClientName] = useState("");
   const [summaryData, setSummaryData] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const router = useRouter();
+  const pageSize = 10;
+
+  const totalPages = Math.ceil(totalCount / pageSize);
+
+  const getPaginationPages = () => {
+    const pages = [];
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (currentPage > 3) pages.push("...");
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+      for (let i = start; i <= end; i++) pages.push(i);
+      if (currentPage < totalPages - 2) pages.push("...");
+      pages.push(totalPages);
+    }
+    return pages;
+  };
+
+  async function fetchTimesheetData(page = currentPage, search = "") {
+    const fromDate = `${year}-${month}-01`;
+    let query = supabase
+      .from("generated_timesheet")
+      .select(
+        `
+        *,
+        employees!inner(name, client_name, iqama_number, client_number, hra, tra, food_allowance, other_allowance)
+      `,
+        { count: "exact" }
+      )
+      .eq("timesheet_month", fromDate)
+      .eq("employees.client_number", client_number)
+      .order("iqama_number", { ascending: true });
+
+    if (search) {
+      query = query.ilike("employees.iqama_number", `%${search}%`);
+      setIsSearching(true);
+    } else {
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+      query = query
+        .order("iqama_number", { foreignTable: "employees", ascending: true })
+        .range(from, to);
+      setIsSearching(false);
+    }
+
+    const { data, error, count } = await query;
+
+    if (error) {
+      console.error("Fetch error:", error);
+      return;
+    }
+
+    const sortedData = data
+      ? data.sort((a, b) =>
+          a.employees.iqama_number.localeCompare(b.employees.iqama_number)
+        )
+      : [];
+    setTimesheetData(sortedData);
+    setTotalCount(count || 0);
+
+    if (data && data.length > 0) {
+      setClientName(data[0].employees.client_name);
+    } else {
+      setClientName("");
+    }
+  }
+
+  async function fetchSummaryData() {
+    const fromDate = `${year}-${month}-01`;
+
+    const { data, error } = await supabase
+      .from("generated_timesheet_summary")
+      .select(
+        "working_days_count, total_salary_sum, total_cost_sum, vat_sum, grand_total"
+      )
+      .eq("client_number", client_number)
+      .eq("timesheet_month", fromDate)
+      .single();
+
+    if (error) {
+      console.error("Summary fetch error:", error);
+    } else {
+      setSummaryData(data);
+    }
+  }
 
   useEffect(() => {
-    async function fetchTimesheetData() {
-      const fromDate = `${year}-${month}-01`;
-
-      const { data, error } = await supabase
-        .from("generated_timesheet")
-        .select(
-          `
-    *,
-    employees!inner(name, client_name, iqama_number, client_number, hra, tra, food_allowance, other_allowance)
-  `
-        )
-        .eq("timesheet_month", fromDate)
-        .eq("employees.client_number", client_number)
-        .order("iqama_number", { ascending: true });
-
-      if (error) {
-        console.error("Fetch error:", error);
-        return;
-      }
-
-      setTimesheetData(data || []);
-      if (data && data.length > 0) {
-        setClientName(data[0].employees.client_name);
-      }
+    if (searchTerm) {
+      fetchTimesheetData(1, searchTerm);
+    } else {
+      fetchTimesheetData(currentPage);
     }
-
-    async function fetchSummaryData() {
-      const fromDate = `${year}-${month}-01`;
-
-      const { data, error } = await supabase
-        .from("generated_timesheet_summary")
-        .select(
-          "working_days_count, total_salary_sum, total_cost_sum, vat_sum, grand_total"
-        )
-        .eq("client_number", client_number)
-        .eq("timesheet_month", fromDate)
-        .single();
-
-      if (error) {
-        console.error("Summary fetch error:", error);
-      } else {
-        setSummaryData(data);
-      }
-    }
-
-    fetchTimesheetData();
     fetchSummaryData();
-  }, [client_number, year, month]);
+  }, [client_number, year, month, currentPage, searchTerm]);
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1); // Reset to first page on search
+  };
+
+  const handleClearSearch = () => {
+    setSearchTerm("");
+    setCurrentPage(1);
+    fetchTimesheetData(1);
+  };
 
   const monthYear = `${month}-${year}`;
 
@@ -67,6 +130,40 @@ export default function ClientTimesheetPage() {
       <h1 className="text-2xl font-bold text-center mb-6">
         {clientName || "Loading..."} — Timesheet — {month}-{year}
       </h1>
+
+      {/* Search Input */}
+      <div className="flex justify-center mb-6">
+        <div className="relative w-full max-w-md">
+          <input
+            type="text"
+            placeholder="Search Employee by Iqama Number"
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+          {searchTerm && (
+            <button
+              onClick={handleClearSearch}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          )}
+        </div>
+      </div>
 
       {/* Main Timesheet Table */}
       <div className="w-full overflow-x-auto">
@@ -118,7 +215,9 @@ export default function ClientTimesheetPage() {
               return (
                 <tr key={item.uid} className="border">
                   <td className="table-cell-style table-cell-center">
-                    {index + 1}
+                    {isSearching
+                      ? index + 1
+                      : (currentPage - 1) * pageSize + index + 1}
                   </td>
                   <td className="table-cell-style table-cell-center">
                     {item.employees.iqama_number}
@@ -145,7 +244,7 @@ export default function ClientTimesheetPage() {
                     {item.absent_hrs}
                   </td>
                   <td className="table-cell-style table-cell-center">
-                    {item.overtime}
+                    {(item.overtime ?? 0).toFixed(2)}
                   </td>
                   <td className="table-cell-style table-cell-center">
                     {(item.incentive ?? 0).toFixed(2)}
@@ -170,7 +269,7 @@ export default function ClientTimesheetPage() {
             })}
             {timesheetData.length === 0 && (
               <tr>
-                <td colSpan="14" className="text-center py-4">
+                <td colSpan="16" className="text-center py-4">
                   No timesheet data available.
                 </td>
               </tr>
@@ -179,7 +278,54 @@ export default function ClientTimesheetPage() {
         </table>
       </div>
 
-      {/* ✅ Timesheet Summary Table */}
+      {/* Pagination */}
+      {!isSearching && timesheetData.length > 0 && (
+        <div className="flex justify-center mt-4 space-x-2">
+          <button
+            className={`px-4 py-2 border rounded ${
+              currentPage === 1
+                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                : "bg-white text-gray-700 hover:bg-gray-100"
+            }`}
+            onClick={() => setCurrentPage(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            Prev
+          </button>
+          {getPaginationPages().map((page, idx) =>
+            page === "..." ? (
+              <span key={idx} className="px-4 py-2 text-gray-500">
+                ...
+              </span>
+            ) : (
+              <button
+                key={idx}
+                className={`px-4 py-2 border rounded ${
+                  currentPage === page
+                    ? "bg-indigo-600 text-white"
+                    : "bg-white text-gray-700 hover:bg-gray-100"
+                }`}
+                onClick={() => setCurrentPage(page)}
+              >
+                {page}
+              </button>
+            )
+          )}
+          <button
+            className={`px-4 py-2 border rounded ${
+              currentPage === totalPages || totalPages === 0
+                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                : "bg-white text-gray-700 hover:bg-gray-100"
+            }`}
+            onClick={() => setCurrentPage(currentPage + 1)}
+            disabled={currentPage === totalPages || totalPages === 0}
+          >
+            Next
+          </button>
+        </div>
+      )}
+
+      {/* Timesheet Summary Table */}
       <div className="mt-10">
         <h2 className="text-xl font-semibold text-center mb-4">
           Timesheet Summary
