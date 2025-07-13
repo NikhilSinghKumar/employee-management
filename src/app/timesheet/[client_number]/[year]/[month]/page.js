@@ -324,27 +324,24 @@ export default function ClientTimesheetPage() {
           </button>
         </div>
       )}
+
       <div className="flex justify-center gap-4 mt-8 mb-8">
         <button
           onClick={() => router.push("/all_timesheet")}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          className="bg-cyan-700 text-white px-4 py-2 cursor-pointer rounded hover:bg-cyan-800"
         >
           Back to Client Timesheet
         </button>
         <button
           onClick={() =>
-            router.push(
-              `/edit_timesheet/${client_number}/${year}/${timesheet_month.slice(
-                5,
-                7
-              )}`
-            )
+            router.push(`/edit_timesheet/${client_number}/${year}/${month}`)
           }
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          className="bg-fuchsia-700 text-white px-4 py-2 rounded hover:bg-fuchsia-800"
         >
           Go to Edit Timesheet
         </button>
       </div>
+
       {/* Timesheet Summary Table */}
       <div className="mt-10">
         <h2 className="text-xl font-semibold text-center mb-4">
