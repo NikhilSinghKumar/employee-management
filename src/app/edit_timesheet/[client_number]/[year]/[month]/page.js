@@ -1,3 +1,4 @@
+// edit timesheet with search feature
 "use client";
 
 import { useParams } from "next/navigation";
@@ -18,6 +19,8 @@ export default function EditTimesheetPage() {
   const [success, setSuccess] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
   const router = useRouter();
   const pageSize = 10;
 
@@ -39,22 +42,31 @@ export default function EditTimesheetPage() {
     return pages;
   };
 
-  // Refetch timesheet and summary data (shared function for save and upload)
-  const fetchTimesheetData = async (page = currentPage) => {
+  // Refetch timesheet data based on search or pagination
+  const fetchTimesheetData = async (page = currentPage, search = "") => {
     const fromDate = `${year}-${month}-01`;
-    const from = (page - 1) * pageSize;
-    const to = from + pageSize - 1;
-
-    const { data, error, count } = await supabase
+    let query = supabase
       .from("generated_timesheet")
       .select(
         `uid, *, employees!inner(name, client_name, iqama_number, client_number, hra, tra, food_allowance, other_allowance)`,
         { count: "exact" }
       )
       .eq("timesheet_month", fromDate)
-      .eq("employees.client_number", client_number)
-      .order("iqama_number", { foreignTable: "employees", ascending: true })
-      .range(from, to);
+      .eq("employees.client_number", client_number);
+
+    if (search) {
+      query = query.ilike("employees.iqama_number", `%${search}%`);
+      setIsSearching(true);
+    } else {
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+      query = query
+        .order("iqama_number", { foreignTable: "employees", ascending: true })
+        .range(from, to);
+      setIsSearching(false);
+    }
+
+    const { data, error, count } = await query;
 
     if (error) {
       console.error("Fetch error details:", error);
@@ -76,7 +88,7 @@ export default function EditTimesheetPage() {
       data.forEach((item) => {
         initialValues[item.uid] = {
           working_days: item.working_days || 0,
-          overtime_hrs: item.overtime_hrs || 0,
+          overtime_hrs: item.over28a1,
           absent_hrs: item.absent_hrs || 0,
           incentive: item.incentive || 0,
           etmam_cost: item.etmam_cost || 0,
@@ -85,6 +97,9 @@ export default function EditTimesheetPage() {
       });
       setEditedValues(initialValues);
       setOriginalValues(initialValues);
+    } else {
+      setEditedValues({});
+      setOriginalValues({});
     }
   };
 
@@ -108,9 +123,13 @@ export default function EditTimesheetPage() {
   };
 
   useEffect(() => {
-    fetchTimesheetData(currentPage);
+    if (searchTerm) {
+      fetchTimesheetData(1, searchTerm);
+    } else {
+      fetchTimesheetData(currentPage);
+    }
     fetchSummaryData();
-  }, [client_number, year, month, currentPage]);
+  }, [client_number, year, month, currentPage, searchTerm]);
 
   const handleInputChange = (timesheetUid, field, value) => {
     setEditedValues((prev) => ({
@@ -169,7 +188,11 @@ export default function EditTimesheetPage() {
 
       await Promise.all(updatePromises);
 
-      await fetchTimesheetData(currentPage);
+      if (searchTerm) {
+        await fetchTimesheetData(1, searchTerm);
+      } else {
+        await fetchTimesheetData(currentPage);
+      }
       await fetchSummaryData();
 
       setSuccess("Timesheet updated successfully!");
@@ -183,13 +206,30 @@ export default function EditTimesheetPage() {
     setEditedValues(originalValues);
     setError(null);
     setSuccess(null);
+    setSearchTerm("");
+    fetchTimesheetData(currentPage);
   };
 
   const handleUploadSuccess = async () => {
     setError(null);
     setSuccess("Timesheet uploaded successfully!");
-    await fetchTimesheetData(currentPage);
+    if (searchTerm) {
+      await fetchTimesheetData(1, searchTerm);
+    } else {
+      await fetchTimesheetData(currentPage);
+    }
     await fetchSummaryData();
+  };
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1); // Reset to first page on search
+  };
+
+  const handleClearSearch = () => {
+    setSearchTerm("");
+    setCurrentPage(1);
+    fetchTimesheetData(1);
   };
 
   useEffect(() => {
@@ -211,35 +251,82 @@ export default function EditTimesheetPage() {
         {clientName || "Loading..."} — Edit Timesheet — {month}-{year}
       </h1>
 
+      <div className="flex justify-center mb-6">
+        <div className="relative w-full max-w-md">
+          <input
+            type="text"
+            placeholder="Search Employee by Iqama Number"
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+          {searchTerm && (
+            <button
+              onClick={handleClearSearch}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="clear.svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          )}
+        </div>
+      </div>
+
       {error && (
-        <div className="bg-red-100 text-red-700 p-4 mb-4 rounded">{error}</div>
+        <div className="text-red-700 p-4 mb-4 text-center">{error}</div>
       )}
       {success && (
-        <div className="bg-green-100 text-green-700 p-4 mb-4 rounded">
-          {success}
-        </div>
+        <div className="text-green-700 p-4 mb-4 text-center">{success}</div>
       )}
 
       <div className="w-full overflow-x-auto">
         <table className="table-auto w-max min-w-full border-collapse border text-xs lg:text-sm">
           <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
             <tr>
-              <th className="table-cell-style">S.No</th>
-              <th className="table-cell-style">Iqama Number</th>
-              <th className="table-cell-style text-left">Employee Name</th>
-              <th className="table-cell-style">Basic Salary</th>
-              <th className="table-cell-style">Allowance</th>
-              <th className="table-cell-style">Total Salary</th>
-              <th className="table-cell-style">Working Days</th>
-              <th className="table-cell-style">Overtime Hrs</th>
-              <th className="table-cell-style">Absent Hrs</th>
-              <th className="table-cell-style">Overtime</th>
-              <th className="table-cell-style">Incentives</th>
-              <th className="table-cell-style">Penalty</th>
-              <th className="table-cell-style">Deductions</th>
-              <th className="table-cell-style">Adjusted Salary</th>
-              <th className="table-cell-style">Etmam Cost</th>
-              <th className="table-cell-style font-semibold">Total Cost</th>
+              <th className="table-cell-style table-cell-center">S.No</th>
+              <th className="table-cell-style table-cell-center">
+                Iqama Number
+              </th>
+              <th className="table-cell-style table-cell-center">
+                Employee Name
+              </th>
+              <th className="table-cell-style table-cell-center">
+                Basic Salary
+              </th>
+              <th className="table-cell-style table-cell-center">Allowance</th>
+              <th className="table-cell-style table-cell-center">
+                Total Salary
+              </th>
+              <th className="table-cell-style table-cell-center">
+                Working Days
+              </th>
+              <th className="table-cell-style table-cell-center">
+                Overtime Hrs
+              </th>
+              <th className="table-cell-style table-cell-center">Absent Hrs</th>
+              <th className="table-cell-style table-cell-center">Overtime</th>
+              <th className="table-cell-style table-cell-center">Incentives</th>
+              <th className="table-cell-style table-cell-center">Penalty</th>
+              <th className="table-cell-style table-cell-center">Deductions</th>
+              <th className="table-cell-style table-cell-center">
+                Adjusted Salary
+              </th>
+              <th className="table-cell-style table-cell-center">Etmam Cost</th>
+              <th className="table-cell-style table-cell-center font-semibold">
+                Total Cost
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -252,10 +339,12 @@ export default function EditTimesheetPage() {
 
               return (
                 <tr key={item.uid} className="border">
-                  <td className="table-cell-style">
-                    {(currentPage - 1) * pageSize + index + 1}
+                  <td className="table-cell-style table-cell-center">
+                    {isSearching
+                      ? index + 1
+                      : (currentPage - 1) * pageSize + index + 1}
                   </td>
-                  <td className="table-cell-style">
+                  <td className="table-cell-style table-cell-center">
                     {item.employees.iqama_number}
                   </td>
                   <td className="table-cell-style text-left">
@@ -400,7 +489,7 @@ export default function EditTimesheetPage() {
         </table>
       </div>
 
-      {timesheetData.length > 0 && (
+      {!isSearching && timesheetData.length > 0 && (
         <div className="flex justify-center mt-4 space-x-2">
           <button
             className={`px-4 py-2 border rounded ${
@@ -446,7 +535,7 @@ export default function EditTimesheetPage() {
         </div>
       )}
 
-      <div className="flex justify-center gap-4 mt-4 mb-10">
+      <div className="flex justify-center gap-4 mt-8 mb-8">
         <button
           onClick={handleSaveClick}
           className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
@@ -470,8 +559,6 @@ export default function EditTimesheetPage() {
           year={year}
           month={month}
         />
-      </div>
-      <div className="flex justify-center gap-4 mt-4 mb-10">
         <UploadTimesheet
           clientNumber={client_number}
           year={year}
@@ -480,7 +567,7 @@ export default function EditTimesheetPage() {
         />
       </div>
 
-      <div className="mt-10">
+      <div>
         <h2 className="text-xl font-semibold text-center mb-4">
           Timesheet Summary
         </h2>
