@@ -302,6 +302,7 @@ export async function PATCH(req) {
     "absent_hrs",
     "incentive",
     "etmam_cost",
+    "penalty",
     "edited_by",
   ];
   const updateKeys = Object.keys(updates);
