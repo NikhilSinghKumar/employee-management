@@ -3,16 +3,24 @@
 import { useState } from "react";
 import { IoMdCloudDownload } from "react-icons/io";
 
-export default function ExcelDownload() {
+export default function ExcelDownload({ data, searchQuery }) {
   const [loading, setLoading] = useState(false);
 
   const handleDownload = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/download`, {
-        method: "GET",
-        credentials: "include", // Include JWT in cookies
-      });
+      // If searchQuery exists, send the filtered data; otherwise, fetch all data
+      const response = await fetch(
+        `/api/download?searchQuery=${encodeURIComponent(searchQuery)}`,
+        {
+          method: "POST", // Changed to POST to send data
+          credentials: "include", // Include JWT in cookies
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: searchQuery ? JSON.stringify(data) : undefined, // Send data only if searchQuery exists
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to download the file.");

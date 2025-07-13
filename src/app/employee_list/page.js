@@ -165,7 +165,7 @@ export default function EmployeeList() {
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             />
           </div>
-          <ExcelDownload />
+          <ExcelDownload data={computedEmployees} searchQuery={searchQuery} />
         </div>
         {loading ? (
           <p className="text-center text-lg mt-16">Loading...</p>
