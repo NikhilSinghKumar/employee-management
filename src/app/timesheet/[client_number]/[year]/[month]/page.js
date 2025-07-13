@@ -23,7 +23,8 @@ export default function ClientTimesheetPage() {
   `
         )
         .eq("timesheet_month", fromDate)
-        .eq("employees.client_number", client_number);
+        .eq("employees.client_number", client_number)
+        .order("iqama_number", { ascending: true });
 
       if (error) {
         console.error("Fetch error:", error);
