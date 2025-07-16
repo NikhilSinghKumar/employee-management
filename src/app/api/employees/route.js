@@ -40,9 +40,9 @@ export async function POST(req) {
 
   const payload = await req.json();
 
-  // Normalize clientNumber and clientName to lowercase
-  payload.clientNo = payload.clientNo.toLowerCase();
-  payload.clientName = payload.clientName.toLowerCase();
+  // Normalize clientNumber and clientName to uppercase
+  payload.clientNo = payload.clientNo.toUpperCase();
+  payload.clientName = payload.clientName.toUpperCase();
 
   const requiredFields = [
     "employeeName",
