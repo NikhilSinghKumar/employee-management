@@ -2,20 +2,7 @@ import { NextResponse } from "next/server";
 import { authenticateToken } from "./lib/middleware/auth";
 
 export async function middleware(request) {
-  // Add /edit_employee to protected routes
-  const protectedRoutes = [
-    "/services",
-    "/employee_list",
-    "/add_employee",
-    "/onboarding",
-    "/edit_employee",
-    "/all_timesheet",
-    "/etmam_employee_form",
-    "/etmam_employees",
-    "/timesheet",
-    "/edit_timesheet",
-  ];
-  const authRoutes = ["/", "/register"];
+  const authRoutes = ["/", "/register", "/login"]; // Include login as an auth route
   const pathname = request.nextUrl.pathname;
 
   // Allow auth routes without checking token
@@ -26,27 +13,51 @@ export async function middleware(request) {
   try {
     const token = request.cookies.get("token")?.value;
 
-    // Ensure authResult always has a success property
+    // Authenticate token and get user details
     const authResult = token
       ? await authenticateToken(token)
-      : { success: false };
+      : { success: false, message: "No token provided" };
 
-    // Check if the pathname starts with any protected route
-    if (
-      protectedRoutes.some((route) => pathname.startsWith(route)) &&
-      !authResult.success
-    ) {
-      return NextResponse.redirect(new URL("/", request.url));
+    if (!authResult.success) {
+      // Redirect to login page with error query param for better UX
+      return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(authResult.message)}`, request.url));
     }
+
+    // Map pathname to base section for section-specific check
+    const protectedRoutes = {
+      "/services/:path*": "services",
+      "/onboarding/:path*": "onboarding",
+      "/employee_list/:path*": "employee_list",
+      "/add_employee/:path*": "add_employee",
+      "/edit_employee/:path*": "edit_employee",
+      "/all_timesheet/:path*": "all_timesheet",
+      "/timesheet/:path*": "timesheet",
+      "/etmam_employee_form/:path*": "etmam_employee_form",
+      "/etmam_employees/:path*": "etmam_employees",
+      "/edit_timesheet/:path*": "edit_timesheet",
+    };
+
+    const matchingRoute = Object.keys(protectedRoutes).find((route) =>
+      pathname.startsWith(route.split(":")[0])
+    );
+    const requiredSection = matchingRoute ? protectedRoutes[matchingRoute] : null;
+
+    // Perform section-specific check if a protected route is matched
+    if (requiredSection) {
+      const sectionAuthResult = await authenticateToken(token, requiredSection);
+      if (!sectionAuthResult.success) {
+        return NextResponse.redirect(new URL(`/unauthorized?error=${encodeURIComponent(sectionAuthResult.message)}`, request.url));
+      }
+    }
+
+    // Allow request to proceed
+    return NextResponse.next();
   } catch (error) {
     console.error("Middleware Error:", error);
-    return NextResponse.redirect(new URL("/", request.url));
+    return NextResponse.redirect(new URL(`/login?error=Server error`, request.url));
   }
-
-  return NextResponse.next();
 }
 
-// Update matcher to include /edit_employee/:id
 export const config = {
   matcher: [
     "/services/:path*",
