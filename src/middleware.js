@@ -70,5 +70,6 @@ export const config = {
     "/etmam_employee_form/:path*",
     "/etmam_employees/:path*",
     "/edit_timesheet/:path*",
+   
   ],
 };
