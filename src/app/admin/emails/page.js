@@ -72,8 +72,8 @@ export default function AdminEmails() {
   }, []);
 
   return (
-    <div className="p-6 max-w-6xl mx-auto bg-gray-50 min-h-screen">
-      <h1 className="text-3xl font-semibold text-gray-800 mb-6">Manage Allowed Emails</h1>
+    <div className="p-6 max-w-6xl mx-auto mt-18 mb-18 bg-gray-50 min-h-screen">
+      <h1 className="text-3xl text-center font-semibold text-gray-800 mb-6">Manage Allowed Emails</h1>
 
       <div className="flex gap-4 mb-8">
         <button

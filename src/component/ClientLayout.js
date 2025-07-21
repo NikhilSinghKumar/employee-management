@@ -17,6 +17,7 @@ export default function ClientLayout({ children }) {
     /^\/timesheet(\/|$)/,
     /^\/etmam_employees(\/|$)/,
     /^\/edit_timesheet(\/|$)/,
+    /^\/admin(\/|$)/,
   ];
   const showNavbar = allowedRoutes.some((pattern) => pattern.test(pathname));
 

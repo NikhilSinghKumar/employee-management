@@ -2,10 +2,9 @@ import { NextResponse } from "next/server";
 import { authenticateToken } from "./lib/middleware/auth";
 
 export async function middleware(request) {
-  const authRoutes = ["/", "/register", "/login"]; // Include login as an auth route
+  const authRoutes = ["/", "/register"];
   const pathname = request.nextUrl.pathname;
 
-  // Allow auth routes without checking token
   if (authRoutes.includes(pathname)) {
     return NextResponse.next();
   }
@@ -13,17 +12,14 @@ export async function middleware(request) {
   try {
     const token = request.cookies.get("token")?.value;
 
-    // Authenticate token and get user details
     const authResult = token
       ? await authenticateToken(token)
       : { success: false, message: "No token provided" };
 
     if (!authResult.success) {
-      // Redirect to login page with error query param for better UX
-      return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(authResult.message)}`, request.url));
+      return NextResponse.redirect(new URL("/", request.url));
     }
 
-    // Map pathname to base section for section-specific check
     const protectedRoutes = {
       "/services/:path*": "services",
       "/onboarding/:path*": "onboarding",
@@ -35,6 +31,7 @@ export async function middleware(request) {
       "/etmam_employee_form/:path*": "etmam_employee_form",
       "/etmam_employees/:path*": "etmam_employees",
       "/edit_timesheet/:path*": "edit_timesheet",
+      "/admin/:path*": "admin",
     };
 
     const matchingRoute = Object.keys(protectedRoutes).find((route) =>
@@ -42,19 +39,19 @@ export async function middleware(request) {
     );
     const requiredSection = matchingRoute ? protectedRoutes[matchingRoute] : null;
 
-    // Perform section-specific check if a protected route is matched
     if (requiredSection) {
       const sectionAuthResult = await authenticateToken(token, requiredSection);
       if (!sectionAuthResult.success) {
-        return NextResponse.redirect(new URL(`/unauthorized?error=${encodeURIComponent(sectionAuthResult.message)}`, request.url));
+        return NextResponse.redirect(
+          new URL(`/unauthorized?error=${encodeURIComponent(sectionAuthResult.message)}`, request.url)
+        );
       }
     }
 
-    // Allow request to proceed
     return NextResponse.next();
   } catch (error) {
     console.error("Middleware Error:", error);
-    return NextResponse.redirect(new URL(`/login?error=Server error`, request.url));
+    return NextResponse.redirect(new URL("/", request.url));
   }
 }
 
@@ -70,6 +67,6 @@ export const config = {
     "/etmam_employee_form/:path*",
     "/etmam_employees/:path*",
     "/edit_timesheet/:path*",
-   
+    "/admin/:path*"
   ],
 };
