@@ -16,14 +16,16 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     try {
-      await fetch(`${API_URL}/api/auth/logout`, {
+     const response= await fetch("/api/auth/logout", {
         method: "POST",
         credentials: "include",
       });
 
       // Refresh the user context to clear user state after logout
-      fetchUser();
-      router.push("/");
+      if(response.ok){
+        await fetchUser();
+        router.push("/")
+      }
     } catch (error) {
       console.error("Logout failed:", error);
     }

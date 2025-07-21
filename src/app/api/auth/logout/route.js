@@ -5,15 +5,13 @@ export async function POST() {
     { message: "Logout successful." },
     { status: 200 }
   );
-
-  // Next.js' built-in cookie handling
+  response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
   response.cookies.set("token", "", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "Strict",
+    sameSite: "Strict", // Try "Lax" if issues persist
     path: "/",
-    expires: new Date(0), // Expire immediately
+    expires: new Date(0),
   });
-
   return response;
 }
