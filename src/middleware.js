@@ -23,15 +23,8 @@ export async function middleware(request) {
     const protectedRoutes = {
       "/dashboard/:path*": "dashboard",
       "/operations/:path*": "operations",
-      // "/onboarding/:path*": "onboarding",
-      // "/employee_list/:path*": "employee_list",
-      // "/add_employee/:path*": "add_employee",
-      // "/edit_employee/:path*": "edit_employee",
-      // "/all_timesheet/:path*": "all_timesheet",
-      // "/timesheet/:path*": "timesheet",
       "/etmam_employee_form/:path*": "etmam_employee_form",
       "/etmam_employees/:path*": "etmam_employees",
-      // "/edit_timesheet/:path*": "edit_timesheet",
       "/admin/:path*": "admin",
     };
 
@@ -60,15 +53,8 @@ export const config = {
   matcher: [
     "/dashboard/:path*",
     "/operations/:path*",
-    // "/onboarding/:path*",
-    // "/employee_list/:path*",
-    // "/add_employee/:path*",
-    // "/edit_employee/:path*",
-    // "/all_timesheet/:path*",
-    // "/timesheet/:path*",
     "/etmam_employee_form/:path*",
     "/etmam_employees/:path*",
-    // "/edit_timesheet/:path*",
     "/admin/:path*"
   ],
 };
