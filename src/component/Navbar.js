@@ -34,7 +34,7 @@ export default function Navbar() {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white text-black px-14 font-medium py-2 flex justify-between items-center text-base h-16 shadow">
       <div className="flex items-center gap-6">
-        <Link href="/services">
+        <Link href="/dashboard">
           <Image
             src="/logo.png"
             alt="Company Logo"
@@ -67,11 +67,11 @@ export default function Navbar() {
         <Dropdown
           label="Operations"
           items={[
-            { label: "Add Employee", href: "/add_employee" },
-            { label: "Onboarding", href: "/onboarding" },
-            { label: "All Employees", href: "/employee_list" },
-            { label: "All Clients", href: "/all_clients" },
-            { label: "Timesheet/ Payroll", href: "/all_timesheet" },
+            { label: "Add Employee", href: "/operations/add_employee" },
+            { label: "Onboarding", href: "/operations/onboarding" },
+            { label: "All Employees", href: "/operations/employee_list" },
+            { label: "All Clients", href: "/operations/all_clients" },
+            { label: "Timesheet/ Payroll", href: "/operations/all_timesheet" },
           ]}
         />
       </div>

@@ -1,8 +1,8 @@
 export const metadata = {
-  title: "Services",
+  title: "Dashboard",
 };
 
-export default function Services() {
+export default function Dashboard() {
   return (
     <div className="flex items-center justify-center min-h-screen">
       <img

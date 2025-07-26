@@ -58,7 +58,7 @@ export default function LoginForm() {
       // Re-fetch user from Supabase through your context after login
       await fetchUser();
 
-      router.push("/services");
+      router.push("/dashboard");
     } catch (error) {
       console.error("Login error:", error);
       setMessage({

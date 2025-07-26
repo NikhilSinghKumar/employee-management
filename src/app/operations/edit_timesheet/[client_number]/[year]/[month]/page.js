@@ -550,7 +550,7 @@ export default function EditTimesheetPage() {
           Cancel
         </button>
         <button
-          onClick={() => router.push("/all_timesheet")}
+          onClick={() => router.push("/operations/all_timesheet")}
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
         >
           Back

@@ -7,7 +7,7 @@ export default function ClientLayout({ children }) {
   const pathname = usePathname();
 
   const allowedRoutes = [
-    /^\/services/,
+    /^\/dashboard/,
     /^\/employee_list/,
     /^\/onboarding/,
     /^\/etmam_employee_form/,
