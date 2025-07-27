@@ -124,13 +124,14 @@ export default function EditTimesheetPage() {
   };
 
   useEffect(() => {
+    document.title = `Edit ${clientName} ${month}-${year}`;
     if (searchTerm) {
       fetchTimesheetData(1, searchTerm);
     } else {
       fetchTimesheetData(currentPage);
     }
     fetchSummaryData();
-  }, [client_number, year, month, currentPage, searchTerm]);
+  }, [clientName, client_number, year, month, currentPage, searchTerm]);
 
   const handleInputChange = (timesheetUid, field, value) => {
     setEditedValues((prev) => ({
