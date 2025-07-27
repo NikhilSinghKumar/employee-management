@@ -92,6 +92,7 @@ export default function TimesheetPage() {
 
   // Fetch paginated timesheet summary
   useEffect(() => {
+    document.title = "All Client Timesheet"
     fetchTimesheetSummary();
   }, [currentPage]);
 

@@ -104,13 +104,14 @@ export default function ClientTimesheetPage() {
   }
 
   useEffect(() => {
+    document.title = `${clientName} ${month}-${year}`;
     if (searchTerm) {
       fetchTimesheetData(1, searchTerm);
     } else {
       fetchTimesheetData(currentPage);
     }
     fetchSummaryData();
-  }, [client_number, year, month, currentPage, searchTerm]);
+  }, [clientName, client_number, year, month, currentPage, searchTerm]);
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
