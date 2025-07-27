@@ -74,6 +74,14 @@ export default function Navbar() {
             { label: "Timesheet/ Payroll", href: "/operations/all_timesheet" },
           ]}
         />
+        <Dropdown
+          label="Acc & Trans"
+          items={[
+            { label: "Checkin Form", href: "/accomodation_transport/checkin_form" },
+            { label: "Checkin List", href: "/accomodation_transport/checkin_list" },
+            { label: "Checkin Invoices", href: "/accomodation_transport/checkin_invoices" },
+          ]}
+        />
       </div>
 
       {user && (

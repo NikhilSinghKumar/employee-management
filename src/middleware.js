@@ -23,7 +23,8 @@ export async function middleware(request) {
     const protectedRoutes = {
       "/dashboard/:path*": "dashboard",
       "/operations/:path*": "operations",
-      "/human_resource/:path*": "",
+      "/human_resource/:path*": "human_resource",
+      "/accomodation_transport/:path*": "accomodation_transport",
       "/admin/:path*": "admin",
     };
 
@@ -53,6 +54,7 @@ export const config = {
     "/dashboard/:path*",
     "/operations/:path*",
     "/human_resource/:path*",
+    "/accomodation_transport/:path*",
     "/admin/:path*"
   ],
 };
