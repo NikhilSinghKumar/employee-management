@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import EtmamTimesheetPage from "../../component/EtmamTimesheetPage";
+import EtmamTimesheetPage from "../../../component/EtmamTimesheetPage";
 
 export default function Page() {
   return (

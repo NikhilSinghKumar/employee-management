@@ -23,8 +23,7 @@ export async function middleware(request) {
     const protectedRoutes = {
       "/dashboard/:path*": "dashboard",
       "/operations/:path*": "operations",
-      "/etmam_employee_form/:path*": "etmam_employee_form",
-      "/etmam_employees/:path*": "etmam_employees",
+      "/human_resource/:path*": "",
       "/admin/:path*": "admin",
     };
 
@@ -53,8 +52,7 @@ export const config = {
   matcher: [
     "/dashboard/:path*",
     "/operations/:path*",
-    "/etmam_employee_form/:path*",
-    "/etmam_employees/:path*",
+    "/human_resource/:path*",
     "/admin/:path*"
   ],
 };

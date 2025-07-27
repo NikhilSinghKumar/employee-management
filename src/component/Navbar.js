@@ -59,9 +59,9 @@ export default function Navbar() {
         <Dropdown
           label="Human Resource"
           items={[
-            { label: "New Employee Form", href: "/etmam_employee_form" },
-            { label: "Etmam Employees", href: "/etmam_employees" },
-            { label: "Etmam Timesheet", href: "/etmam_timesheet" },
+            { label: "New Employee Form", href: "/human_resource/etmam_employee_form" },
+            { label: "Etmam Employees", href: "/human_resource/etmam_employees" },
+            { label: "Etmam Timesheet", href: "/human_resource/etmam_timesheet" },
           ]}
         />
         <Dropdown

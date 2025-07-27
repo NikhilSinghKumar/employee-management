@@ -8,9 +8,8 @@ export default function ClientLayout({ children }) {
 
   const allowedRoutes = [
     /^\/dashboard/,
-    /^\/operations/,
-    /^\/etmam_employee_form/,
-    /^\/etmam_employees(\/|$)/,
+    /^\/operations(\/|$)/,
+    /^\/human_resource(\/|$)/,
     /^\/admin(\/|$)/,
   ];
   const showNavbar = allowedRoutes.some((pattern) => pattern.test(pathname));
