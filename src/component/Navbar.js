@@ -79,7 +79,7 @@ export default function Navbar() {
           items={[
             { label: "Checkin Form", href: "/accomodation_transport/checkin_form" },
             { label: "Checkin List", href: "/accomodation_transport/checkin_list" },
-            { label: "Checkin Invoices", href: "/accomodation_transport/checkin_invoices" },
+            { label: "A&T Invoices", href: "/accomodation_transport/at_invoices" },
           ]}
         />
       </div>
