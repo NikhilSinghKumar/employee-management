@@ -82,6 +82,15 @@ export default function Navbar() {
             { label: "A&T Timesheet", href: "/accomodation_transport/at_timesheet" },
           ]}
         />
+        
+        <Dropdown
+          label="Talent Acquisition"
+          items={[
+            { label: "Job Opening", href: "/talent_acquisition/job_opening" },
+            { label: "Application Form", href: "/talent_acquisition/aplication_form" },
+            { label: "Applicant List", href: "/talent_acquisition/applicant_list" },
+          ]}
+        />
       </div>
 
       {user && (
