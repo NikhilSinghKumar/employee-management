@@ -8,6 +8,7 @@ export default function AccommodationTransportList() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null); // New state for success message
   const pageSize = 10;
 
   const totalPages = Math.ceil(totalCount / pageSize);
@@ -19,10 +20,15 @@ export default function AccommodationTransportList() {
   async function fetchRecords() {
     try {
       const response = await fetch(
-        `/api/accomodation_transport?search=${encodeURIComponent(searchTerm)}&page=${currentPage}&pageSize=${pageSize}`,
+        `/api/accomodation_transport?search=${encodeURIComponent(
+          searchTerm
+        )}&page=${currentPage}&pageSize=${pageSize}`,
         {
           headers: {
-            Authorization: `Bearer ${document.cookie.replace(/(?:(?:^|.*;\s*)token\s*=\s*([^;]*).*$)|^.*$/, "$1")}`,
+            Authorization: `Bearer ${document.cookie.replace(
+              /(?:(?:^|.*;\s*)token\s*=\s*([^;]*).*$)|^.*$/,
+              "$1"
+            )}`,
           },
         }
       );
@@ -44,6 +50,45 @@ export default function AccommodationTransportList() {
       setTotalCount(0);
     }
   }
+
+  // New handleDelete function
+  async function handleDelete(id) {
+    // Confirmation dialog
+    if (!confirm("Are you sure you want to delete this record?")) {
+      return;
+    }
+
+    try {
+      setError(null); // Clear previous errors
+      setSuccess(null); // Clear previous success messages
+
+      const response = await fetch(`/api/accomodation_transport?id=${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${document.cookie.replace(
+            /(?:(?:^|.*;\s*)token\s*=\s*([^;]*).*$)|^.*$/,
+            "$1"
+          )}`,
+        },
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        setError(result.error || "Failed to delete record");
+      } else {
+        setSuccess("Record deleted successfully");
+        // Refresh the records after deletion
+        await fetchRecords();
+      }
+    } catch (error) {
+      setError("Network error: " + error.message);
+    }
+  }
+
+  setTimeout(() => {
+    setSuccess(null)
+  }, 2000);
 
   const getPaginationPages = () => {
     const pages = [];
@@ -83,56 +128,91 @@ export default function AccommodationTransportList() {
       {error && (
         <p className="text-red-500 text-center mb-4">{error}</p>
       )}
+      {success && (
+        <p className="text-green-500 text-center mb-4">{success}</p> // Success message
+      )}
 
       {records.length === 0 ? (
         <p className="text-center text-gray-500">No records found.</p>
       ) : (
-<div className="w-full overflow-x-auto">
-  <table className="table-auto w-full border border-gray-300 text-sm">
-    <thead className="bg-gray-100 text-gray-700">
-      <tr>
-        <th className="px-4 py-2 border text-center">S.No</th>
-        <th className="px-4 py-2 border text-center">Id No.</th>
-        <th className="px-4 py-2 border text-center">Name</th>
-        <th className="px-4 py-2 border text-center">Iqama Number</th>
-        <th className="px-4 py-2 border text-center">Nationality</th>
-        <th className="px-4 py-2 border text-center">Passport</th>
-        <th className="px-4 py-2 border text-center">Client Name</th>
-        <th className="px-4 py-2 border text-center">Client Number</th>
-        <th className="px-4 py-2 border text-center">Location</th>
-        <th className="px-4 py-2 border text-center">Contract Type</th>
-        <th className="px-4 py-2 border text-center">Checkin Date</th>
-        <th className="px-4 py-2 border text-center">Checkout Date</th>
-        <th className="px-4 py-2 border text-center">Status</th>
-        <th className="px-4 py-2 border text-center">Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      {records.map((record, index) => (
-        <tr key={record.id} className="border">
-          <td className="px-4 py-2 border text-center">{(currentPage - 1) * pageSize + index + 1}</td>
-          <td className="px-4 py-2 border text-center">{record.checkin_id}</td>
-          <td className="px-4 py-2 border text-center">{record.checkin_name}</td>
-          <td className="px-4 py-2 border text-center">{record.iqama_number}</td>
-          <td className="px-4 py-2 border text-center">{record.nationality}</td>
-          <td className="px-4 py-2 border text-center">{record.passport_number}</td>
-          <td className="px-4 py-2 border text-center">{record.client_name}</td>
-          <td className="px-4 py-2 border text-center">{record.client_number}</td>
-          <td className="px-4 py-2 border text-center">{record.location}</td>
-          <td className="px-4 py-2 border text-center">{record.contract_type}</td>
-          <td className="px-4 py-2 border text-center">{record.checkin_date}</td>
-          <td className="px-4 py-2 border text-center">{record.checkout_date}</td>
-          <td className="px-4 py-2 border text-center">{record.status}</td>
-          <td className="px-4 py-2 border text-center space-x-2">
-            <button className="text-blue-600 hover:underline text-xs">Edit</button>
-            <button className="text-red-600 hover:underline text-xs">Delete</button>
-          </td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
-</div>
-
+        <div className="w-full overflow-x-auto">
+          <table className="table-auto w-full border border-gray-300 text-sm">
+            <thead className="bg-gray-100 text-gray-700">
+              <tr>
+                <th className="px-4 py-2 border text-center">S.No</th>
+                <th className="px-4 py-2 border text-center">Id No.</th>
+                <th className="px-4 py-2 border text-center">Name</th>
+                <th className="px-4 py-2 border text-center">Iqama Number</th>
+                <th className="px-4 py-2 border text-center">Nationality</th>
+                <th className="px-4 py-2 border text-center">Passport</th>
+                <th className="px-4 py-2 border text-center">Client Name</th>
+                <th className="px-4 py-2 border text-center">Client Number</th>
+                <th className="px-4 py-2 border text-center">Location</th>
+                <th className="px-4 py-2 border text-center">Contract Type</th>
+                <th className="px-4 py-2 border text-center">Checkin Date</th>
+                <th className="px-4 py-2 border text-center">Checkout Date</th>
+                <th className="px-4 py-2 border text-center">Status</th>
+                <th className="px-4 py-2 border text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {records.map((record, index) => (
+                <tr key={record.id} className="border">
+                  <td className="px-4 py-2 border text-center">
+                    {(currentPage - 1) * pageSize + index + 1}
+                  </td>
+                  <td className="px-4 py-2 border text-center">
+                    {record.checkin_id}
+                  </td>
+                  <td className="px-4 py-2 border text-center">
+                    {record.checkin_name}
+                  </td>
+                  <td className="px-4 py-2 border text-center">
+                    {record.iqama_number}
+                  </td>
+                  <td className="px-4 py-2 border text-center">
+                    {record.nationality}
+                  </td>
+                  <td className="px-4 py-2 border text-center">
+                    {record.passport_number}
+                  </td>
+                  <td className="px-4 py-2 border text-center">
+                    {record.client_name}
+                  </td>
+                  <td className="px-4 py-2 border text-center">
+                    {record.client_number}
+                  </td>
+                  <td className="px-4 py-2 border text-center">
+                    {record.location}
+                  </td>
+                  <td className="px-4 py-2 border text-center">
+                    {record.contract_type}
+                  </td>
+                  <td className="px-4 py-2 border text-center">
+                    {record.checkin_date}
+                  </td>
+                  <td className="px-4 py-2 border text-center">
+                    {record.checkout_date}
+                  </td>
+                  <td className="px-4 py-2 border text-center">
+                    {record.status}
+                  </td>
+                  <td className="px-4 py-2 border text-center space-x-2">
+                    <button className="text-blue-600 hover:underline text-xs">
+                      Edit
+                    </button>
+                    <button
+                      className="text-red-600 hover:underline text-xs"
+                      onClick={() => handleDelete(record.id)} // Add onClick handler
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
 
       {/* Pagination */}
