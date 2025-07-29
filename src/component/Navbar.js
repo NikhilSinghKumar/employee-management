@@ -77,9 +77,9 @@ export default function Navbar() {
         <Dropdown
           label="Acc & Trans"
           items={[
-            { label: "Checkin Form", href: "/accomodation_transport/checkin_form" },
-            { label: "Checkin List", href: "/accomodation_transport/checkin_list" },
-            { label: "A&T Invoices", href: "/accomodation_transport/at_invoices" },
+            { label: "A&T Form", href: "/accomodation_transport/at_form" },
+            { label: "A&T List", href: "/accomodation_transport/at_list" },
+            { label: "A&T Timesheet", href: "/accomodation_transport/at_timesheet" },
           ]}
         />
       </div>
