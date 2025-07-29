@@ -12,10 +12,10 @@ export default function AccomodationTransportForm() {
     clientName: "",
     clientNumber: "",
     location: "",
-    contractType: "Accomodation",
+    contractType: "",
     checkinDate: "",
     checkoutDate: "",
-    checkinStatus: "Active",
+    checkinStatus: "",
   });
 
   const [message, setMessage] = useState(null);
@@ -116,15 +116,15 @@ export default function AccomodationTransportForm() {
 
 <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
   {[
-    { label: "ID No.", name: "checkinId" },
-    { label: "Name", name: "checkinName" },
-    { label: "Nationality", name: "nationality" },
-    { label: "Passport Number", name: "passportNumber" },
-    { label: "Iqama Number", name: "iqamaNumber" },
-    { label: "Client Name", name: "clientName" },
-    { label: "Client Number", name: "clientNumber" },
-    { label: "Location", name: "location" },
-  ].map(({ label, name }) => (
+    { label: "ID No.", name: "checkinId", placeholder: "Enter ID No." },
+    { label: "Name", name: "checkinName", placeholder: "Enter Name" },
+    { label: "Nationality", name: "nationality", placeholder: "Enter Nationality" },
+    { label: "Passport Number", name: "passportNumber", placeholder: "Enter Passport Number" },
+    { label: "Iqama Number", name: "iqamaNumber", placeholder: "Enter Iqama Number" },
+    { label: "Client Name", name: "clientName", placeholder: "Enter Client Name" },
+    { label: "Client Number", name: "clientNumber", placeholder: "Enter Client Number" },
+    { label: "Location", name: "location", placeholder: "Enter Location" },
+  ].map(({ label, name, placeholder }) => (
     <div key={name} className="flex items-center">
       <label className="text-sm font-medium text-gray-700 w-1/3">{label}</label>
       <input
@@ -132,9 +132,10 @@ export default function AccomodationTransportForm() {
         name={name}
         value={formData[name]}
         onChange={handleChange}
+        placeholder={placeholder || ""} // Default to empty string if placeholder is undefined
         className={`w-2/3 p-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 ${
           errors[name] ? "border-red-500" : "border-gray-300"
-        }`}
+        } bg-gray-100`}
         required={name !== "iqamaNumber"}
       />
       {errors[name] && (
@@ -149,9 +150,10 @@ export default function AccomodationTransportForm() {
       name="contractType"
       value={formData.contractType}
       onChange={handleChange}
-      className="w-2/3 p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
+      className="w-2/3 p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 bg-gray-100"
       required
     >
+      <option value="">Select Contract Type</option>
       <option>Accomodation</option>
       <option>Transport</option>
       <option>Acc & Trans</option>
@@ -165,9 +167,10 @@ export default function AccomodationTransportForm() {
       name="checkinDate"
       value={formData.checkinDate}
       onChange={handleChange}
+      placeholder="Select Check-in Date"
       className={`w-2/3 p-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 ${
         errors.checkinDate ? "border-red-500" : "border-gray-300"
-      }`}
+      } bg-gray-100`}
       required
     />
     {errors.checkinDate && (
@@ -182,7 +185,8 @@ export default function AccomodationTransportForm() {
       name="checkoutDate"
       value={formData.checkoutDate}
       onChange={handleChange}
-      className="w-2/3 p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
+      placeholder="Select Check-out Date"
+      className="w-2/3 p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 bg-gray-100"
     />
   </div>
 
@@ -192,9 +196,10 @@ export default function AccomodationTransportForm() {
       name="checkinStatus"
       value={formData.checkinStatus}
       onChange={handleChange}
-      className="w-2/3 p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
+      className="w-2/3 p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 bg-gray-100"
       required
     >
+      <option value="">Select Status</option>
       <option>Active</option>
       <option>Inactive</option>
     </select>
