@@ -126,7 +126,7 @@ export default function AccomodationTransportForm() {
     { label: "Location", name: "location", placeholder: "Enter Location" },
   ].map(({ label, name, placeholder }) => (
     <div key={name} className="flex items-center">
-      <label className="text-sm font-medium text-gray-700 w-1/3">{label}</label>
+      <label className="text-medium font-medium text-gray-700 w-1/3">{label}</label>
       <input
         type="text"
         name={name}
@@ -145,7 +145,7 @@ export default function AccomodationTransportForm() {
   ))}
 
   <div className="flex items-center">
-    <label className="text-sm font-medium text-gray-700 w-1/3">Contract Type</label>
+    <label className="text-medium font-medium text-gray-700 w-1/3">Contract Type</label>
     <select
       name="contractType"
       value={formData.contractType}
@@ -161,7 +161,7 @@ export default function AccomodationTransportForm() {
   </div>
 
   <div className="flex items-center">
-    <label className="text-sm font-medium text-gray-700 w-1/3">Check-in Date</label>
+    <label className="text-medium font-medium text-gray-700 w-1/3">Check-in Date</label>
     <input
       type="date"
       name="checkinDate"
@@ -179,7 +179,7 @@ export default function AccomodationTransportForm() {
   </div>
 
   <div className="flex items-center">
-    <label className="text-sm font-medium text-gray-700 w-1/3">Check-out Date</label>
+    <label className="text-medium font-medium text-gray-700 w-1/3">Check-out Date</label>
     <input
       type="date"
       name="checkoutDate"
@@ -191,7 +191,7 @@ export default function AccomodationTransportForm() {
   </div>
 
   <div className="flex items-center">
-    <label className="text-sm font-medium text-gray-700 w-1/3">Status</label>
+    <label className="text-medium font-medium text-gray-700 w-1/3">Status</label>
     <select
       name="checkinStatus"
       value={formData.checkinStatus}
