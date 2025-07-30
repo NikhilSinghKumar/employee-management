@@ -9,7 +9,7 @@ export default function AccommodationTransportList() {
   const [totalCount, setTotalCount] = useState(0);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-  const [isLoading, setIsLoading] = useState(false); // New loading state
+  const [isLoading, setIsLoading] = useState(false);
   const pageSize = 10;
 
   const totalPages = Math.ceil(totalCount / pageSize);
@@ -19,7 +19,7 @@ export default function AccommodationTransportList() {
   }, [currentPage, searchTerm]);
 
   async function fetchRecords() {
-    setIsLoading(true); // Set loading to true before fetching
+    setIsLoading(true);
     try {
       const response = await fetch(
         `/api/accomodation_transport?search=${encodeURIComponent(
@@ -51,7 +51,7 @@ export default function AccommodationTransportList() {
       setRecords([]);
       setTotalCount(0);
     } finally {
-      setIsLoading(false); // Set loading to false after fetching
+      setIsLoading(false);
     }
   }
 
@@ -63,7 +63,7 @@ export default function AccommodationTransportList() {
     try {
       setError(null);
       setSuccess(null);
-      setIsLoading(true); // Set loading during delete
+      setIsLoading(true);
       const response = await fetch(`/api/accomodation_transport?id=${id}`, {
         method: "DELETE",
         headers: {
@@ -80,12 +80,12 @@ export default function AccommodationTransportList() {
         setError(result.error || "Failed to delete record");
       } else {
         setSuccess("Record deleted successfully");
-        await fetchRecords(); // Refresh records
+        await fetchRecords();
       }
     } catch (error) {
       setError("Network error: " + error.message);
     } finally {
-      setIsLoading(false); // Clear loading state
+      setIsLoading(false);
     }
   }
 
@@ -94,7 +94,7 @@ export default function AccommodationTransportList() {
       const timer = setTimeout(() => {
         setSuccess(null);
       }, 2000);
-      return () => clearTimeout(timer); // Cleanup timer
+      return () => clearTimeout(timer);
     }
   }, [success]);
 
@@ -226,7 +226,7 @@ export default function AccommodationTransportList() {
         </div>
       )}
 
-      {records.length > 0 && !isLoading && (
+      {records.length > 0 && !isLoading && totalCount > pageSize && (
         <div className="flex justify-center mt-4 space-x-2">
           <button
             className={`px-3 py-1 border rounded ${
