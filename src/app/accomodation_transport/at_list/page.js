@@ -8,7 +8,8 @@ export default function AccommodationTransportList() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null); // New state for success message
+  const [success, setSuccess] = useState(null);
+  const [isLoading, setIsLoading] = useState(false); // New loading state
   const pageSize = 10;
 
   const totalPages = Math.ceil(totalCount / pageSize);
@@ -18,6 +19,7 @@ export default function AccommodationTransportList() {
   }, [currentPage, searchTerm]);
 
   async function fetchRecords() {
+    setIsLoading(true); // Set loading to true before fetching
     try {
       const response = await fetch(
         `/api/accomodation_transport?search=${encodeURIComponent(
@@ -48,20 +50,20 @@ export default function AccommodationTransportList() {
       setError("Network error: " + error.message);
       setRecords([]);
       setTotalCount(0);
+    } finally {
+      setIsLoading(false); // Set loading to false after fetching
     }
   }
 
-  // New handleDelete function
   async function handleDelete(id) {
-    // Confirmation dialog
     if (!confirm("Are you sure you want to delete this record?")) {
       return;
     }
 
     try {
-      setError(null); // Clear previous errors
-      setSuccess(null); // Clear previous success messages
-
+      setError(null);
+      setSuccess(null);
+      setIsLoading(true); // Set loading during delete
       const response = await fetch(`/api/accomodation_transport?id=${id}`, {
         method: "DELETE",
         headers: {
@@ -78,17 +80,23 @@ export default function AccommodationTransportList() {
         setError(result.error || "Failed to delete record");
       } else {
         setSuccess("Record deleted successfully");
-        // Refresh the records after deletion
-        await fetchRecords();
+        await fetchRecords(); // Refresh records
       }
     } catch (error) {
       setError("Network error: " + error.message);
+    } finally {
+      setIsLoading(false); // Clear loading state
     }
   }
 
-  setTimeout(() => {
-    setSuccess(null)
-  }, 2000);
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => {
+        setSuccess(null);
+      }, 2000);
+      return () => clearTimeout(timer); // Cleanup timer
+    }
+  }, [success]);
 
   const getPaginationPages = () => {
     const pages = [];
@@ -125,14 +133,17 @@ export default function AccommodationTransportList() {
         />
       </div>
 
-      {error && (
-        <p className="text-red-500 text-center mb-4">{error}</p>
-      )}
+      {error && <p className="text-red-500 text-center mb-4">{error}</p>}
       {success && (
-        <p className="text-green-500 text-center mb-4">{success}</p> // Success message
+        <p className="text-green-500 text-center mb-4">{success}</p>
       )}
 
-      {records.length === 0 ? (
+      {isLoading ? (
+        <div className="text-center text-gray-500">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-500"></div>
+          <p>Loading...</p>
+        </div>
+      ) : records.length === 0 ? (
         <p className="text-center text-gray-500">No records found.</p>
       ) : (
         <div className="w-full overflow-x-auto">
@@ -203,7 +214,7 @@ export default function AccommodationTransportList() {
                     </button>
                     <button
                       className="text-red-600 hover:underline text-xs"
-                      onClick={() => handleDelete(record.id)} // Add onClick handler
+                      onClick={() => handleDelete(record.id)}
                     >
                       Delete
                     </button>
@@ -215,8 +226,7 @@ export default function AccommodationTransportList() {
         </div>
       )}
 
-      {/* Pagination */}
-      {records.length > 0 && (
+      {records.length > 0 && !isLoading && (
         <div className="flex justify-center mt-4 space-x-2">
           <button
             className={`px-3 py-1 border rounded ${
