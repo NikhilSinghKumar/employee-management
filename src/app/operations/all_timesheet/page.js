@@ -13,12 +13,12 @@ export default function TimesheetPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [successMessage, setSuccessMessage] = useState("");
-  const [currentDate, setCurrentDate] = useState(new Date()); // State for current date
+  const [currentDate, setCurrentDate] = useState(new Date());
   const pageSize = 10;
   const router = useRouter();
 
   // Derive month and year from currentDate
-  const currentMonth = String(currentDate.getMonth() + 1).padStart(2, "0"); // Month is 0-based, so +1
+  const currentMonth = String(currentDate.getMonth() + 1).padStart(2, "0");
   const currentYear = currentDate.getFullYear().toString();
   const formattedMonth = currentDate.toLocaleString("default", {
     month: "long",
@@ -30,29 +30,38 @@ export default function TimesheetPage() {
   useEffect(() => {
     const checkDate = () => {
       const now = new Date();
-      // Check if month or year has changed
       if (
         now.getMonth() !== currentDate.getMonth() ||
         now.getFullYear() !== currentDate.getFullYear()
       ) {
-        setCurrentDate(new Date()); // Update date to trigger re-render
+        setCurrentDate(new Date());
       }
     };
 
-    // Check every minute (or adjust interval as needed)
-    const timer = setInterval(checkDate, 60 * 1000); // 60 seconds
-    return () => clearInterval(timer); // Cleanup on unmount
+    const timer = setInterval(checkDate, 60 * 1000);
+    return () => clearInterval(timer);
   }, [currentDate]);
 
   // Fetch client numbers
   useEffect(() => {
     async function fetchClientNumbers() {
-      const res = await fetch("/api/client_numbers", {
-        credentials: "include",
-      });
-      const data = await res.json();
-      if (res.ok) setClientNumbers(data);
-      else setError(data.error);
+      setLoading(true);
+      try {
+        const res = await fetch("/api/client_numbers", {
+          credentials: "include",
+        });
+        const data = await res.json();
+        if (res.ok) {
+          setClientNumbers(data);
+        } else {
+          setError(data.error || "Failed to fetch client numbers");
+        }
+      } catch (err) {
+        setError(err.message || "Unexpected error fetching client numbers");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
     }
     fetchClientNumbers();
   }, []);
@@ -74,14 +83,15 @@ export default function TimesheetPage() {
         credentials: "include",
       });
       const result = await res.json();
-      if (!res.ok)
+      if (!res.ok) {
         throw new Error(result.error || "Failed to generate timesheet");
+      }
       setSuccessMessage("Timesheet generated successfully!");
       setTimeout(() => setSuccessMessage(""), 3000);
 
       // Refetch summary after successful generation
-      await fetchTimesheetSummary(1); // Reset to first page to show new row
-      setCurrentPage(1); // Reset pagination
+      await fetchTimesheetSummary(1);
+      setCurrentPage(1);
     } catch (err) {
       setError(err.message || "Unexpected error");
       console.error(err);
@@ -92,26 +102,33 @@ export default function TimesheetPage() {
 
   // Fetch paginated timesheet summary
   useEffect(() => {
-    document.title = "All Client Timesheet"
+    document.title = "All Client Timesheet";
     fetchTimesheetSummary();
   }, [currentPage]);
 
   async function fetchTimesheetSummary(page = currentPage) {
-    const from = (page - 1) * pageSize;
-    const to = from + pageSize - 1;
-    const { data, error, count } = await supabase
-      .from("generated_timesheet_summary")
-      .select("*", { count: "exact" })
-      .order("created_at", { ascending: false }) // Sort by created_at descending
-      .range(from, to);
+    setLoading(true);
+    try {
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+      const { data, error, count } = await supabase
+        .from("generated_timesheet_summary")
+        .select("*", { count: "exact" })
+        .order("created_at", { ascending: false })
+        .range(from, to);
 
-    if (error) {
-      console.error("Error fetching summary:", error.message);
-      setError(error.message || "Failed to fetch timesheet summary");
-      return;
+      if (error) {
+        throw new Error(error.message || "Failed to fetch timesheet summary");
+      }
+      setTimesheetSummary(data || []);
+      setTotalCount(count || 0);
+      setError(null);
+    } catch (err) {
+      setError(err.message || "Failed to fetch timesheet summary");
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
-    setTimesheetSummary(data || []);
-    setTotalCount(count || 0);
   }
 
   const formatMonthYear = (dateString) => {
@@ -124,23 +141,17 @@ export default function TimesheetPage() {
 
   const getPaginationPages = () => {
     const pages = [];
-
     if (totalPages <= 5) {
       for (let i = 1; i <= totalPages; i++) pages.push(i);
     } else {
       pages.push(1);
-
       if (currentPage > 3) pages.push("...");
-
       const start = Math.max(2, currentPage - 1);
       const end = Math.min(totalPages - 1, currentPage + 1);
-
       for (let i = start; i <= end; i++) pages.push(i);
-
       if (currentPage < totalPages - 2) pages.push("...");
       pages.push(totalPages);
     }
-
     return pages;
   };
 
@@ -222,7 +233,12 @@ export default function TimesheetPage() {
       {/* Table */}
       <div className="overflow-x-auto w-full">
         <div className="mx-auto max-w-7xl">
-          {timesheetSummary.length === 0 ? (
+          {loading ? (
+            <div className="text-center text-gray-500 py-10">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-500"></div>
+              <p className="mt-2">Loading...</p>
+            </div>
+          ) : timesheetSummary.length === 0 ? (
             <p className="text-center text-gray-500 text-lg py-10">
               No timesheet data available.
             </p>
@@ -315,7 +331,7 @@ export default function TimesheetPage() {
       </div>
 
       {/* Pagination */}
-      {timesheetSummary.length > 0 && (
+      {timesheetSummary.length > 0 && !loading && (
         <div className="flex justify-center mt-4 space-x-2">
           <button
             className={`px-4 py-2 border rounded ${
