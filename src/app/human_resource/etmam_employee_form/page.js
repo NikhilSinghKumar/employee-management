@@ -54,7 +54,7 @@ export default function EtmamEmployeeFormPage() {
     "HR",
     "Finance",
     "Talent Acquisition",
-    "Accomodation & Transportation",
+    "Accommodation & Transportation",
     "Manpower Affairs",
     "Executive Management",
   ];

@@ -37,7 +37,7 @@ export default function AccommodationTransportList() {
     setIsLoading(true);
     try {
       const response = await fetch(
-        `/api/accomodation_transport?search=${encodeURIComponent(
+        `/api/accommodation_transport?search=${encodeURIComponent(
           searchTerm
         )}&page=${currentPage}&pageSize=${pageSize}`,
         {
@@ -79,7 +79,7 @@ export default function AccommodationTransportList() {
       setError(null);
       setSuccess(null);
       setIsLoading(true);
-      const response = await fetch(`/api/accomodation_transport?id=${id}`, {
+      const response = await fetch(`/api/accommodation_transport?id=${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${document.cookie.replace(
@@ -111,7 +111,7 @@ export default function AccommodationTransportList() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/accomodation_transport", {
+      const response = await fetch("/api/accommodation_transport", {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

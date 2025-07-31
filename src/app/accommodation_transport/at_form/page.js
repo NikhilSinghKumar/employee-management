@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 
-export default function AccomodationTransportForm() {
+export default function AccommodationTransportForm() {
   const [formData, setFormData] = useState({
     checkinId: "",
     checkinName: "",
@@ -54,7 +54,7 @@ export default function AccomodationTransportForm() {
     const payload = { ...formData };
 
     try {
-      const res = await fetch("/api/accomodation_transport", {
+      const res = await fetch("/api/accommodation_transport", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -74,7 +74,7 @@ export default function AccomodationTransportForm() {
           clientName: "",
           clientNumber: "",
           location: "",
-          contractType: "Accomodation",
+          contractType: "Accommodation",
           checkinDate: "",
           checkoutDate: "",
           checkinStatus: "Active",
@@ -154,7 +154,7 @@ export default function AccomodationTransportForm() {
       required
     >
       <option value="">Select Contract Type</option>
-      <option>Accomodation</option>
+      <option>Accommodation</option>
       <option>Transport</option>
       <option>Acc & Trans</option>
     </select>

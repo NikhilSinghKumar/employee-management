@@ -24,7 +24,7 @@ export async function middleware(request) {
       "/dashboard/:path*": "dashboard",
       "/operations/:path*": "operations",
       "/human_resource/:path*": "human_resource",
-      "/accomodation_transport/:path*": "accomodation_transport",
+      "/accommodation_transport/:path*": "accommodation_transport",
       "/admin/:path*": "admin",
     };
 
@@ -54,7 +54,7 @@ export const config = {
     "/dashboard/:path*",
     "/operations/:path*",
     "/human_resource/:path*",
-    "/accomodation_transport/:path*",
+    "/accommodation_transport/:path*",
     "/admin/:path*"
   ],
 };
