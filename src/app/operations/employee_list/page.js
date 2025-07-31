@@ -194,7 +194,10 @@ export default function EmployeeList() {
           <ExcelDownload data={computedEmployees} searchQuery={searchQuery} />
         </div>
         {loading ? (
-          <p className="text-center text-lg mt-16">Loading...</p>
+          <div className="text-center text-gray-500">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-500"></div>
+            <p>Loading...</p>
+          </div>
         ) : error ? (
           <p className="text-center text-red-500 mt-16">Error: {error}</p>
         ) : employees.length === 0 ? (
