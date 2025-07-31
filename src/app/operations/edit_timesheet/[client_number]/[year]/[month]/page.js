@@ -1,4 +1,3 @@
-// edit timesheet with search feature
 "use client";
 
 import { useParams } from "next/navigation";
@@ -21,6 +20,7 @@ export default function EditTimesheetPage() {
   const [totalCount, setTotalCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
   const pageSize = 10;
 
@@ -44,87 +44,100 @@ export default function EditTimesheetPage() {
 
   // Refetch timesheet data based on search or pagination
   const fetchTimesheetData = async (page = currentPage, search = "") => {
-    const fromDate = `${year}-${month}-01`;
-    let query = supabase
-      .from("generated_timesheet")
-      .select(
-        `uid, *, employees!inner(name, client_name, iqama_number, client_number, hra, tra, food_allowance, other_allowance)`,
-        { count: "exact" }
-      )
-      .eq("timesheet_month", fromDate)
-      .eq("employees.client_number", client_number)
-      .order("iqama_number", { ascending: true });
-
-    if (search) {
-      query = query.ilike("employees.iqama_number", `%${search}%`);
-      setIsSearching(true);
-    } else {
-      const from = (page - 1) * pageSize;
-      const to = from + pageSize - 1;
-      query = query
-        .order("iqama_number", { foreignTable: "employees", ascending: true })
-        .range(from, to);
-      setIsSearching(false);
-    }
-
-    const { data, error, count } = await query;
-
-    if (error) {
-      console.error("Fetch error details:", error);
-      setError(`Failed to fetch timesheet data: ${error.message}`);
-      return;
-    }
-
-    const sortedData = data
-      ? data.sort((a, b) =>
-          a.employees.iqama_number.localeCompare(b.employees.iqama_number)
+    setLoading(true);
+    try {
+      const fromDate = `${year}-${month}-01`;
+      let query = supabase
+        .from("generated_timesheet")
+        .select(
+          `uid, *, employees!inner(name, client_name, iqama_number, client_number, hra, tra, food_allowance, other_allowance)`,
+          { count: "exact" }
         )
-      : [];
-    setTimesheetData(sortedData);
-    setTotalCount(count || 0);
+        .eq("timesheet_month", fromDate)
+        .eq("employees.client_number", client_number)
+        .order("iqama_number", { ascending: true });
 
-    if (data && data.length > 0) {
-      setClientName(data[0].employees.client_name);
-      const initialValues = {};
-      data.forEach((item) => {
-        initialValues[item.uid] = {
-          working_days: item.working_days || 0,
-          overtime_hrs: item.over28a1,
-          absent_hrs: item.absent_hrs || 0,
-          incentive: item.incentive || 0,
-          etmam_cost: item.etmam_cost || 0,
-          penalty: item.penalty || 0,
-        };
-      });
-      setEditedValues(initialValues);
-      setOriginalValues(initialValues);
-    } else {
-      setEditedValues({});
-      setOriginalValues({});
+      if (search) {
+        query = query.ilike("employees.iqama_number", `%${search}%`);
+        setIsSearching(true);
+      } else {
+        const from = (page - 1) * pageSize;
+        const to = from + pageSize - 1;
+        query = query
+          .order("iqama_number", { foreignTable: "employees", ascending: true })
+          .range(from, to);
+        setIsSearching(false);
+      }
+
+      const { data, error, count } = await query;
+
+      if (error) {
+        throw new Error(`Failed to fetch timesheet data: ${error.message}`);
+      }
+
+      const sortedData = data
+        ? data.sort((a, b) =>
+            a.employees.iqama_number.localeCompare(b.employees.iqama_number)
+          )
+        : [];
+      setTimesheetData(sortedData);
+      setTotalCount(count || 0);
+
+      if (data && data.length > 0) {
+        setClientName(data[0].employees.client_name);
+        const initialValues = {};
+        data.forEach((item) => {
+          initialValues[item.uid] = {
+            working_days: item.working_days || 0,
+            overtime_hrs: item.overtime_hrs || 0,
+            absent_hrs: item.absent_hrs || 0,
+            incentive: item.incentive || 0,
+            etmam_cost: item.etmam_cost || 0,
+            penalty: item.penalty || 0,
+          };
+        });
+        setEditedValues(initialValues);
+        setOriginalValues(initialValues);
+      } else {
+        setClientName("");
+        setEditedValues({});
+        setOriginalValues({});
+      }
+    } catch (err) {
+      console.error("Fetch error details:", err);
+      setError(err.message || "Failed to fetch timesheet data");
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchSummaryData = async () => {
-    const fromDate = `${year}-${month}-01`;
-    const { data, error } = await supabase
-      .from("generated_timesheet_summary")
-      .select(
-        "working_days_count, total_salary_sum, total_cost_sum, vat_sum, grand_total"
-      )
-      .eq("client_number", client_number)
-      .eq("timesheet_month", fromDate)
-      .single();
+    setLoading(true);
+    try {
+      const fromDate = `${year}-${month}-01`;
+      const { data, error } = await supabase
+        .from("generated_timesheet_summary")
+        .select(
+          "working_days_count, total_salary_sum, total_cost_sum, vat_sum, grand_total"
+        )
+        .eq("client_number", client_number)
+        .eq("timesheet_month", fromDate)
+        .single();
 
-    if (error) {
-      console.error("Summary fetch error:", error);
-      setError(`Failed to fetch summary data: ${error.message}`);
-    } else {
+      if (error) {
+        throw new Error(`Failed to fetch summary data: ${error.message}`);
+      }
       setSummaryData(data);
+    } catch (err) {
+      console.error("Summary fetch error:", err);
+      setError(err.message || "Failed to fetch summary data");
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    document.title = `Edit ${clientName} ${month}-${year}`;
+    document.title = `Edit ${clientName || "Loading..."} ${month}-${year}`;
     if (searchTerm) {
       fetchTimesheetData(1, searchTerm);
     } else {
@@ -144,30 +157,32 @@ export default function EditTimesheetPage() {
   };
 
   const handleSaveClick = async () => {
+    setLoading(true);
     setError(null);
     setSuccess(null);
 
-    for (const timesheetUid in editedValues) {
-      const updates = editedValues[timesheetUid];
-      for (const field of [
-        "working_days",
-        "overtime_hrs",
-        "absent_hrs",
-        "incentive",
-        "etmam_cost",
-        "penalty",
-      ]) {
-        if (
-          updates[field] !== undefined &&
-          (isNaN(updates[field]) || updates[field] < 0)
-        ) {
-          setError(`${field.replace("_", " ")} must be a non-negative number.`);
-          return;
+    try {
+      for (const timesheetUid in editedValues) {
+        const updates = editedValues[timesheetUid];
+        for (const field of [
+          "working_days",
+          "overtime_hrs",
+          "absent_hrs",
+          "incentive",
+          "etmam_cost",
+          "penalty",
+        ]) {
+          if (
+            updates[field] !== undefined &&
+            (isNaN(updates[field]) || updates[field] < 0)
+          ) {
+            throw new Error(
+              `${field.replace("_", " ")} must be a non-negative number.`
+            );
+          }
         }
       }
-    }
 
-    try {
       const updatePromises = Object.keys(editedValues).map((timesheetUid) =>
         fetch("/api/generate_timesheet", {
           method: "PATCH",
@@ -200,7 +215,9 @@ export default function EditTimesheetPage() {
       setSuccess("Timesheet updated successfully!");
     } catch (error) {
       console.error("Error updating timesheet:", error);
-      setError("Server error. Please try again.");
+      setError(error.message || "Server error. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -225,7 +242,7 @@ export default function EditTimesheetPage() {
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
-    setCurrentPage(1); // Reset to first page on search
+    setCurrentPage(1);
   };
 
   const handleClearSearch = () => {
@@ -272,7 +289,7 @@ export default function EditTimesheetPage() {
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
-                xmlns="clear.svg"
+                xmlns="http://www.w3.org/2000/svg"
               >
                 <path
                   strokeLinecap="round"
@@ -294,204 +311,208 @@ export default function EditTimesheetPage() {
       )}
 
       <div className="w-full overflow-x-auto">
-        <table className="table-auto w-max min-w-full border-collapse border text-xs lg:text-sm">
-          <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
-            <tr>
-              <th className="table-cell-style table-cell-center">S.No</th>
-              <th className="table-cell-style table-cell-center">
-                Iqama Number
-              </th>
-              <th className="table-cell-style table-cell-center">
-                Employee Name
-              </th>
-              <th className="table-cell-style table-cell-center">
-                Basic Salary
-              </th>
-              <th className="table-cell-style table-cell-center">Allowance</th>
-              <th className="table-cell-style table-cell-center">
-                Total Salary
-              </th>
-              <th className="table-cell-style table-cell-center">
-                Working Days
-              </th>
-              <th className="table-cell-style table-cell-center">
-                Overtime Hrs
-              </th>
-              <th className="table-cell-style table-cell-center">Absent Hrs</th>
-              <th className="table-cell-style table-cell-center">Overtime</th>
-              <th className="table-cell-style table-cell-center">Incentives</th>
-              <th className="table-cell-style table-cell-center">Penalty</th>
-              <th className="table-cell-style table-cell-center">Deductions</th>
-              <th className="table-cell-style table-cell-center">
-                Adjusted Salary
-              </th>
-              <th className="table-cell-style table-cell-center">Etmam Cost</th>
-              <th className="table-cell-style table-cell-center font-semibold">
-                Total Cost
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {timesheetData.map((item, index) => {
-              const allowance =
-                (item.employees.hra ?? 0) +
-                (item.employees.tra ?? 0) +
-                (item.employees.food_allowance ?? 0) +
-                (item.employees.other_allowance ?? 0);
-
-              return (
-                <tr key={item.uid} className="border">
-                  <td className="table-cell-style table-cell-center">
-                    {isSearching
-                      ? index + 1
-                      : (currentPage - 1) * pageSize + index + 1}
-                  </td>
-                  <td className="table-cell-style table-cell-center">
-                    {item.employees.iqama_number}
-                  </td>
-                  <td className="table-cell-style text-left">
-                    {item.employees.name}
-                  </td>
-                  <td className="table-cell-style">
-                    {(item.basic_salary ?? 0).toFixed(2)}
-                  </td>
-                  <td className="table-cell-style">{allowance.toFixed(2)}</td>
-                  <td className="table-cell-style">
-                    {(item.total_salary ?? 0).toFixed(2)}
-                  </td>
-                  <td className="table-cell-style">
-                    <input
-                      type="number"
-                      min="0"
-                      max="30"
-                      value={
-                        editedValues[item.uid]?.working_days ??
-                        item.working_days
-                      }
-                      onChange={(e) =>
-                        handleInputChange(
-                          item.uid,
-                          "working_days",
-                          parseInt(e.target.value) || 0
-                        )
-                      }
-                      className="w-16 text-center border rounded"
-                    />
-                  </td>
-                  <td className="table-cell-style">
-                    <input
-                      type="number"
-                      min="0"
-                      value={
-                        editedValues[item.uid]?.overtime_hrs ??
-                        item.overtime_hrs
-                      }
-                      onChange={(e) =>
-                        handleInputChange(
-                          item.uid,
-                          "overtime_hrs",
-                          parseInt(e.target.value) || 0
-                        )
-                      }
-                      className="w-16 text-center border rounded"
-                    />
-                  </td>
-                  <td className="table-cell-style">
-                    <input
-                      type="number"
-                      min="0"
-                      value={
-                        editedValues[item.uid]?.absent_hrs ?? item.absent_hrs
-                      }
-                      onChange={(e) =>
-                        handleInputChange(
-                          item.uid,
-                          "absent_hrs",
-                          parseInt(e.target.value) || 0
-                        )
-                      }
-                      className="w-16 text-center border rounded"
-                    />
-                  </td>
-                  <td className="table-cell-style">
-                    {(item.overtime ?? 0).toFixed(2)}
-                  </td>
-                  <td className="table-cell-style">
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={
-                        editedValues[item.uid]?.incentive ?? item.incentive
-                      }
-                      onChange={(e) =>
-                        handleInputChange(
-                          item.uid,
-                          "incentive",
-                          parseFloat(e.target.value) || 0
-                        )
-                      }
-                      className="w-16 text-center border rounded"
-                    />
-                  </td>
-                  <td className="table-cell-style">
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={editedValues[item.uid]?.penalty ?? item.penalty}
-                      onChange={(e) =>
-                        handleInputChange(
-                          item.uid,
-                          "penalty",
-                          parseFloat(e.target.value) || 0
-                        )
-                      }
-                      className="w-16 text-center border rounded"
-                    />
-                  </td>
-                  <td className="table-cell-style">
-                    {(item.deductions ?? 0).toFixed(2)}
-                  </td>
-                  <td className="table-cell-style">
-                    {(item.adjusted_salary ?? 0).toFixed(2)}
-                  </td>
-                  <td className="table-cell-style">
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={
-                        editedValues[item.uid]?.etmam_cost ?? item.etmam_cost
-                      }
-                      onChange={(e) =>
-                        handleInputChange(
-                          item.uid,
-                          "etmam_cost",
-                          parseFloat(e.target.value) || 0
-                        )
-                      }
-                      className="w-16 text-center border rounded"
-                    />
-                  </td>
-                  <td className="table-cell-style font-semibold">
-                    {(item.total_cost ?? 0).toFixed(2)}
-                  </td>
-                </tr>
-              );
-            })}
-            {timesheetData.length === 0 && (
+        {loading ? (
+          <div className="text-center text-gray-500 py-10">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-500"></div>
+            <p className="mt-2">Loading...</p>
+          </div>
+        ) : timesheetData.length === 0 ? (
+          <div className="text-center text-gray-500 text-lg py-10">
+            No timesheet data available.
+          </div>
+        ) : (
+          <table className="table-auto w-max min-w-full border-collapse border text-xs lg:text-sm">
+            <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
               <tr>
-                <td colSpan="15" className="text-center py-4">
-                  No timesheet data available.
-                </td>
+                <th className="table-cell-style table-cell-center">S.No</th>
+                <th className="table-cell-style table-cell-center">
+                  Iqama Number
+                </th>
+                <th className="table-cell-style table-cell-center">
+                  Employee Name
+                </th>
+                <th className="table-cell-style table-cell-center">
+                  Basic Salary
+                </th>
+                <th className="table-cell-style table-cell-center">Allowance</th>
+                <th className="table-cell-style table-cell-center">
+                  Total Salary
+                </th>
+                <th className="table-cell-style table-cell-center">
+                  Working Days
+                </th>
+                <th className="table-cell-style table-cell-center">
+                  Overtime Hrs
+                </th>
+                <th className="table-cell-style table-cell-center">Absent Hrs</th>
+                <th className="table-cell-style table-cell-center">Overtime</th>
+                <th className="table-cell-style table-cell-center">Incentives</th>
+                <th className="table-cell-style table-cell-center">Penalty</th>
+                <th className="table-cell-style table-cell-center">Deductions</th>
+                <th className="table-cell-style table-cell-center">
+                  Adjusted Salary
+                </th>
+                <th className="table-cell-style table-cell-center">Etmam Cost</th>
+                <th className="table-cell-style table-cell-center font-semibold">
+                  Total Cost
+                </th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {timesheetData.map((item, index) => {
+                const allowance =
+                  (item.employees.hra ?? 0) +
+                  (item.employees.tra ?? 0) +
+                  (item.employees.food_allowance ?? 0) +
+                  (item.employees.other_allowance ?? 0);
+
+                return (
+                  <tr key={item.uid} className="border">
+                    <td className="table-cell-style table-cell-center">
+                      {isSearching
+                        ? index + 1
+                        : (currentPage - 1) * pageSize + index + 1}
+                    </td>
+                    <td className="table-cell-style table-cell-center">
+                      {item.employees.iqama_number}
+                    </td>
+                    <td className="table-cell-style text-left">
+                      {item.employees.name}
+                    </td>
+                    <td className="table-cell-style">
+                      {(item.basic_salary ?? 0).toFixed(2)}
+                    </td>
+                    <td className="table-cell-style">{allowance.toFixed(2)}</td>
+                    <td className="table-cell-style">
+                      {(item.total_salary ?? 0).toFixed(2)}
+                    </td>
+                    <td className="table-cell-style">
+                      <input
+                        type="number"
+                        min="0"
+                        max="30"
+                        value={
+                          editedValues[item.uid]?.working_days ??
+                          item.working_days
+                        }
+                        onChange={(e) =>
+                          handleInputChange(
+                            item.uid,
+                            "working_days",
+                            parseInt(e.target.value) || 0
+                          )
+                        }
+                        className="w-16 text-center border rounded"
+                      />
+                    </td>
+                    <td className="table-cell-style">
+                      <input
+                        type="number"
+                        min="0"
+                        value={
+                          editedValues[item.uid]?.overtime_hrs ??
+                          item.overtime_hrs
+                        }
+                        onChange={(e) =>
+                          handleInputChange(
+                            item.uid,
+                            "overtime_hrs",
+                            parseInt(e.target.value) || 0
+                          )
+                        }
+                        className="w-16 text-center border rounded"
+                      />
+                    </td>
+                    <td className="table-cell-style">
+                      <input
+                        type="number"
+                        min="0"
+                        value={
+                          editedValues[item.uid]?.absent_hrs ?? item.absent_hrs
+                        }
+                        onChange={(e) =>
+                          handleInputChange(
+                            item.uid,
+                            "absent_hrs",
+                            parseInt(e.target.value) || 0
+                          )
+                        }
+                        className="w-16 text-center border rounded"
+                      />
+                    </td>
+                    <td className="table-cell-style">
+                      {(item.overtime ?? 0).toFixed(2)}
+                    </td>
+                    <td className="table-cell-style">
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={
+                          editedValues[item.uid]?.incentive ?? item.incentive
+                        }
+                        onChange={(e) =>
+                          handleInputChange(
+                            item.uid,
+                            "incentive",
+                            parseFloat(e.target.value) || 0
+                          )
+                        }
+                        className="w-16 text-center border rounded"
+                      />
+                    </td>
+                    <td className="table-cell-style">
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={editedValues[item.uid]?.penalty ?? item.penalty}
+                        onChange={(e) =>
+                          handleInputChange(
+                            item.uid,
+                            "penalty",
+                            parseFloat(e.target.value) || 0
+                          )
+                        }
+                        className="w-16 text-center border rounded"
+                      />
+                    </td>
+                    <td className="table-cell-style">
+                      {(item.deductions ?? 0).toFixed(2)}
+                    </td>
+                    <td className="table-cell-style">
+                      {(item.adjusted_salary ?? 0).toFixed(2)}
+                    </td>
+                    <td className="table-cell-style">
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={
+                          editedValues[item.uid]?.etmam_cost ?? item.etmam_cost
+                        }
+                        onChange={(e) =>
+                          handleInputChange(
+                            item.uid,
+                            "etmam_cost",
+                            parseFloat(e.target.value) || 0
+                          )
+                        }
+                        className="w-16 text-center border rounded"
+                      />
+                    </td>
+                    <td className="table-cell-style font-semibold">
+                      {(item.total_cost ?? 0).toFixed(2)}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
       </div>
 
-      {!isSearching && timesheetData.length > 0 && (
+      {!isSearching && timesheetData.length > 0 && !loading && (
         <div className="flex justify-center mt-4 space-x-2">
           <button
             className={`px-4 py-2 border rounded ${
@@ -540,19 +561,28 @@ export default function EditTimesheetPage() {
       <div className="flex justify-center gap-4 mt-8 mb-8">
         <button
           onClick={handleSaveClick}
-          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+          disabled={loading}
+          className={`bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 ${
+            loading ? "bg-gray-400 cursor-not-allowed" : ""
+          }`}
         >
-          Save
+          {loading ? "Saving..." : "Save"}
         </button>
         <button
           onClick={handleCancelClick}
-          className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+          disabled={loading}
+          className={`bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 ${
+            loading ? "bg-gray-400 cursor-not-allowed" : ""
+          }`}
         >
           Cancel
         </button>
         <button
           onClick={() => router.push("/operations/all_timesheet")}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          disabled={loading}
+          className={`bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 ${
+            loading ? "bg-gray-400 cursor-not-allowed" : ""
+          }`}
         >
           Back
         </button>
@@ -560,12 +590,14 @@ export default function EditTimesheetPage() {
           clientNumber={client_number}
           year={year}
           month={month}
+          disabled={loading}
         />
         <UploadTimesheet
           clientNumber={client_number}
           year={year}
           month={month}
           onUploadSuccess={handleUploadSuccess}
+          disabled={loading}
         />
       </div>
 
@@ -574,18 +606,23 @@ export default function EditTimesheetPage() {
           Timesheet Summary
         </h2>
         <div className="overflow-x-auto flex justify-center">
-          <table className="table-auto border-collapse border border-gray-300 text-sm w-max">
-            <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
-              <tr>
-                <th className="border px-4 py-2">Total Working Days</th>
-                <th className="border px-4 py-2">Net Salary</th>
-                <th className="border px-4 py-2">Net Cost Total</th>
-                <th className="border px-4 py-2">VAT</th>
-                <th className="border px-4 py-2">Grand Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {summaryData ? (
+          {loading ? (
+            <div className="text-center text-gray-500 py-10">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-500"></div>
+              <p className="mt-2">Loading...</p>
+            </div>
+          ) : summaryData ? (
+            <table className="table-auto border-collapse border border-gray-300 text-sm w-max">
+              <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
+                <tr>
+                  <th className="border px-4 py-2">Total Working Days</th>
+                  <th className="border px-4 py-2">Net Salary</th>
+                  <th className="border px-4 py-2">Net Cost Total</th>
+                  <th className="border px-4 py-2">VAT</th>
+                  <th className="border px-4 py-2">Grand Total</th>
+                </tr>
+              </thead>
+              <tbody>
                 <tr className="text-center">
                   <td className="border px-4 py-2">
                     {summaryData.working_days_count ?? 0}
@@ -603,15 +640,13 @@ export default function EditTimesheetPage() {
                     {summaryData.grand_total?.toFixed(2) ?? "0.00"}
                   </td>
                 </tr>
-              ) : (
-                <tr>
-                  <td colSpan="5" className="text-center py-4">
-                    No summary data available.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+              </tbody>
+            </table>
+          ) : (
+            <div className="text-center text-gray-500 text-lg py-10">
+              No summary data available.
+            </div>
+          )}
         </div>
       </div>
     </div>
