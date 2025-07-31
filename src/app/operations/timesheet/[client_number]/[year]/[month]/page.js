@@ -14,6 +14,7 @@ export default function ClientTimesheetPage() {
   const [totalCount, setTotalCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
   const pageSize = 10;
 
@@ -36,75 +37,86 @@ export default function ClientTimesheetPage() {
   };
 
   async function fetchTimesheetData(page = currentPage, search = "") {
-    const fromDate = `${year}-${month}-01`;
-    let query = supabase
-      .from("generated_timesheet")
-      .select(
-        `
-        *,
-        employees!inner(name, client_name, iqama_number, client_number, hra, tra, food_allowance, other_allowance)
-      `,
-        { count: "exact" }
-      )
-      .eq("timesheet_month", fromDate)
-      .eq("employees.client_number", client_number)
-      .order("iqama_number", { ascending: true });
-
-    if (search) {
-      query = query.ilike("employees.iqama_number", `%${search}%`);
-      setIsSearching(true);
-    } else {
-      const from = (page - 1) * pageSize;
-      const to = from + pageSize - 1;
-      query = query
-        .order("iqama_number", { foreignTable: "employees", ascending: true })
-        .range(from, to);
-      setIsSearching(false);
-    }
-
-    const { data, error, count } = await query;
-
-    if (error) {
-      console.error("Fetch error:", error);
-      return;
-    }
-
-    const sortedData = data
-      ? data.sort((a, b) =>
-          a.employees.iqama_number.localeCompare(b.employees.iqama_number)
+    setLoading(true);
+    try {
+      const fromDate = `${year}-${month}-01`;
+      let query = supabase
+        .from("generated_timesheet")
+        .select(
+          `
+          *,
+          employees!inner(name, client_name, iqama_number, client_number, hra, tra, food_allowance, other_allowance)
+        `,
+          { count: "exact" }
         )
-      : [];
-    setTimesheetData(sortedData);
-    setTotalCount(count || 0);
+        .eq("timesheet_month", fromDate)
+        .eq("employees.client_number", client_number)
+        .order("iqama_number", { ascending: true });
 
-    if (data && data.length > 0) {
-      setClientName(data[0].employees.client_name);
-    } else {
-      setClientName("");
+      if (search) {
+        query = query.ilike("employees.iqama_number", `%${search}%`);
+        setIsSearching(true);
+      } else {
+        const from = (page - 1) * pageSize;
+        const to = from + pageSize - 1;
+        query = query
+          .order("iqama_number", { foreignTable: "employees", ascending: true })
+          .range(from, to);
+        setIsSearching(false);
+      }
+
+      const { data, error, count } = await query;
+
+      if (error) {
+        throw new Error(error.message || "Failed to fetch timesheet data");
+      }
+
+      const sortedData = data
+        ? data.sort((a, b) =>
+            a.employees.iqama_number.localeCompare(b.employees.iqama_number)
+          )
+        : [];
+      setTimesheetData(sortedData);
+      setTotalCount(count || 0);
+
+      if (data && data.length > 0) {
+        setClientName(data[0].employees.client_name);
+      } else {
+        setClientName("");
+      }
+    } catch (err) {
+      console.error("Fetch error:", err);
+    } finally {
+      setLoading(false);
     }
   }
 
   async function fetchSummaryData() {
-    const fromDate = `${year}-${month}-01`;
+    setLoading(true);
+    try {
+      const fromDate = `${year}-${month}-01`;
+      const { data, error } = await supabase
+        .from("generated_timesheet_summary")
+        .select(
+          "working_days_count, total_salary_sum, total_cost_sum, vat_sum, grand_total"
+        )
+        .eq("client_number", client_number)
+        .eq("timesheet_month", fromDate)
+        .single();
 
-    const { data, error } = await supabase
-      .from("generated_timesheet_summary")
-      .select(
-        "working_days_count, total_salary_sum, total_cost_sum, vat_sum, grand_total"
-      )
-      .eq("client_number", client_number)
-      .eq("timesheet_month", fromDate)
-      .single();
-
-    if (error) {
-      console.error("Summary fetch error:", error);
-    } else {
+      if (error) {
+        throw new Error(error.message || "Failed to fetch summary data");
+      }
       setSummaryData(data);
+    } catch (err) {
+      console.error("Summary fetch error:", err);
+    } finally {
+      setLoading(false);
     }
   }
 
   useEffect(() => {
-    document.title = `${clientName} ${month}-${year}`;
+    document.title = `${clientName || "Loading..."} ${month}-${year}`;
     if (searchTerm) {
       fetchTimesheetData(1, searchTerm);
     } else {
@@ -115,7 +127,7 @@ export default function ClientTimesheetPage() {
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
-    setCurrentPage(1); // Reset to first page on search
+    setCurrentPage(1);
   };
 
   const handleClearSearch = () => {
@@ -168,119 +180,123 @@ export default function ClientTimesheetPage() {
 
       {/* Main Timesheet Table */}
       <div className="w-full overflow-x-auto">
-        <table className="table-auto w-max min-w-full border-collapse border text-xs lg:text-sm">
-          <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
-            <tr>
-              <th className="table-cell-style table-cell-center">S.No</th>
-              <th className="table-cell-style table-cell-center">
-                Iqama Number
-              </th>
-              <th className="table-cell-style table-cell-center">
-                Employee Name
-              </th>
-              <th className="table-cell-style table-cell-center">
-                Basic Salary
-              </th>
-              <th className="table-cell-style table-cell-center">Allowance</th>
-              <th className="table-cell-style table-cell-center">
-                Total Salary
-              </th>
-              <th className="table-cell-style table-cell-center">
-                Working Days
-              </th>
-              <th className="table-cell-style table-cell-center">
-                Overtime Hrs
-              </th>
-              <th className="table-cell-style table-cell-center">Absent Hrs</th>
-              <th className="table-cell-style table-cell-center">Overtime</th>
-              <th className="table-cell-style table-cell-center">Incentives</th>
-              <th className="table-cell-style table-cell-center">Penalty</th>
-              <th className="table-cell-style table-cell-center">Deductions</th>
-              <th className="table-cell-style table-cell-center">
-                Adjusted Salary
-              </th>
-              <th className="table-cell-style table-cell-center">Etmam Cost</th>
-              <th className="table-cell-style table-cell-center font-bold">
-                Total Cost
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {timesheetData.map((item, index) => {
-              const allowance =
-                (item.employees.hra ?? 0) +
-                (item.employees.tra ?? 0) +
-                (item.employees.food_allowance ?? 0) +
-                (item.employees.other_allowance ?? 0);
-
-              return (
-                <tr key={item.uid} className="border">
-                  <td className="table-cell-style table-cell-center">
-                    {isSearching
-                      ? index + 1
-                      : (currentPage - 1) * pageSize + index + 1}
-                  </td>
-                  <td className="table-cell-style table-cell-center">
-                    {item.employees.iqama_number}
-                  </td>
-                  <td className="table-cell-style table-cell-left">
-                    {item.employees.name}
-                  </td>
-                  <td className="table-cell-style table-cell-center">
-                    {(item.basic_salary ?? 0).toFixed(2)}
-                  </td>
-                  <td className="table-cell-style table-cell-center">
-                    {allowance.toFixed(2)}
-                  </td>
-                  <td className="table-cell-style table-cell-center">
-                    {(item.total_salary ?? 0).toFixed(2)}
-                  </td>
-                  <td className="table-cell-style table-cell-center">
-                    {item.working_days}
-                  </td>
-                  <td className="table-cell-style table-cell-center">
-                    {item.overtime_hrs}
-                  </td>
-                  <td className="table-cell-style table-cell-center">
-                    {item.absent_hrs}
-                  </td>
-                  <td className="table-cell-style table-cell-center">
-                    {(item.overtime ?? 0).toFixed(2)}
-                  </td>
-                  <td className="table-cell-style table-cell-center">
-                    {(item.incentive ?? 0).toFixed(2)}
-                  </td>
-                  <td className="table-cell-style table-cell-center">
-                    {(item.penalty ?? 0).toFixed(2)}
-                  </td>
-                  <td className="table-cell-style table-cell-center">
-                    {(item.deductions ?? 0).toFixed(2)}
-                  </td>
-                  <td className="table-cell-style table-cell-center">
-                    {(item.adjusted_salary ?? 0).toFixed(2)}
-                  </td>
-                  <td className="table-cell-style table-cell-center">
-                    {(item.etmam_cost ?? 0).toFixed(2)}
-                  </td>
-                  <td className="table-cell-style table-cell-center font-bold">
-                    {(item.total_cost ?? 0).toFixed(2)}
-                  </td>
-                </tr>
-              );
-            })}
-            {timesheetData.length === 0 && (
+        {loading ? (
+          <div className="text-center text-gray-500 py-10">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-500"></div>
+            <p className="mt-2">Loading...</p>
+          </div>
+        ) : timesheetData.length === 0 ? (
+          <div className="text-center text-gray-500 text-lg py-10">
+            No timesheet data available.
+          </div>
+        ) : (
+          <table className="table-auto w-max min-w-full border-collapse border text-xs lg:text-sm">
+            <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
               <tr>
-                <td colSpan="16" className="text-center py-4">
-                  No timesheet data available.
-                </td>
+                <th className="table-cell-style table-cell-center">S.No</th>
+                <th className="table-cell-style table-cell-center">
+                  Iqama Number
+                </th>
+                <th className="table-cell-style table-cell-center">
+                  Employee Name
+                </th>
+                <th className="table-cell-style table-cell-center">
+                  Basic Salary
+                </th>
+                <th className="table-cell-style table-cell-center">Allowance</th>
+                <th className="table-cell-style table-cell-center">
+                  Total Salary
+                </th>
+                <th className="table-cell-style table-cell-center">
+                  Working Days
+                </th>
+                <th className="table-cell-style table-cell-center">
+                  Overtime Hrs
+                </th>
+                <th className="table-cell-style table-cell-center">Absent Hrs</th>
+                <th className="table-cell-style table-cell-center">Overtime</th>
+                <th className="table-cell-style table-cell-center">Incentives</th>
+                <th className="table-cell-style table-cell-center">Penalty</th>
+                <th className="table-cell-style table-cell-center">Deductions</th>
+                <th className="table-cell-style table-cell-center">
+                  Adjusted Salary
+                </th>
+                <th className="table-cell-style table-cell-center">Etmam Cost</th>
+                <th className="table-cell-style table-cell-center font-bold">
+                  Total Cost
+                </th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {timesheetData.map((item, index) => {
+                const allowance =
+                  (item.employees.hra ?? 0) +
+                  (item.employees.tra ?? 0) +
+                  (item.employees.food_allowance ?? 0) +
+                  (item.employees.other_allowance ?? 0);
+
+                return (
+                  <tr key={item.uid} className="border">
+                    <td className="table-cell-style table-cell-center">
+                      {isSearching
+                        ? index + 1
+                        : (currentPage - 1) * pageSize + index + 1}
+                    </td>
+                    <td className="table-cell-style table-cell-center">
+                      {item.employees.iqama_number}
+                    </td>
+                    <td className="table-cell-style table-cell-left">
+                      {item.employees.name}
+                    </td>
+                    <td className="table-cell-style table-cell-center">
+                      {(item.basic_salary ?? 0).toFixed(2)}
+                    </td>
+                    <td className="table-cell-style table-cell-center">
+                      {allowance.toFixed(2)}
+                    </td>
+                    <td className="table-cell-style table-cell-center">
+                      {(item.total_salary ?? 0).toFixed(2)}
+                    </td>
+                    <td className="table-cell-style table-cell-center">
+                      {item.working_days}
+                    </td>
+                    <td className="table-cell-style table-cell-center">
+                      {item.overtime_hrs}
+                    </td>
+                    <td className="table-cell-style table-cell-center">
+                      {item.absent_hrs}
+                    </td>
+                    <td className="table-cell-style table-cell-center">
+                      {(item.overtime ?? 0).toFixed(2)}
+                    </td>
+                    <td className="table-cell-style table-cell-center">
+                      {(item.incentive ?? 0).toFixed(2)}
+                    </td>
+                    <td className="table-cell-style table-cell-center">
+                      {(item.penalty ?? 0).toFixed(2)}
+                    </td>
+                    <td className="table-cell-style table-cell-center">
+                      {(item.deductions ?? 0).toFixed(2)}
+                    </td>
+                    <td className="table-cell-style table-cell-center">
+                      {(item.adjusted_salary ?? 0).toFixed(2)}
+                    </td>
+                    <td className="table-cell-style table-cell-center">
+                      {(item.etmam_cost ?? 0).toFixed(2)}
+                    </td>
+                    <td className="table-cell-style table-cell-center font-bold">
+                      {(item.total_cost ?? 0).toFixed(2)}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {/* Pagination */}
-      {!isSearching && timesheetData.length > 0 && (
+      {!isSearching && timesheetData.length > 0 && !loading && (
         <div className="flex justify-center mt-4 space-x-2">
           <button
             className={`px-4 py-2 border rounded ${
@@ -349,18 +365,23 @@ export default function ClientTimesheetPage() {
           Timesheet Summary
         </h2>
         <div className="overflow-x-auto flex justify-center">
-          <table className="table-auto border-collapse border border-gray-300 text-sm w-max">
-            <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
-              <tr>
-                <th className="border px-4 py-2">Total Working Days</th>
-                <th className="border px-4 py-2">Net Salary</th>
-                <th className="border px-4 py-2">Net Cost Total</th>
-                <th className="border px-4 py-2">VAT</th>
-                <th className="border px-4 py-2 font-bold">Grand Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {summaryData ? (
+          {loading ? (
+            <div className="text-center text-gray-500 py-10">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-500"></div>
+              <p className="mt-2">Loading...</p>
+            </div>
+          ) : summaryData ? (
+            <table className="table-auto border-collapse border border-gray-300 text-sm w-max">
+              <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
+                <tr>
+                  <th className="border px-4 py-2">Total Working Days</th>
+                  <th className="border px-4 py-2">Net Salary</th>
+                  <th className="border px-4 py-2">Net Cost Total</th>
+                  <th className="border px-4 py-2">VAT</th>
+                  <th className="border px-4 py-2 font-bold">Grand Total</th>
+                </tr>
+              </thead>
+              <tbody>
                 <tr className="text-center">
                   <td className="border px-4 py-2">
                     {summaryData.working_days_count ?? 0}
@@ -378,15 +399,13 @@ export default function ClientTimesheetPage() {
                     {summaryData.grand_total?.toFixed(2) ?? "0.00"}
                   </td>
                 </tr>
-              ) : (
-                <tr>
-                  <td colSpan="5" className="text-center py-4">
-                    No summary data available.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+              </tbody>
+            </table>
+          ) : (
+            <div className="text-center text-gray-500 text-lg py-10">
+              No summary data available.
+            </div>
+          )}
         </div>
       </div>
     </div>
