@@ -312,7 +312,7 @@ export default function EmployeeList() {
                           </td>
                           <td className="p-1 border flex items-center space-x-2">
                             <Link
-                              href={`/edit_employee/${employee.id}`}
+                              href={`/operations/edit_employee/${employee.id}`}
                               className="text-blue-500 cursor-pointer hover:text-blue-700 hover:scale-110 transition-transform duration-200"
                             >
                               <FaRegEdit />
