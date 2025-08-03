@@ -42,6 +42,7 @@ export async function GET(req) {
     let query = supabase
       .from("accommodation_transport")
       .select("*", { count: "exact" })
+      .order("iqama_number", {ascending: true})
       .range(from, to);
 
     if (search.trim() !== "") {
