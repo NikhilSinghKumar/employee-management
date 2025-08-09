@@ -42,13 +42,16 @@ export async function GET(req) {
     let query = supabase
       .from("accommodation_transport")
       .select("*", { count: "exact" })
-      .order("iqama_number", {ascending: true})
+      .eq("is_deleted", false)
+      .order("iqama_number", { ascending: true })
       .range(from, to);
 
     if (search.trim() !== "") {
-      query = query.or(
-        `iqama_number.ilike.%${search}%,client_number.ilike.%${search}%,client_name.ilike.%${search}%,passport_number.ilike.%${search}%,status.ilike.%${search}%,contract_type.ilike.%${search}%`
-      );
+      query = query
+        .or(
+          `iqama_number.ilike.%${search}%,client_number.ilike.%${search}%,client_name.ilike.%${search}%,passport_number.ilike.%${search}%,status.ilike.%${search}%,contract_type.ilike.%${search}%`
+        )
+        .eq("is_deleted", false);
     }
 
     const { data, error, count } = await query;
@@ -73,7 +76,6 @@ export async function GET(req) {
   }
 }
 
-
 export async function POST(req) {
   const authResult = await verifyAuth();
 
@@ -88,7 +90,7 @@ export async function POST(req) {
     );
   }
 
-  const userId = authResult.user.userId; 
+  const userId = authResult.user.userId;
 
   const payload = await req.json();
   const requiredFields = [
@@ -102,7 +104,6 @@ export async function POST(req) {
     "location",
     "contractType",
     "checkinDate",
-    "checkoutDate",
     "checkinStatus",
   ];
 
@@ -130,10 +131,11 @@ export async function POST(req) {
           location: payload.location,
           contract_type: payload.contractType,
           checkin_date: payload.checkinDate,
-          checkout_date: payload.checkoutDate,
+          checkout_date: payload.checkoutDate || null,
           status: payload.checkinStatus,
           created_by: userId,
           edited_by: userId,
+          is_deleted: false,
         },
       ])
       .select("id")
@@ -189,6 +191,10 @@ export async function PATCH(req) {
       { result: "No fields provided for update", success: false },
       { status: 400 }
     );
+  }
+
+  if ("checkoutDate" in updates) {
+    updates.checkoutDate = updates.checkoutDate || null;
   }
 
   try {
@@ -257,8 +263,13 @@ export async function DELETE(req) {
   try {
     const { data, error } = await supabase
       .from("accommodation_transport")
-      .delete()
+      .update({
+        is_deleted: true,
+        edited_by: userId,
+        updated_at: new Date().toISOString(),
+      })
       .eq("id", id) // No created_by restriction
+      .eq("is_deleted", false)
       .select("id")
       .single();
 

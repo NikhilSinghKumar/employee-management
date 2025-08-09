@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { MdDelete } from "react-icons/md";
+import { FaRegEdit } from "react-icons/fa";
 
 export default function AccommodationTransportList() {
   const [records, setRecords] = useState([]);
@@ -244,11 +246,17 @@ export default function AccommodationTransportList() {
                   <th className="px-4 py-2 border text-center">Nationality</th>
                   <th className="px-4 py-2 border text-center">Passport</th>
                   <th className="px-4 py-2 border text-center">Client Name</th>
-                  <th className="px-4 py-2 border text-center">Client Number</th>
+                  <th className="px-4 py-2 border text-center">
+                    Client Number
+                  </th>
                   <th className="px-4 py-2 border text-center">Location</th>
-                  <th className="px-4 py-2 border text-center">Contract Type</th>
+                  <th className="px-4 py-2 border text-center">
+                    Contract Type
+                  </th>
                   <th className="px-4 py-2 border text-center">Checkin Date</th>
-                  <th className="px-4 py-2 border text-center">Checkout Date</th>
+                  <th className="px-4 py-2 border text-center">
+                    Checkout Date
+                  </th>
                   <th className="px-4 py-2 border text-center">Status</th>
                   <th className="px-4 py-2 border text-center">Actions</th>
                 </tr>
@@ -290,26 +298,26 @@ export default function AccommodationTransportList() {
                       {record.checkin_date}
                     </td>
                     <td className="px-4 py-2 border text-center">
-                      {record.checkout_date}
+                      {record.checkout_date ? record.checkout_date : "N/A"}
                     </td>
                     <td className="px-4 py-2 border text-center">
                       {record.status}
                     </td>
                     <td className="px-4 py-2 border text-center space-x-2">
                       <button
-                        className="text-blue-600 hover:underline text-xs"
+                        className="text-blue-500 cursor-pointer hover:text-blue-700 hover:scale-110 transition-transform duration-200"
                         onClick={() => {
                           setEditRecord(record);
                           setIsEditing(true);
                         }}
                       >
-                        Edit
+                        <FaRegEdit />
                       </button>
                       <button
-                        className="text-red-600 hover:underline text-xs"
+                        className="text-red-500 cursor-pointer hover:text-red-600 hover:scale-110 transition-transform duration-200"
                         onClick={() => handleDelete(record.id)}
                       >
-                        Delete
+                        <MdDelete />
                       </button>
                     </td>
                   </tr>
@@ -327,14 +335,20 @@ export default function AccommodationTransportList() {
           >
             <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl">
               <h2 className="text-xl font-bold mb-4">Edit Record</h2>
-              <form onSubmit={handleEditSubmit} className="grid grid-cols-2 gap-4">
+              <form
+                onSubmit={handleEditSubmit}
+                className="grid grid-cols-2 gap-4"
+              >
                 <div>
                   <label className="block text-sm font-medium">Id No.</label>
                   <input
                     type="text"
                     value={editRecord.checkin_id}
                     onChange={(e) =>
-                      setEditRecord({ ...editRecord, checkin_id: e.target.value })
+                      setEditRecord({
+                        ...editRecord,
+                        checkin_id: e.target.value,
+                      })
                     }
                     className="w-full px-3 py-2 border rounded-md"
                   />
@@ -345,29 +359,42 @@ export default function AccommodationTransportList() {
                     type="text"
                     value={editRecord.checkin_name}
                     onChange={(e) =>
-                      setEditRecord({ ...editRecord, checkin_name: e.target.value })
+                      setEditRecord({
+                        ...editRecord,
+                        checkin_name: e.target.value,
+                      })
                     }
                     className="w-full px-3 py-2 border rounded-md"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium">Iqama Number</label>
+                  <label className="block text-sm font-medium">
+                    Iqama Number
+                  </label>
                   <input
                     type="text"
                     value={editRecord.iqama_number}
                     onChange={(e) =>
-                      setEditRecord({ ...editRecord, iqama_number: e.target.value })
+                      setEditRecord({
+                        ...editRecord,
+                        iqama_number: e.target.value,
+                      })
                     }
                     className="w-full px-3 py-2 border rounded-md"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium">Nationality</label>
+                  <label className="block text-sm font-medium">
+                    Nationality
+                  </label>
                   <input
                     type="text"
                     value={editRecord.nationality}
                     onChange={(e) =>
-                      setEditRecord({ ...editRecord, nationality: e.target.value })
+                      setEditRecord({
+                        ...editRecord,
+                        nationality: e.target.value,
+                      })
                     }
                     className="w-full px-3 py-2 border rounded-md"
                   />
@@ -387,23 +414,33 @@ export default function AccommodationTransportList() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium">Client Name</label>
+                  <label className="block text-sm font-medium">
+                    Client Name
+                  </label>
                   <input
                     type="text"
                     value={editRecord.client_name}
                     onChange={(e) =>
-                      setEditRecord({ ...editRecord, client_name: e.target.value })
+                      setEditRecord({
+                        ...editRecord,
+                        client_name: e.target.value,
+                      })
                     }
                     className="w-full px-3 py-2 border rounded-md"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium">Client Number</label>
+                  <label className="block text-sm font-medium">
+                    Client Number
+                  </label>
                   <input
                     type="text"
                     value={editRecord.client_number}
                     onChange={(e) =>
-                      setEditRecord({ ...editRecord, client_number: e.target.value })
+                      setEditRecord({
+                        ...editRecord,
+                        client_number: e.target.value,
+                      })
                     }
                     className="w-full px-3 py-2 border rounded-md"
                   />
@@ -420,11 +457,16 @@ export default function AccommodationTransportList() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium">Contract Type</label>
+                  <label className="block text-sm font-medium">
+                    Contract Type
+                  </label>
                   <select
                     value={editRecord.contract_type}
                     onChange={(e) =>
-                      setEditRecord({ ...editRecord, contract_type: e.target.value })
+                      setEditRecord({
+                        ...editRecord,
+                        contract_type: e.target.value,
+                      })
                     }
                     className="w-full px-3 py-2 border rounded-md"
                   >
@@ -439,23 +481,33 @@ export default function AccommodationTransportList() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium">Checkin Date</label>
+                  <label className="block text-sm font-medium">
+                    Checkin Date
+                  </label>
                   <input
                     type="date"
                     value={editRecord.checkin_date}
                     onChange={(e) =>
-                      setEditRecord({ ...editRecord, checkin_date: e.target.value })
+                      setEditRecord({
+                        ...editRecord,
+                        checkin_date: e.target.value,
+                      })
                     }
                     className="w-full px-3 py-2 border rounded-md"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium">Checkout Date</label>
+                  <label className="block text-sm font-medium">
+                    Checkout Date
+                  </label>
                   <input
                     type="date"
-                    value={editRecord.checkout_date}
+                    value={editRecord.checkout_date || ""}
                     onChange={(e) =>
-                      setEditRecord({ ...editRecord, checkout_date: e.target.value })
+                      setEditRecord({
+                        ...editRecord,
+                        checkout_date: e.target.value || null,
+                      })
                     }
                     className="w-full px-3 py-2 border rounded-md"
                   />
