@@ -16,11 +16,17 @@ export default function Clients() {
         const response = await fetch(
           "/api/accommodation_transport/at_client_numbers"
         );
-        const { data } = await response.json(); // Destructuring directly
+        const { data } = await response.json();
+
         if (Array.isArray(data)) {
           const uniqueClients = [
-            ...new Set(data.map((c) => c.client_number.trim())),
-          ];
+            ...new Set(
+              data.map(
+                (client) => client.client_number?.trim().toUpperCase() // normalize spacing & case
+              )
+            ),
+          ].filter(Boolean); // remove null/empty
+
           setClients(uniqueClients);
         } else {
           console.error("Expected 'data' to be an array, got:", data);
