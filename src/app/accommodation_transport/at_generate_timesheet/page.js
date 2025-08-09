@@ -3,7 +3,9 @@
 import { useState, useEffect } from "react";
 
 export default function Clients() {
-  const [month, setMonth] = useState(new Date().toLocaleString("default", { month: "long" }));
+  const [month, setMonth] = useState(
+    new Date().toLocaleString("default", { month: "long" })
+  );
   const [year, setYear] = useState(new Date().getFullYear());
   const [clients, setClients] = useState([]);
   const [selectedClient, setSelectedClient] = useState("");
@@ -11,10 +13,15 @@ export default function Clients() {
   useEffect(() => {
     const fetchClients = async () => {
       try {
-        const response = await fetch("/api/accommodation_transport");
+        const response = await fetch(
+          "/api/accommodation_transport/at_client_numbers"
+        );
         const { data } = await response.json(); // Destructuring directly
         if (Array.isArray(data)) {
-          setClients(data.map(client => client.client_number));
+          const uniqueClients = [
+            ...new Set(data.map((c) => c.client_number.trim())),
+          ];
+          setClients(uniqueClients);
         } else {
           console.error("Expected 'data' to be an array, got:", data);
           setClients([]);
@@ -45,7 +52,9 @@ export default function Clients() {
             </option>
           ))}
         </select>
-        <button className="px-4 py-2 bg-purple-600 text-white rounded">Generate</button>
+        <button className="px-4 py-2 bg-purple-600 text-white rounded">
+          Generate
+        </button>
       </div>
     </div>
   );
