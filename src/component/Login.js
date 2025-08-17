@@ -7,6 +7,8 @@ import { UserContext } from "@/context/UserContext";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
 
 export default function LoginForm() {
+  const [isOnline, setIsOnline] = useState(true);
+  const [showOnlineBanner, setShowOnlineBanner] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -17,6 +19,26 @@ export default function LoginForm() {
 
   useEffect(() => {
     document.title = "Welcome! Login";
+    setIsOnline(navigator.onLine);
+
+    const handleOnline = () => {
+      setIsOnline(true);
+      setShowOnlineBanner(true);
+      setTimeout(() => setShowOnlineBanner(false), 4000);
+    };
+
+    const handleOffline = () => {
+      setIsOnline(false);
+      setShowOnlineBanner(false);
+    };
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
   }, []);
 
   const handleSubmit = async (e) => {
@@ -61,16 +83,40 @@ export default function LoginForm() {
       router.push("/dashboard");
     } catch (error) {
       console.error("Login error:", error);
-      setMessage({
-        text: error.message || "Server error. Please try again later.",
-        type: "error",
-      });
+      if (!navigator.onLine) {
+        setMessage({
+          text: "No internet connection. Please check your network.",
+          type: "error",
+        });
+      } else if (error.message.includes("Failed to fetch")) {
+        setMessage({
+          text: "Unable to connect to server. Please try again later.",
+          type: "error",
+        });
+      } else {
+        setMessage({
+          text: error.message || "Server error. Please try again later.",
+          type: "error",
+        });
+      }
       setIsLoading(false);
     }
   };
 
   return (
     <>
+      {/* Banner */}
+      {!isOnline && (
+        <div className="fixed top-0 left-0 right-0 bg-red-700 text-white text-center py-2 z-50">
+          You are offline. Please check your internet connection.
+        </div>
+      )}
+
+      {showOnlineBanner && (
+        <div className="fixed top-0 left-0 right-0 bg-green-600 text-white text-center py-2 z-50 transition-opacity duration-500">
+          Back online
+        </div>
+      )}
       <div className="flex justify-center items-center h-screen">
         <form
           onSubmit={handleSubmit}
