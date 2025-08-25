@@ -1,5 +1,5 @@
 "use client";
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -8,23 +8,26 @@ import { IoPower } from "react-icons/io5";
 import { UserContext } from "@/context/UserContext";
 import Dropdown from "@/component/Dropdown";
 
-const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-
 export default function Navbar() {
   const { user, fetchUser } = useContext(UserContext);
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    console.log("Hydration Debug - user:", user);
+  }, [user]);
 
   const handleLogout = async () => {
     try {
-     const response= await fetch("/api/auth/logout", {
+      const response = await fetch("/api/auth/logout", {
         method: "POST",
         credentials: "include",
       });
 
-      // Refresh the user context to clear user state after logout
-      if(response.ok){
+      if (response.ok) {
         await fetchUser();
-        router.push("/")
+        router.push("/");
       }
     } catch (error) {
       console.error("Logout failed:", error);
@@ -44,6 +47,7 @@ export default function Navbar() {
             priority
           />
         </Link>
+        {/* Dropdowns */}
         <Dropdown
           label="Sales"
           items={[
@@ -59,9 +63,18 @@ export default function Navbar() {
         <Dropdown
           label="Human Resource"
           items={[
-            { label: "New Employee Form", href: "/human_resource/etmam_employee_form" },
-            { label: "Etmam Employees", href: "/human_resource/etmam_employees" },
-            { label: "Etmam Timesheet", href: "/human_resource/etmam_timesheet" },
+            {
+              label: "New Employee Form",
+              href: "/human_resource/etmam_employee_form",
+            },
+            {
+              label: "Etmam Employees",
+              href: "/human_resource/etmam_employees",
+            },
+            {
+              label: "Etmam Timesheet",
+              href: "/human_resource/etmam_timesheet",
+            },
           ]}
         />
         <Dropdown
@@ -79,33 +92,49 @@ export default function Navbar() {
           items={[
             { label: "A&T Form", href: "/accommodation_transport/at_form" },
             { label: "A&T List", href: "/accommodation_transport/at_list" },
-            { label: "A&T Timesheet", href: "/accommodation_transport/at_generate_timesheet" },
+            {
+              label: "A&T Timesheet",
+              href: "/accommodation_transport/at_generate_timesheet",
+            },
           ]}
         />
-        
+
         <Dropdown
           label="Talent Acquisition"
           items={[
+            { label: "Post Job", href: "/talent_acquisition/post_job" },
             { label: "Job Opening", href: "/talent_acquisition/job_opening" },
-            { label: "Application Form", href: "/talent_acquisition/aplication_form" },
-            { label: "Applicant List", href: "/talent_acquisition/applicant_list" },
+            {
+              label: "Application Form",
+              href: "/talent_acquisition/application_form",
+            },
+            {
+              label: "Applicant List",
+              href: "/talent_acquisition/applicant_list",
+            },
           ]}
         />
       </div>
 
-      {user && (
-        <div className="flex gap-6">
-          <div className="flex flex-col items-center gap-1">
-            <CgProfile className="w-5 h-5" />
-            <p>Hi {user.first_name}</p>
-          </div>
-          <div className="flex flex-col items-center gap-1">
-            <IoPower className="w-5 h-5 stroke-1" />
-            <button onClick={handleLogout} className="cursor-pointer">
-              Logout
-            </button>
-          </div>
-        </div>
+      {/* Render user block only after mount to avoid hydration error */}
+
+      {mounted && (
+        <>
+          {user && (
+            <div className="flex gap-6">
+              <div className="flex flex-col items-center gap-1">
+                <CgProfile className="w-5 h-5" />
+                <p>Hi {user.first_name}</p>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <IoPower className="w-5 h-5 stroke-1" />
+                <button onClick={handleLogout} className="cursor-pointer">
+                  Logout
+                </button>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </nav>
   );
