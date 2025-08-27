@@ -6,24 +6,68 @@ import { supabase } from "@/utils/supabaseClient";
 async function verifyAuth() {
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
+  console.log("Token received in DELETE:", token ? "Present" : "Missing");
   if (!token)
     return { success: false, error: "Unauthorized: No token provided" };
-  return authenticateToken(token);
+  const authResult = await authenticateToken(token);
+  console.log("Auth result:", authResult);
+  return authResult;
 }
 
-export async function GET() {
+export async function GET(req) {
   const authResult = await verifyAuth();
   if (!authResult.success)
     return NextResponse.json(authResult, { status: 401 });
 
+  const { searchParams } = new URL(req.url);
+  const page = parseInt(searchParams.get("page")) || 1;
+  const pageSize = parseInt(searchParams.get("pageSize")) || 20;
+  const search = searchParams.get("search")?.toLowerCase() || "";
+
   try {
-    const { data, error } = await supabase.from("employees").select("*");
+    let query = supabase.from("employees").select("*", { count: "exact" });
+
+    if (search) {
+      query = query.or(
+        `name.ilike.%${search}%,et_number.ilike.%${search}%,iqama_number.ilike.%${search}%,passport_number.ilike.%${search}%,profession.ilike.%${search}%,nationality.ilike.%${search}%,client_number.ilike.%${search}%,client_name.ilike.%${search}%,mobile.ilike.%${search}%,email.ilike.%${search}%,bank_account.ilike.%${search}%,employee_status.ilike.%${search}%,employee_source.ilike.%${search}%`
+      );
+    } else {
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+      query = query.range(from, to);
+    }
+
+    query = query.order("iqama_number", { ascending: true });
+
+    const { data, error, count } = await query;
 
     if (error) {
+      console.error("Supabase GET error:", error);
       throw new Error(error.message);
     }
 
-    return NextResponse.json({ success: true, data }, { status: 200 });
+    // Calculate unique client count
+    const { data: allClientsData, error: clientError } = await supabase
+      .from("employees")
+      .select("client_number");
+    if (clientError) {
+      console.error("Supabase client count error:", clientError);
+      throw new Error(clientError.message);
+    }
+    const clientSet = new Set(
+      allClientsData?.map((emp) => emp.client_number).filter(Boolean)
+    );
+    const uniqueClientCount = clientSet.size;
+
+    return NextResponse.json(
+      {
+        success: true,
+        data,
+        totalCount: count,
+        uniqueClientCount,
+      },
+      { status: 200 }
+    );
   } catch (error) {
     console.error("Supabase query error:", error);
     return NextResponse.json(
@@ -121,7 +165,10 @@ export async function POST(req) {
       .select("id")
       .single();
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error("Supabase POST error:", error);
+      throw new Error(error.message);
+    }
 
     return NextResponse.json(
       {
@@ -145,40 +192,83 @@ export async function DELETE(req) {
   if (!authResult.success)
     return NextResponse.json(authResult, { status: 401 });
 
-  const { id } = await req.json();
+  if (!authResult.user?.userId) {
+    return NextResponse.json(
+      { result: "User ID not found", success: false },
+      { status: 401 }
+    );
+  }
+
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get("id");
+
   if (!id) {
     return NextResponse.json(
-      { error: "Employee ID is required" },
+      { result: "Employee ID is required", success: false },
       { status: 400 }
     );
   }
 
   try {
-    const { error, count } = await supabase
+    // Pre-check if employee exists
+    const { data: employee, error: checkError } = await supabase
+      .from("employees")
+      .select("id, name, employee_status")
+      .eq("id", id)
+      .single();
+
+    console.log("Employee check result:", {
+      employee,
+      checkError: checkError || null,
+    });
+
+    if (checkError || !employee) {
+      console.error("Employee check error:", checkError || "No employee found");
+      return NextResponse.json(
+        { result: `Employee with ID ${id} not found`, success: false },
+        { status: 404 }
+      );
+    }
+
+    // Attempt deletion
+    const { data, error } = await supabase
       .from("employees")
       .delete()
       .eq("id", id)
-      .select()
+      .select("id")
       .single();
 
     if (error) {
-      if (error.code === "PGRST116") {
+      console.error("Supabase DELETE error:", error);
+      if (error.code === "PGRST116" || error.code === "P0001") {
         return NextResponse.json(
-          { error: "Employee not found" },
+          { result: `Employee with ID ${id} not found`, success: false },
           { status: 404 }
         );
       }
-      throw new Error(error.message);
+      throw error;
     }
 
+    if (!data) {
+      return NextResponse.json(
+        { result: `Employee with ID ${id} not found`, success: false },
+        { status: 404 }
+      );
+    }
+
+    console.log(`Employee with ID ${id} deleted successfully`);
     return NextResponse.json(
-      { success: true, message: "Employee deleted successfully" },
+      {
+        result: `Employee with ID ${id} deleted successfully`,
+        id: data.id,
+        success: true,
+      },
       { status: 200 }
     );
   } catch (error) {
-    console.error("Supabase delete error:", error);
+    console.error("Supabase DELETE error details:", error);
     return NextResponse.json(
-      { error: "Server error", success: false },
+      { result: "Database error", error: error.message, success: false },
       { status: 500 }
     );
   }
