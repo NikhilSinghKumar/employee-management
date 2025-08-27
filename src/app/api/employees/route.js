@@ -6,11 +6,9 @@ import { supabase } from "@/utils/supabaseClient";
 async function verifyAuth() {
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
-  console.log("Token received in DELETE:", token ? "Present" : "Missing");
   if (!token)
     return { success: false, error: "Unauthorized: No token provided" };
   const authResult = await authenticateToken(token);
-  console.log("Auth result:", authResult);
   return authResult;
 }
 
@@ -217,11 +215,6 @@ export async function DELETE(req) {
       .eq("id", id)
       .single();
 
-    console.log("Employee check result:", {
-      employee,
-      checkError: checkError || null,
-    });
-
     if (checkError || !employee) {
       console.error("Employee check error:", checkError || "No employee found");
       return NextResponse.json(
@@ -255,8 +248,6 @@ export async function DELETE(req) {
         { status: 404 }
       );
     }
-
-    console.log(`Employee with ID ${id} deleted successfully`);
     return NextResponse.json(
       {
         result: `Employee with ID ${id} deleted successfully`,

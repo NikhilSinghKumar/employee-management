@@ -1,67 +1,290 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
-export default function Clients() {
-  const [month, setMonth] = useState(
-    new Date().toLocaleString("default", { month: "long" })
-  );
-  const [year, setYear] = useState(new Date().getFullYear());
-  const [clients, setClients] = useState([]);
-  const [selectedClient, setSelectedClient] = useState("");
+export default function TimesheetPage() {
+  const [clientNumber, setClientNumber] = useState("");
+  const [clientNumbers, setClientNumbers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [timesheetSummary, setTimesheetSummary] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const pageSize = 10;
+  const router = useRouter();
 
+  // Derive month and year from currentDate
+  const currentMonth = String(currentDate.getMonth() + 1).padStart(2, "0");
+  const currentYear = currentDate.getFullYear().toString();
+  const formattedMonth = currentDate.toLocaleString("default", {
+    month: "long",
+  });
+
+  const totalPages = Math.ceil(totalCount / pageSize);
+
+  // Automatic update for month/year
   useEffect(() => {
-    const fetchClients = async () => {
-      try {
-        const response = await fetch(
-          "/api/accommodation_transport/at_client_numbers"
-        );
-        const { data } = await response.json();
-
-        if (Array.isArray(data)) {
-          const uniqueClients = [
-            ...new Set(
-              data.map(
-                (client) => client.client_number?.trim().toUpperCase() // normalize spacing & case
-              )
-            ),
-          ].filter(Boolean); // remove null/empty
-
-          setClients(uniqueClients);
-        } else {
-          console.error("Expected 'data' to be an array, got:", data);
-          setClients([]);
-        }
-      } catch (error) {
-        console.error("Error fetching clients:", error);
-        setClients([]);
+    const checkDate = () => {
+      const now = new Date();
+      if (
+        now.getMonth() !== currentDate.getMonth() ||
+        now.getFullYear() !== currentDate.getFullYear()
+      ) {
+        setCurrentDate(new Date());
       }
     };
 
-    fetchClients();
+    const timer = setInterval(checkDate, 60 * 1000);
+    return () => clearInterval(timer);
+  }, [currentDate]);
+
+  // Fetch client numbers
+  useEffect(() => {
+    async function fetchClientNumbers() {
+      setLoading(true);
+      try {
+        const res = await fetch(
+          "/api/accommodation_transport/at_client_numbers",
+          {
+            credentials: "include",
+          }
+        );
+        const data = await res.json();
+        if (res.ok) {
+          setClientNumbers(data);
+        } else {
+          setError(data.error || "Failed to fetch client numbers");
+        }
+      } catch (err) {
+        setError(err.message || "Unexpected error fetching client numbers");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchClientNumbers();
   }, []);
 
+  const formatMonthYear = (dateString) => {
+    const date = new Date(dateString);
+    return {
+      month: date.toLocaleString("default", { month: "long" }),
+      year: date.getFullYear(),
+    };
+  };
+
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="flex space-x-4 p-4 bg-white rounded-lg shadow-lg">
-        <button className="px-4 py-2 bg-gray-200 rounded">{month}</button>
-        <button className="px-4 py-2 bg-gray-200 rounded">{year}</button>
-        <select
-          className="px-4 py-2 bg-gray-200 rounded"
-          value={selectedClient}
-          onChange={(e) => setSelectedClient(e.target.value)}
-        >
-          <option value="">Select Client</option>
-          {clients.map((client) => (
-            <option key={client} value={client}>
-              {client}
-            </option>
-          ))}
-        </select>
-        <button className="px-4 py-2 bg-purple-600 text-white rounded">
-          Generate
-        </button>
+    <>
+      <div className="container mx-auto p-6 mt-16 max-w-5xl">
+        <h1 className="text-3xl font-bold text-gray-800 text-center mb-8">
+          A&T Timesheet
+        </h1>
+
+        <form className="flex flex-col sm:flex-row items-end justify-center gap-4 bg-gradient-to-br from-white via-gray-50 to-gray-100 p-6 rounded-2xl shadow-2xl ring-1 ring-gray-300">
+          {/* Month and Year Display */}
+          <div className="flex flex-col h-full justify-end w-full sm:w-auto">
+            <div className="block w-full flex items-center justify-center sm:w-40 h-[42px] px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-700">
+              {formattedMonth}
+            </div>
+          </div>
+          <div className="flex flex-col h-full justify-end w-full sm:w-auto">
+            <div className="block w-full flex items-center justify-center sm:w-40 h-[42px] px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-700">
+              {currentYear}
+            </div>
+          </div>
+
+          {/* Client Number */}
+          <div className="flex flex-col h-full justify-end w-full sm:w-auto">
+            <select
+              id="clientNumber"
+              value={clientNumber}
+              onChange={(e) => setClientNumber(e.target.value)}
+              required
+              className="block w-full sm:w-40 h-[42px] px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-black"
+            >
+              <option value="">Select Client</option>
+              {clientNumbers.map((number) => (
+                <option key={number} value={number}>
+                  {number}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Submit Button */}
+          <div className="flex h-full items-end w-full sm:w-auto">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full sm:w-auto h-[42px] px-6 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-semibold rounded-md cursor-pointer hover:from-indigo-700 hover:to-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            >
+              {loading ? "Generating..." : "Generate"}
+            </button>
+          </div>
+        </form>
+        <div className="h-12 mb-4 mt-1">
+          {error ? (
+            <p className="text-red-600 text-center transition-opacity duration-300 ease-in-out opacity-100">
+              {error}
+            </p>
+          ) : successMessage ? (
+            <p className="text-green-600 text-center">{successMessage}</p>
+          ) : (
+            <div className="h-full"></div>
+          )}
+        </div>
       </div>
-    </div>
+
+      {/* Table */}
+      <div className="overflow-x-auto w-full">
+        <div className="mx-auto max-w-7xl">
+          {loading ? (
+            <div className="text-center text-gray-500 py-10">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-500"></div>
+              <p className="mt-2">Loading...</p>
+            </div>
+          ) : timesheetSummary.length === 0 ? (
+            <p className="text-center text-gray-500 text-lg py-10">
+              No timesheet data available.
+            </p>
+          ) : (
+            <table className="table-auto w-max border-collapse border border-gray-300 text-sm">
+              <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
+                <tr className="border border-gray-300">
+                  <th className="px-4 py-3 border">S.No</th>
+                  <th className="px-4 py-3 border">Client Number</th>
+                  <th className="px-4 py-3 border">Client Name</th>
+                  <th className="px-4 py-3 border">Month</th>
+                  <th className="px-4 py-3 border">Year</th>
+                  <th className="px-4 py-3 border">Total Employees</th>
+                  <th className="px-4 py-3 border">Net Salary</th>
+                  <th className="px-4 py-3 border">Net Adjusted Salary</th>
+                  <th className="px-4 py-3 border">Grand Total</th>
+                  <th className="px-4 py-3 border">Action</th>
+                  <th className="px-4 py-3 border">Status</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white">
+                {timesheetSummary.map((entry, index) => {
+                  const { month, year } = formatMonthYear(
+                    entry.timesheet_month
+                  );
+                  return (
+                    <tr key={entry.uid} className="border border-gray-300">
+                      <td className="px-4 py-2 border text-center">
+                        {(currentPage - 1) * pageSize + index + 1}
+                      </td>
+                      <td className="px-4 py-2 border">
+                        {entry.client_number}
+                      </td>
+                      <td className="px-4 py-2 border">{entry.client_name}</td>
+                      <td className="px-4 py-2 border">{month}</td>
+                      <td className="px-4 py-2 border">{year}</td>
+                      <td className="px-4 py-2 border text-center">
+                        {entry.employee_count}
+                      </td>
+                      <td className="px-4 py-2 border">
+                        {entry.total_salary_sum.toFixed(2)}
+                      </td>
+                      <td className="px-4 py-2 border">
+                        {entry.adjusted_salary_sum.toFixed(2)}
+                      </td>
+                      <td className="px-4 py-2 font-semibold border">
+                        {entry.grand_total.toFixed(2)}
+                      </td>
+                      <td className="px-4 py-2 space-x-2 border">
+                        <button
+                          onClick={() =>
+                            router.push(
+                              `/operations/timesheet/${
+                                entry.client_number
+                              }/${year}/${entry.timesheet_month.slice(5, 7)}`
+                            )
+                          }
+                          className="px-3 py-1 text-gray rounded hover:bg-indigo-600 hover:text-white text-xs cursor-pointer"
+                        >
+                          View
+                        </button>
+                        <button
+                          onClick={() =>
+                            router.push(
+                              `/operations/edit_timesheet/${
+                                entry.client_number
+                              }/${year}/${entry.timesheet_month.slice(5, 7)}`
+                            )
+                          }
+                          className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-xs cursor-pointer"
+                        >
+                          Edit
+                        </button>
+                      </td>
+                      <td className="px-4 py-2 space-x-2 border">
+                        <button className="px-3 py-1 text-green hover:bg-green-600 hover:text-white text-xs cursor-pointer">
+                          Submit
+                        </button>
+                        <button className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs cursor-pointer">
+                          Closed
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+
+      {/* Pagination */}
+      {timesheetSummary.length > 0 && !loading && (
+        <div className="flex justify-center mt-4 space-x-2">
+          <button
+            className={`px-4 py-2 border rounded ${
+              currentPage === 1
+                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                : "bg-white text-gray-700 hover:bg-gray-100"
+            }`}
+            onClick={() => setCurrentPage(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            Prev
+          </button>
+
+          {getPaginationPages().map((page, idx) =>
+            page === "..." ? (
+              <span key={idx} className="px-4 py-2 text-gray-500">
+                ...
+              </span>
+            ) : (
+              <button
+                key={idx}
+                className={`px-4 py-2 border rounded ${
+                  currentPage === page
+                    ? "bg-indigo-600 text-white"
+                    : "bg-white text-gray-700 hover:bg-gray-100"
+                }`}
+                onClick={() => setCurrentPage(page)}
+              >
+                {page}
+              </button>
+            )
+          )}
+          <button
+            className={`px-4 py-2 border rounded ${
+              currentPage === totalPages || totalPages === 0
+                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                : "bg-white text-gray-700 hover:bg-gray-100"
+            }`}
+            onClick={() => setCurrentPage(currentPage + 1)}
+            disabled={currentPage === totalPages || totalPages === 0}
+          >
+            Next
+          </button>
+        </div>
+      )}
+    </>
   );
 }
