@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { supabase } from "@/utils/supabaseClient";
 import ExcelDownload from "@/component/ExcelDownload";
 import { MdDelete } from "react-icons/md";
 import { FaRegEdit } from "react-icons/fa";
@@ -12,117 +11,104 @@ export default function EmployeeList() {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalCount, setTotalCount] = useState(0); // Total employees (unchanged by search)
+  const [totalCount, setTotalCount] = useState(0);
   const [uniqueClientCount, setUniqueClientCount] = useState(0);
-  const [searchResultCount, setSearchResultCount] = useState(0); // Number of search results
+  const [searchResultCount, setSearchResultCount] = useState(0);
   const pageSize = 20;
 
   useEffect(() => {
     document.title = "All Employees List";
 
-    // Fetch total employee count and unique client count (runs only once or after delete)
-    const fetchCounts = async () => {
-      const { count, error: countError } = await supabase
-        .from("employees")
-        .select("*", { count: "exact", head: true }); // head: true avoids fetching data
-
-      if (countError) {
-        setError("Failed to fetch total employee count");
-        console.error(countError);
-      } else {
-        setTotalCount(count || 0);
-      }
-
-      const { data: allClientsData, error: clientError } = await supabase
-        .from("employees")
-        .select("client_number");
-
-      if (clientError) {
-        console.error("Error fetching client numbers:", clientError.message);
-      } else {
-        const clientSet = new Set(
-          allClientsData?.map((emp) => emp.client_number).filter(Boolean)
-        );
-        setUniqueClientCount(clientSet.size);
-      }
-    };
-
-    // Fetch employees (paginated or search results)
     const fetchEmployees = async () => {
       setLoading(true);
+      try {
+        let url = `/api/employees?search=${encodeURIComponent(searchQuery)}&page=${currentPage}&pageSize=${pageSize}`;
+        const response = await fetch(url, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${document.cookie.replace(
+              /(?:(?:^|.*;\s*)token\s*=\s*([^;]*).*$)|^.*$/,
+              "$1"
+            )}`,
+          },
+        });
 
-      if (searchQuery) {
-        // Search mode: Fetch all employees matching the search query
-        const query = searchQuery.toLowerCase();
-        const { data, error } = await supabase
-          .from("employees")
-          .select("*")
-          .or(
-            `name.ilike.%${query}%,et_number.ilike.%${query}%,iqama_number.ilike.%${query}%,passport_number.ilike.%${query}%,profession.ilike.%${query}%,nationality.ilike.%${query}%,client_number.ilike.%${query}%,client_name.ilike.%${query}%,mobile.ilike.%${query}%,email.ilike.%${query}%,bank_account.ilike.%${query}%,employee_status.ilike.%${query}%,employee_source.ilike.%${query}%`
-          )
-          .order("id", { ascending: true });
+        const result = await response.json();
 
-        if (error) {
-          setError("Failed to fetch employees");
-          console.error(error);
-        } else {
-          setEmployees(data || []);
-          setSearchResultCount(data?.length || 0); // Track search result count
+        if (!response.ok) {
+          throw new Error(result.error || "Failed to fetch employees");
         }
-      } else {
-        // Pagination mode: Fetch employees for the current page
-        const from = (currentPage - 1) * pageSize;
-        const to = from + pageSize - 1;
 
-        const { data, error } = await supabase
-          .from("employees")
-          .select("*")
-          .order("id", { ascending: true })
-          .range(from, to);
-
-        if (error) {
-          setError("Failed to fetch employees");
-          console.error(error);
-        } else {
-          setEmployees(data || []);
-          setSearchResultCount(data?.length || 0); // Reset search result count
-        }
+        setEmployees(result.data || []);
+        setSearchResultCount(result.data?.length || 0);
+        setTotalCount(result.totalCount || 0);
+        setUniqueClientCount(result.uniqueClientCount || 0);
+        setError(null);
+      } catch (err) {
+        setError(err.message);
+        console.error("Fetch error:", err);
+        setEmployees([]);
+        setTotalCount(0);
+        setUniqueClientCount(0);
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
     };
 
-    // Run both fetches
-    fetchCounts();
     fetchEmployees();
   }, [currentPage, searchQuery]);
 
   const handleDelete = async (employee_id) => {
-    const { error } = await supabase
-      .from("employees")
-      .delete()
-      .eq("id", employee_id);
-    if (error) {
-      console.error("Error deleting employee:", error.message);
-    } else {
-      setEmployees((prev) => prev.filter((emp) => emp.id !== employee_id));
-      // Update totalCount and uniqueClientCount after delete
-      const { count } = await supabase
-        .from("employees")
-        .select("*", { count: "exact", head: true });
-      setTotalCount(count || 0);
+    const employee = employees.find((emp) => emp.id === employee_id);
+    const employeeName = employee?.name || `ID ${employee_id}`;
+    if (!window.confirm(`Are you sure you want to delete employee ${employeeName}?`)) {
+      return;
+    }
 
-      const { data: allClientsData } = await supabase
-        .from("employees")
-        .select("client_number");
-      const clientSet = new Set(
-        allClientsData?.map((emp) => emp.client_number).filter(Boolean)
-      );
-      setUniqueClientCount(clientSet.size);
+    try {
+      setError(null);
+      setSuccess(null);
+      setLoading(true);
+      console.log("Deleting employee with ID:", employee_id, "Type:", typeof employee_id);
+      const response = await fetch(`/api/employees?id=${employee_id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${document.cookie.replace(
+            /(?:(?:^|.*;\s*)token\s*=\s*([^;]*).*$)|^.*$/,
+            "$1"
+          )}`,
+        },
+      });
+
+      const result = await response.json();
+      console.log("Delete response:", result);
+
+      if (!response.ok) {
+        throw new Error(result.result || "Failed to delete employee");
+      }
+
+      setSuccess(`Employee ${employeeName} deleted successfully`);
+      await fetchEmployees();
+    } catch (err) {
+      console.error("Delete error:", err.message);
+      setError(err.message || "Failed to delete employee");
+    } finally {
+      setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => {
+        setSuccess(null);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
 
   const formatDate = (date) =>
     date ? new Date(date).toLocaleDateString("en-GB") : "";
@@ -150,6 +136,10 @@ export default function EmployeeList() {
         <h2 className="text-2xl text-center font-semibold m-4">
           All Employee Details
         </h2>
+        {error && <p className="text-red-500 text-center mb-4">{error}</p>}
+        {success && (
+          <p className="text-green-500 text-center mb-4">{success}</p>
+        )}
         <div className="flex flex-wrap justify-center items-center mb-6 gap-4">
           <div className="flex gap-4 text-sm font-medium text-gray-700 whitespace-nowrap mr-20">
             <span>Total Clients: {uniqueClientCount}</span>
@@ -164,7 +154,7 @@ export default function EmployeeList() {
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
-                setCurrentPage(1); // Reset to first page on search
+                setCurrentPage(1);
               }}
               placeholder="Search employee by Name, ET No., IQAMA, etc."
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
@@ -335,10 +325,7 @@ export default function EmployeeList() {
                     const totalPages = Math.ceil(totalCount / pageSize);
                     const pages = [];
 
-                    // Always include first page
                     if (totalPages > 0) pages.push(1);
-
-                    // Add middle pages with ellipsis logic
                     if (currentPage > 4) pages.push("...");
 
                     for (
@@ -350,8 +337,6 @@ export default function EmployeeList() {
                     }
 
                     if (currentPage + 2 < totalPages) pages.push("...");
-
-                    // Always include last page (if not already)
                     if (totalPages > 1) pages.push(totalPages);
 
                     return (
@@ -367,7 +352,6 @@ export default function EmployeeList() {
                         >
                           Prev
                         </button>
-
                         {pages.map((page, idx) =>
                           page === "..." ? (
                             <span
@@ -390,7 +374,6 @@ export default function EmployeeList() {
                             </button>
                           )
                         )}
-
                         <button
                           disabled={currentPage === totalPages}
                           onClick={() => setCurrentPage((prev) => prev + 1)}
