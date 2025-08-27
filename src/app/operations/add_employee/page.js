@@ -53,7 +53,7 @@ export default function AddEmployee() {
     const validators = {
       employeeName: /^[a-zA-Z\s'-]{1,50}$/,
       nationality: /^[a-zA-Z\s'-]{1,50}$/,
-      profession: /^[a-zA-Z\s'-]{1,50}$/,
+      // profession: /^[a-zA-Z\s'-]{1,50}$/,
       clientName: /^[a-zA-Z\s'-]{1,50}$/,
       mobile: /^[1-9]\d{0,9}$/,
       email: /^[a-zA-Z0-9._]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
