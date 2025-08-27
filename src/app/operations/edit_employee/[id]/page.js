@@ -195,7 +195,7 @@ export default function EditEmployeePage() {
       }
 
       setSuccessMessage("Employee updated successfully");
-      setTimeout(() => router.push("/employee_list"), 1500);
+      setTimeout(() => router.push("/operations/employee_list"), 1500);
     } catch (err) {
       setError(err.message);
     } finally {
