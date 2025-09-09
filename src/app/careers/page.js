@@ -7,6 +7,10 @@ export default function CareersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  useEffect(()=>{
+    document.title = "Etmam Careers"
+  }, [])
+
   useEffect(() => {
     async function fetchJobs() {
       try {
