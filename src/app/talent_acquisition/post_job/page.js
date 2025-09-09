@@ -3,12 +3,12 @@
 import { useState, useEffect, useRef } from "react";
 import { FaCircleInfo } from "react-icons/fa6";
 
-export default function AccommodationTransportForm() {
+export default function JobCreatePost() {
   const [formData, setFormData] = useState({
     jobId: "",
     jobTitle: "",
     jobLocation: "",
-    jobOpeningdate: "",
+    jobOpeningDate: "",
     jobClosingDate: "",
     jobDescription: "",
     jobKeySkills: "",
@@ -29,8 +29,8 @@ export default function AccommodationTransportForm() {
     if (!formData.jobTitle.trim()) newErrors.jobTitle = "Job Title is required";
     if (!formData.jobLocation.trim())
       newErrors.jobLocation = "Job location is required";
-    if (!formData.jobOpeningdate.trim())
-      newErrors.jobOpeningdate = "Job opening date is required";
+    if (!formData.jobOpeningDate.trim())
+      newErrors.jobOpeningDate = "Job opening date is required";
 
     if (formData.jobDescription.trim()) {
       const wordCount = formData.jobDescription
@@ -42,8 +42,8 @@ export default function AccommodationTransportForm() {
     }
 
     // Closing date should not be before opening date
-    if (formData.jobClosingDate && formData.jobOpeningdate) {
-      const open = new Date(formData.jobOpeningdate);
+    if (formData.jobClosingDate && formData.jobOpeningDate) {
+      const open = new Date(formData.jobOpeningDate);
       const close = new Date(formData.jobClosingDate);
       if (close < open)
         newErrors.jobClosingDate = "Closing date cannot be before opening date";
@@ -72,7 +72,7 @@ export default function AccommodationTransportForm() {
     setIsLoading(true);
 
     try {
-      const res = await fetch("/api/jobs", {
+      const res = await fetch("/api/talent_acquisition/job_management", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
@@ -88,7 +88,7 @@ export default function AccommodationTransportForm() {
           jobId: "",
           jobTitle: "",
           jobLocation: "",
-          jobOpeningdate: "",
+          jobOpeningDate: "",
           jobClosingDate: "",
           jobDescription: "",
           jobKeySkills: "",
@@ -221,16 +221,16 @@ export default function AccommodationTransportForm() {
           </label>
           <input
             type="date"
-            name="jobOpeningdate"
-            value={formData.jobOpeningdate}
+            name="jobOpeningDate"
+            value={formData.jobOpeningDate}
             onChange={handleChange}
             className={`p-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 ${
-              errors.jobOpeningdate ? "border-red-500" : "border-gray-300"
+              errors.jobOpeningDate ? "border-red-500" : "border-gray-300"
             } bg-gray-100`}
           />
-          {errors.jobOpeningdate && (
+          {errors.jobOpeningDate && (
             <p className="mt-1 text-sm text-red-600 animate-pulse">
-              {errors.jobOpeningdate}
+              {errors.jobOpeningDate}
             </p>
           )}
         </div>
@@ -243,7 +243,7 @@ export default function AccommodationTransportForm() {
             name="jobClosingDate"
             value={formData.jobClosingDate}
             onChange={handleChange}
-            min={formData.jobOpeningdate || undefined}
+            min={formData.jobOpeningDate || undefined}
             className={`p-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 ${
               errors.jobClosingDate ? "border-red-500" : "border-gray-300"
             } bg-gray-100`}
