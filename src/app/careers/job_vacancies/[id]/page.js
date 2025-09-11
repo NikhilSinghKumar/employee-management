@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { CalendarDays, MapPin, DollarSign, Briefcase, ArrowLeft  } from "lucide-react";
 
 export default function JobDetailsPage() {
   const { id } = useParams();
@@ -23,27 +24,93 @@ export default function JobDetailsPage() {
     fetchJob();
   }, [id]);
 
-  if (loading) return <p className="text-center mt-10">Loading...</p>;
-  if (!job) return <p className="text-center mt-10 text-red-600">Job not found</p>;
+  if (loading)
+    return <p className="text-center mt-10 text-lg font-medium text-gray-500">Loading...</p>;
+  if (!job)
+    return <p className="text-center mt-10 text-lg font-semibold text-red-600">Job not found</p>;
 
   return (
-    <div className="max-w-3xl mx-auto p-6">
-      <h1 className="text-3xl font-bold">{job.job_title}</h1>
-      <p className="text-gray-600">{job.job_location}</p>
-      <p className="text-gray-800 mt-2">Salary: {job.job_salary}</p>
-      <p className="text-sm text-gray-500 mt-1">
-        Opening: {job.job_opening_date} | Closing: {job.job_closing_date || "N/A"}
-      </p>
-      <h2 className="mt-6 text-xl font-semibold">Description</h2>
-      <p className="mt-2 text-gray-700 whitespace-pre-line">
-        {job.job_description}
-      </p>
-      {job.job_benefits && (
-        <>
-          <h2 className="mt-6 text-xl font-semibold">Benefits</h2>
-          <p className="mt-2 text-gray-700">{job.job_benefits}</p>
-        </>
-      )}
+    <div className="max-w-4xl mx-auto px-6 py-10">
+              {/* Back to Listings */}
+        <div className="mb-4">
+          <a
+            href="/careers/job_vacancies"
+            className="inline-flex items-center text-sm font-medium text-gray-600 hover:text-indigo-600 transition"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Open Jobs
+          </a>
+        </div>
+      <div className="bg-white rounded-2xl shadow-md p-8 border border-gray-100">
+        {/* Job Header */}
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-gray-900">{job.job_title}</h1>
+          <p className="flex items-center text-gray-600 mt-2">
+            <MapPin className="w-4 h-4 mr-2" /> {job.job_location}
+          </p>
+        </div>
+
+        {/* Job Meta */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="flex items-center text-gray-700">
+            <DollarSign className="w-5 h-5 mr-2 text-green-600" />
+            <span className="font-medium">
+              {job.job_salary || "Not disclosed"}
+            </span>
+          </div>
+          <div className="flex items-center text-gray-700">
+            <CalendarDays className="w-5 h-5 mr-2 text-indigo-600" />
+            <span className="text-sm">
+              Opening:{" "}
+              <span className="font-medium">{job.job_opening_date}</span>
+            </span>
+          </div>
+          <div className="flex items-center text-gray-700">
+            <CalendarDays className="w-5 h-5 mr-2 text-red-600" />
+            <span className="text-sm">
+              Closing:{" "}
+              <span className="font-medium">
+                {job.job_closing_date || "N/A"}
+              </span>
+            </span>
+          </div>
+        </div>
+
+        {/* Description */}
+        <section className="mb-8">
+          <h2 className="text-xl font-semibold text-gray-900 flex items-center mb-2">
+            <Briefcase className="w-5 h-5 mr-2 text-blue-600" />
+            Job Description
+          </h2>
+          <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+            {job.job_description}
+          </p>
+        </section>
+
+        {/* Benefits */}
+        {job.job_benefits && (
+          <section className="mb-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              Benefits
+            </h2>
+            <ul className="list-disc list-inside text-gray-700 space-y-1">
+              {job.job_benefits.split(",").map((benefit, idx) => (
+                <li key={idx}>{benefit.trim()}</li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {/* Apply Button */}
+        <div className="text-center">
+          <a
+            href={`/careers/job_vacancies/${job.job_id}/application_online`}
+            className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-3 rounded-xl shadow-md transition duration-200"
+          >
+            Apply Now
+          </a>
+        </div>
+      </div>
     </div>
   );
 }
