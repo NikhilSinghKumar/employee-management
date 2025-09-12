@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 export default function CareersPage() {
   const [jobs, setJobs] = useState([]);
@@ -59,12 +60,12 @@ export default function CareersPage() {
                 <p className="mt-2 text-gray-700 line-clamp-2">
                   {job.job_description}
                 </p>
-                <a
+                <Link
                   href={`/careers/job_vacancies/${job.job_id}`}
                   className="text-indigo-600 text-sm font-medium hover:underline"
                 >
                   View Details →
-                </a>
+                </Link>
               </li>
             ))}
           </ul>

@@ -2,7 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { CalendarDays, MapPin, DollarSign, Briefcase, ArrowLeft  } from "lucide-react";
+import Link from "next/link";
+import {
+  CalendarDays,
+  MapPin,
+  DollarSign,
+  Briefcase,
+  ArrowLeft,
+} from "lucide-react";
 
 export default function JobDetailsPage() {
   const { id } = useParams();
@@ -12,7 +19,9 @@ export default function JobDetailsPage() {
   useEffect(() => {
     async function fetchJob() {
       try {
-        const res = await fetch(`/api/talent_acquisition/public_job_list/${id}`);
+        const res = await fetch(
+          `/api/talent_acquisition/public_job_list/${id}`
+        );
         const result = await res.json();
         if (result.success) setJob(result.job);
       } catch (error) {
@@ -25,22 +34,30 @@ export default function JobDetailsPage() {
   }, [id]);
 
   if (loading)
-    return <p className="text-center mt-10 text-lg font-medium text-gray-500">Loading...</p>;
+    return (
+      <p className="text-center mt-10 text-lg font-medium text-gray-500">
+        Loading...
+      </p>
+    );
   if (!job)
-    return <p className="text-center mt-10 text-lg font-semibold text-red-600">Job not found</p>;
+    return (
+      <p className="text-center mt-10 text-lg font-semibold text-red-600">
+        Job not found
+      </p>
+    );
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-10">
-              {/* Back to Listings */}
-        <div className="mb-4">
-          <a
-            href="/careers/job_vacancies"
-            className="inline-flex items-center text-sm font-medium text-gray-600 hover:text-indigo-600 transition"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Open Jobs
-          </a>
-        </div>
+      {/* Back to Listings */}
+      <div className="mb-4">
+        <Link
+          href="/careers/job_vacancies"
+          className="inline-flex items-center text-sm font-medium text-gray-600 hover:text-indigo-600 transition"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Open Jobs
+        </Link>
+      </div>
       <div className="bg-white rounded-2xl shadow-md p-8 border border-gray-100">
         {/* Job Header */}
         <div className="mb-6">
