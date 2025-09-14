@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 
-export default function AccommodationTransportForm() {
+export default function JobApplicationForm() {
   const [formData, setFormData] = useState({
     applicantName: "",
     applicantMobileNo: "",
