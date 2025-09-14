@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { UserProvider } from "@/context/UserContext";
 import ClientLayout from "@/component/ClientLayout";
+import { NetworkStatusProvider } from "@/context/NetworkStatusProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,7 +27,9 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <UserProvider>
-          <ClientLayout>{children}</ClientLayout>
+          <ClientLayout>
+            <NetworkStatusProvider>{children}</NetworkStatusProvider>
+          </ClientLayout>
         </UserProvider>
       </body>
     </html>
