@@ -62,6 +62,8 @@ export default function CareersPage() {
                 </p>
                 <Link
                   href={`/careers/job_vacancies/${job.job_id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-indigo-600 text-sm font-medium hover:underline"
                 >
                   View Details →

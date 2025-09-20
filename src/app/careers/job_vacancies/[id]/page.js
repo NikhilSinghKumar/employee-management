@@ -120,12 +120,14 @@ export default function JobDetailsPage() {
 
         {/* Apply Button */}
         <div className="text-center">
-          <a
+          <Link
             href={`/careers/job_vacancies/${job.job_id}/application_online`}
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-3 rounded-xl shadow-md transition duration-200"
           >
             Apply Now
-          </a>
+          </Link>
         </div>
       </div>
     </div>
