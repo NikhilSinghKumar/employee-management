@@ -103,7 +103,7 @@ export default function Navbar() {
           label="Talent Acquisition"
           items={[
             { label: "Post Job", href: "/talent_acquisition/post_job" },
-            { label: "Job Opening", href: "/talent_acquisition/job_opening" },
+            { label: "Job List", href: "/talent_acquisition/job_list" },
             {
               label: "Application Form",
               href: "/talent_acquisition/application_form",
