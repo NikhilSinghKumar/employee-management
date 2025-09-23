@@ -34,18 +34,25 @@ export default function JobCreatePost() {
     const newErrors = {};
     if (!formData.jobId.trim()) newErrors.jobId = "Job ID is required";
     if (!formData.jobTitle.trim()) newErrors.jobTitle = "Job Title is required";
-    if (!formData.jobLocation.trim()) newErrors.jobLocation = "Job location is required";
-    if (!formData.jobOpeningDate.trim()) newErrors.jobOpeningDate = "Opening date is required";
+    if (!formData.jobLocation.trim())
+      newErrors.jobLocation = "Job location is required";
+    if (!formData.jobOpeningDate.trim())
+      newErrors.jobOpeningDate = "Opening date is required";
 
     if (formData.jobDescription.trim()) {
-      const wordCount = formData.jobDescription.trim().split(/\s+/).filter(Boolean).length;
-      if (wordCount > 2000) newErrors.jobDescription = "Description must not exceed 2000 words";
+      const wordCount = formData.jobDescription
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean).length;
+      if (wordCount > 2000)
+        newErrors.jobDescription = "Description must not exceed 2000 words";
     }
 
     if (formData.jobClosingDate && formData.jobOpeningDate) {
       const open = new Date(formData.jobOpeningDate);
       const close = new Date(formData.jobClosingDate);
-      if (close < open) newErrors.jobClosingDate = "Closing date cannot be before opening date";
+      if (close < open)
+        newErrors.jobClosingDate = "Closing date cannot be before opening date";
     }
 
     return newErrors;
@@ -89,7 +96,10 @@ export default function JobCreatePost() {
         });
         setErrors({});
       } else {
-        setMessage({ text: result.error || "Submission failed.", type: "error" });
+        setMessage({
+          text: result.error || "Submission failed.",
+          type: "error",
+        });
       }
     } catch (error) {
       console.error(error);
@@ -99,9 +109,9 @@ export default function JobCreatePost() {
     }
   };
 
-  useEffect(()=> {
-    document.title = "Job Post"
-  })
+  useEffect(() => {
+    document.title = "Job Post";
+  });
   // ✅ auto-hide message
   useEffect(() => {
     if (message) {
@@ -111,7 +121,7 @@ export default function JobCreatePost() {
   }, [message]);
 
   return (
-    <div className="max-w-3xl mx-auto mt-16 mb-10 p-6 bg-white rounded-xl shadow-md">
+    <div className="max-w-3xl mx-auto mt-20 mb-10 p-6 bg-white rounded-xl shadow-md">
       <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">
         Create Job Post
       </h2>
@@ -133,7 +143,11 @@ export default function JobCreatePost() {
         {/* Inputs */}
         {[
           { label: "Job ID", name: "jobId", placeholder: "e.g. J123" },
-          { label: "Job Title", name: "jobTitle", placeholder: "Software Engineer" },
+          {
+            label: "Job Title",
+            name: "jobTitle",
+            placeholder: "Software Engineer",
+          },
           { label: "Location", name: "jobLocation", placeholder: "Bangalore" },
           {
             label: "Key Skills",
