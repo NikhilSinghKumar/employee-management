@@ -3,6 +3,7 @@ import "./globals.css";
 import { UserProvider } from "@/context/UserContext";
 import ClientLayout from "@/component/ClientLayout";
 import { NetworkStatusProvider } from "@/context/NetworkStatusProvider";
+import { Toaster } from "react-hot-toast";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,6 +31,7 @@ export default function RootLayout({ children }) {
           <ClientLayout>
             <NetworkStatusProvider>{children}</NetworkStatusProvider>
           </ClientLayout>
+          <Toaster position="top-center" reverseOrder={false} />
         </UserProvider>
       </body>
     </html>
