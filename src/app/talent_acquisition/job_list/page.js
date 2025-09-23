@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MdDelete } from "react-icons/md";
-import { FaRegEdit } from "react-icons/fa";
 import { IoLockClosed, IoLockOpen } from "react-icons/io5";
 import Link from "next/link";
+import JobActions from "../JobActions";
 
 export default function CareersPage() {
   const [jobs, setJobs] = useState([]);
@@ -156,22 +155,11 @@ export default function CareersPage() {
                     title="Open"
                   />
                 )}
-
-                {/* Edit Button */}
-                <button
-                  className="text-blue-500 text-xl cursor-pointer hover:text-blue-700 hover:scale-120 transition-transform duration-200"
-                  onClick={() => setSelectedJob(job)} // open modal
-                >
-                  <FaRegEdit title="Edit" />
-                </button>
-
-                {/* Delete Button */}
-                <button
-                  className="text-rose-500 text-xl cursor-pointer hover:text-rose-600 hover:scale-120 transition-transform duration-200"
-                  onClick={() => handleDelete(job.job_id)}
-                >
-                  <MdDelete title="Delete" />
-                </button>
+                <JobActions
+                  jobId={job.job_id}
+                  onEdit={(id) => setSelectedJob(job)}
+                  onDelete={(id) => handleDelete(id)}
+                />
               </div>
             </li>
           ))}
