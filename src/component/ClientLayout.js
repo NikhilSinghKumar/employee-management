@@ -12,6 +12,7 @@ export default function ClientLayout({ children }) {
     /^\/human_resource(\/|$)/,
     /^\/accommodation_transport(\/|$)/,
     /^\/admin(\/|$)/,
+    /^\/talent_acquisition(\/|$)/,
   ];
   const showNavbar = allowedRoutes.some((pattern) => pattern.test(pathname));
 
