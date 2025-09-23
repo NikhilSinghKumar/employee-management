@@ -45,7 +45,7 @@ export default function JobDetailsPage() {
     );
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-10">
+    <div className="max-w-4xl mx-auto px-6 mt-14 py-10">
       <div className="bg-white rounded-2xl shadow-md p-8 border border-gray-100">
         {/* Job Header */}
         <div className="mb-6">
