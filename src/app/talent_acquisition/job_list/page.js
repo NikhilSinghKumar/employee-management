@@ -103,11 +103,11 @@ export default function CareersPage() {
     }
   }
 
-  if (loading) return <p className="text-center mt-10">Loading jobs...</p>;
-  if (error) return <p className="text-center mt-10 text-red-600">{error}</p>;
+  if (loading) return <p className="text-center mt-24">Loading jobs...</p>;
+  if (error) return <p className="text-center mt-24 text-red-600">{error}</p>;
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-4xl mx-auto mt-16 p-6">
       <h1 className="text-2xl font-bold text-center mb-8">All Jobs List</h1>
 
       {jobs.length === 0 ? (
@@ -185,6 +185,14 @@ export default function CareersPage() {
           data-testid="modal-backdrop"
         >
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+            {/* Close Button */}
+            <button
+              onClick={() => setSelectedJob(null)}
+              className="absolute top-3 right-50 cursor-pointer text-gray-500 hover:text-gray-700 text-2xl"
+              aria-label="Close"
+            >
+              &times;
+            </button>
             <h2 className="text-xl font-bold mb-6">
               Edit Job [{selectedJob.job_id}] {selectedJob.job_title}
             </h2>
