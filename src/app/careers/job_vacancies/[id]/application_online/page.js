@@ -9,7 +9,7 @@ export default function JobApplicationForm() {
     applicantNationality: "",
     applicantPassportIqama: "",
     applicantCity: "",
-    applicantProfession: "",
+    applicantExperienceYears: "",
     applicantIsNoticePeriod: "No",
     applicantNoticePeriodDays: "0",
     applicantCurrentSalary: "",
@@ -34,7 +34,8 @@ export default function JobApplicationForm() {
       newErrors.applicantMobileNo =
         "Mobile number must be exactly 10 digits and cannot start with 0";
     }
-
+    if (!formData.applicantMobileNo.trim())
+      newErrors.applicantMobileNo = "Mobile number is required";
     if (!formData.applicantNationality.trim())
       newErrors.applicantNationality = "Nationality is required";
 
@@ -44,14 +45,19 @@ export default function JobApplicationForm() {
     if (!formData.applicantCity.trim())
       newErrors.applicantCity = "City is required";
 
-    if (!formData.applicantProfession.trim())
-      newErrors.applicantProfession = "Profession is required";
-
     if (
       formData.applicantIsNoticePeriod === "Yes" &&
       !formData.applicantNoticePeriodDays.trim()
     ) {
       newErrors.applicantNoticePeriodDays = "Notice period days is required";
+    }
+    if (!formData.applicantExperienceYears.trim()) {
+      newErrors.applicantExperienceYears = "Experience is required";
+    } else if (
+      isNaN(formData.applicantExperienceYears) ||
+      formData.applicantExperienceYears < 0
+    ) {
+      newErrors.applicantExperienceYears = "Enter a valid number of years";
     }
 
     if (formData.applicantDescription.trim()) {
@@ -78,11 +84,11 @@ export default function JobApplicationForm() {
       const file = files?.[0];
       if (!file) return;
 
-      if (file.size > 1024 * 1024) {
+      if (file.size > 500 * 1024) {
         setFormData({ ...formData, applicantCV: null });
         setErrors({
           ...errors,
-          applicantCV: "File size must be less than 1MB",
+          applicantCV: "File size must be less than 500KB",
         });
         return;
       }
@@ -177,7 +183,7 @@ export default function JobApplicationForm() {
           applicantNationality: "",
           applicantPassportIqama: "",
           applicantCity: "",
-          applicantProfession: "",
+          applicantExperienceYears: "",
           applicantIsNoticePeriod: "",
           applicantNoticePeriodDays: "0",
           applicantCurrentSalary: "",
@@ -215,7 +221,7 @@ export default function JobApplicationForm() {
     .filter(Boolean).length;
 
   return (
-    <div className="max-w-4xl mx-auto p-6 sm:p-8 bg-gradient-to-br from-gray-30 to-gray-60 rounded-2xl shadow-xl mt-10">
+    <div className="max-w-4xl mx-auto p-6 sm:p-8 bg-gradient-to-br from-gray-30 to-gray-60 rounded-2xl shadow-xl">
       <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">
         Application Form
       </h2>
@@ -238,22 +244,29 @@ export default function JobApplicationForm() {
       >
         {/* Text fields */}
         {[
-          { label: "Name", name: "applicantName", placeholder: "Enter Name" },
+          { label: "Name*", name: "applicantName", placeholder: "Enter Name" },
           {
-            label: "Nationality",
+            label: "Mobile No.*",
+            name: "applicantMobileNo",
+            placeholder: "Enter Mobile No.",
+            type: "text",
+          },
+          {
+            label: "Nationality*",
             name: "applicantNationality",
             placeholder: "Enter Nationality",
           },
           {
-            label: "Passport/ Iqama",
+            label: "Passport/ Iqama*",
             name: "applicantPassportIqama",
             placeholder: "Enter Passport or Iqama",
           },
-          { label: "City", name: "applicantCity", placeholder: "Enter City" },
+          { label: "City*", name: "applicantCity", placeholder: "Enter City" },
           {
-            label: "Profession",
-            name: "applicantProfession",
-            placeholder: "Enter Profession",
+            label: "Experience (Years)*",
+            name: "applicantExperienceYears",
+            placeholder: "Enter years",
+            type: "number",
           },
           {
             label: "Current Salary",
@@ -265,17 +278,19 @@ export default function JobApplicationForm() {
             name: "applicantExpectedSalary",
             placeholder: "Enter Expected Salary",
           },
-        ].map(({ label, name, placeholder }) => (
+        ].map(({ label, name, placeholder, type = "text" }) => (
           <div key={name} className="flex flex-col">
             <label className="text-sm font-medium text-gray-700 mb-1">
               {label}
             </label>
             <input
-              type="text"
+              type={type}
               name={name}
               value={formData[name]}
               onChange={handleChange}
               placeholder={placeholder}
+              inputMode={name === "applicantMobileNo" ? "numeric" : undefined}
+              maxLength={name === "applicantMobileNo" ? 10 : undefined}
               className={`p-2 border rounded-md focus:ring-1 focus:ring-indigo-500 text-sm ${
                 errors[name] ? "border-red-500" : "border-gray-300"
               }`}
@@ -285,29 +300,6 @@ export default function JobApplicationForm() {
             )}
           </div>
         ))}
-        {/* Mobile No. (customized) */}
-        <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-700 mb-1">
-            Mobile No.
-          </label>
-          <input
-            type="text"
-            name="applicantMobileNo"
-            value={formData.applicantMobileNo}
-            onChange={handleChange}
-            inputMode="numeric"
-            maxLength={10}
-            placeholder="Enter Mobile No."
-            className={`p-2 border rounded-md focus:ring-1 focus:ring-indigo-500 text-sm ${
-              errors.applicantMobileNo ? "border-red-500" : "border-gray-300"
-            }`}
-          />
-          {errors.applicantMobileNo && (
-            <p className="text-xs text-red-500 mt-1">
-              {errors.applicantMobileNo}
-            </p>
-          )}
-        </div>
 
         {/* Notice Period */}
         <div className="flex flex-col">
@@ -368,7 +360,7 @@ export default function JobApplicationForm() {
           />
           <p className="text-xs text-gray-500 mt-1">
             <span className="font-medium">Only PDF, DOC, DOCX</span> — Max size:{" "}
-            <span className="font-medium">1MB</span>.
+            <span className="font-medium">500KB</span>.
           </p>
           <div className="h-5 mt-1 text-xs">
             {errors.applicantCV ? (
