@@ -1,8 +1,12 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useParams } from "next/navigation";
 
 export default function JobApplicationForm() {
+  const params = useParams();
+  const job_id = params.id;
+
   const [formData, setFormData] = useState({
     applicantName: "",
     applicantMobileNo: "",
@@ -16,6 +20,7 @@ export default function JobApplicationForm() {
     applicantExpectedSalary: "",
     applicantCV: null,
     applicantDescription: "",
+    jobId: job_id || "",
   });
 
   const [message, setMessage] = useState(null);
@@ -167,10 +172,11 @@ export default function JobApplicationForm() {
         formPayload.append("applicantCV", formData.applicantCV);
       }
 
-      const res = await fetch("/api/*", {
+      formPayload.append("jobId", formData.jobId);
+
+      const res = await fetch("/api/talent_acquisition/job_applicant", {
         method: "POST",
         body: formPayload,
-        credentials: "include",
       });
 
       const result = await res.json();
