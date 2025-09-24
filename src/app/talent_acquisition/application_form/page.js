@@ -11,7 +11,7 @@ export default function AccommodationTransportForm() {
     applicantPassportIqama: "",
     applicantCity: "",
     applicantProfession: "",
-    applicantIsNoticePeriod: "",
+    applicantIsNoticePeriod: "No",
     applicantNoticePeriodDays: "0",
     applicantCurrentSalary: "",
     applicantExpectedSalary: "",
@@ -69,11 +69,11 @@ export default function AccommodationTransportForm() {
     if (name === "applicantCV") {
       const file = files[0];
       if (file) {
-        // validate file size (max 1MB)
-        if (file.size > 1024 * 1024) {
+        // validate file size (max 500KB)
+        if (file.size > 500 * 1024) {
           setErrors({
             ...errors,
-            applicantCV: "File size must be less than 1MB",
+            applicantCV: "File size must be less than 500KB",
           });
           return;
         }
@@ -388,12 +388,12 @@ export default function AccommodationTransportForm() {
                 <FaCircleInfo
                   className="text-gray-500 cursor-pointer hover:text-indigo-500"
                   onClick={() => setShowInfo(!showInfo)}
-                  title="Only PDF or Word documents are allowed. Max size 1MB."
+                  title="Only PDF or Word documents are allowed. Max size 500KB."
                 />
 
                 {showInfo && (
                   <div className="absolute top-full mt-1 w-max bg-gray-800 text-white text-xs px-2 py-1 rounded shadow-lg z-10">
-                    Only PDF or Word documents are allowed. Max size 1MB.
+                    Only PDF or Word documents are allowed. Max size 500KB.
                   </div>
                 )}
               </div>
