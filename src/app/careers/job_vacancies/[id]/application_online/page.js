@@ -35,10 +35,10 @@ export default function JobApplicationForm() {
     if (!formData.applicantName.trim())
       newErrors.applicantName = "Name is required";
 
-    if (!/^[1-9][0-9]{9}$/.test(formData.applicantMobileNo)) {
-      newErrors.applicantMobileNo =
-        "Mobile number must be exactly 10 digits and cannot start with 0";
-    }
+    // if (!/^[1-9][0-9]{9}$/.test(formData.applicantMobileNo)) {
+    //   newErrors.applicantMobileNo =
+    //     "Mobile number must be exactly 10 digits and cannot start with 0";
+    // }
     if (!formData.applicantMobileNo.trim())
       newErrors.applicantMobileNo = "Mobile number is required";
     if (!formData.applicantNationality.trim())
@@ -120,9 +120,6 @@ export default function JobApplicationForm() {
     // ✅ Special handling for mobile number
     if (name === "applicantMobileNo") {
       let cleaned = value.replace(/\D/g, ""); // only digits
-      if (cleaned.startsWith("0")) {
-        cleaned = cleaned.slice(1); // remove leading 0
-      }
       if (cleaned.length > 10) {
         cleaned = cleaned.slice(0, 10); // enforce max 10 digits
       }
