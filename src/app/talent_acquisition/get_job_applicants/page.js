@@ -104,6 +104,9 @@ export default function JobApplicationsPage() {
                 Job ID
               </th>
               <th className="px-3 py-2 border border-gray-200 text-center">
+                Mobile
+              </th>
+              <th className="px-3 py-2 border border-gray-200 text-center">
                 City
               </th>
               <th className="px-3 py-2 border border-gray-200 text-center">
@@ -139,6 +142,9 @@ export default function JobApplicationsPage() {
                 </td>
                 <td className="px-3 py-2 border border-gray-200 text-gray-600">
                   {app.job_id || "N/A"}
+                </td>
+                <td className="px-3 py-2 border border-gray-200 text-gray-600 text-center">
+                  {app.applicant_mobile_no}
                 </td>
                 <td className="px-3 py-2 text-center border border-gray-200">
                   {app.applicant_city}
