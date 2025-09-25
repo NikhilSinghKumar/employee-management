@@ -110,7 +110,7 @@ export default function Navbar() {
             },
             {
               label: "Applicant List",
-              href: "/talent_acquisition/applicant_list",
+              href: "/talent_acquisition/get_job_applicants",
             },
           ]}
         />
