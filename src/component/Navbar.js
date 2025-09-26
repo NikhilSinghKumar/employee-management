@@ -85,6 +85,7 @@ export default function Navbar() {
             { label: "All Employees", href: "/operations/employee_list" },
             { label: "All Clients", href: "/operations/all_clients" },
             { label: "Timesheet/ Payroll", href: "/operations/all_timesheet" },
+            { label: "Case Management", href: "/operations/case_management" },
           ]}
         />
         <Dropdown
