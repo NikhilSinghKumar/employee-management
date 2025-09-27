@@ -203,42 +203,58 @@ export default function CaseManagementForm() {
         >
           {/* Text fields */}
           {[
-            { label: "Name*", name: "cmName", placeholder: "Enter Name" },
             {
-              label: "Mobile No.*",
+              label: "Name",
+              name: "cmName",
+              placeholder: "Enter Name",
+              required: true,
+            },
+            {
+              label: "Mobile No.",
               name: "cmMobileNo",
               placeholder: "Enter Mobile No.",
               type: "text",
+              required: true,
             },
             {
               label: "Email",
               name: "cmEmail",
               placeholder: "Enter Email Id",
               type: "text",
+              required: false,
             },
             {
-              label: "Nationality*",
+              label: "Nationality",
               name: "cmNationality",
               placeholder: "Enter Nationality",
+              required: true,
             },
             {
-              label: "IQAMA No. or Passport No.*",
+              label: "IQAMA No. or Passport No.",
               name: "cmPassportIqama",
-              placeholder: "Enter Passport or Iqama",
+              placeholder: "Enter Passport or IQAMA",
+              required: true,
             },
-            { label: "City", name: "cmCity", placeholder: "Enter City" },
             {
-              label: "Client Name*",
+              label: "City",
+              name: "cmCity",
+              placeholder: "Enter City",
+              required: false,
+            },
+            {
+              label: "Client Name",
               name: "cmClientName",
               placeholder: "Enter Client Name",
+              required: true,
             },
-          ].map(({ label, name, placeholder, type = "text" }) => (
+          ].map(({ label, name, placeholder, type = "text", required }) => (
             <div key={name} className="flex flex-col">
               <label
                 htmlFor={name}
                 className="text-sm font-medium text-gray-700 mb-1"
               >
                 {label}
+                {required && <span className="text-red-500">*</span>}
               </label>
               <input
                 id={name}
@@ -273,7 +289,8 @@ export default function CaseManagementForm() {
               htmlFor="cmComplaintDescription"
               className="text-sm font-medium text-gray-700 mb-1"
             >
-              Complain Details*
+              Complain Details
+              <span className="text-red-500">*</span>
             </label>
             <textarea
               id="cmComplaintDescription"
