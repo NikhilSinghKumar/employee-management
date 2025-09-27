@@ -191,7 +191,7 @@ export default function CaseManagementForm() {
             alt="Company Logo"
             className="h-25 w-auto mb-2"
           />
-          <h2 className="text-xl font-bold text-gray-800 text-center">
+          <h2 className="text-xl font-bold text-blue-950 text-center">
             Employee Request Form
           </h2>
         </div>
@@ -222,7 +222,7 @@ export default function CaseManagementForm() {
               placeholder: "Enter Nationality",
             },
             {
-              label: "Passport/ Iqama*",
+              label: "IQAMA No. or Passport No.*",
               name: "cmPassportIqama",
               placeholder: "Enter Passport or Iqama",
             },
