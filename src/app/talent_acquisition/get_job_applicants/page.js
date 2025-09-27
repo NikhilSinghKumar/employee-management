@@ -84,7 +84,13 @@ export default function JobApplicationsPage() {
     );
   };
 
-  if (loading) return <p className="p-6">Loading applications...</p>;
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <p className="animate-pulse text-gray-600">Loading details...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-4 mt-16">
@@ -194,7 +200,7 @@ export default function JobApplicationsPage() {
                 </td>
               </tr>
             ))}
-            {applications.length === 0 && (
+            {!loading && applications.length === 0 && (
               <tr>
                 <td
                   colSpan="8"
