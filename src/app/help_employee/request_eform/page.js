@@ -182,7 +182,17 @@ export default function CaseManagementForm() {
 
       {/* Background Right with diagonal cut */}
       <div className="absolute inset-0 bg-blue-600 clip-diagonal" />
-
+      {message && (
+        <div
+          className={`mb-4 p-2 text-sm rounded ${
+            message.type === "success"
+              ? "bg-green-100 text-green-800"
+              : "bg-red-100 text-red-800"
+          }`}
+        >
+          {message.text}
+        </div>
+      )}
       {/* Form Container */}
       <div className="relative bg-white rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8 mx-4 sm:mx-auto max-w-lg w-full">
         <div className="flex flex-col items-center mb-6">
