@@ -39,3 +39,7 @@ body {
 .table-cell-right {
   @apply table-cell text-right;
 }
+
+.clip-diagonal {
+  clip-path: polygon(40% 0, 100% 0, 100% 100%, 60% 100%);
+}
