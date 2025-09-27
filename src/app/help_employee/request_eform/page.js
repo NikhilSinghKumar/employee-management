@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { toast } from "react-hot-toast";
 
 export default function CaseManagementForm() {
   const [formData, setFormData] = useState({
@@ -14,7 +15,6 @@ export default function CaseManagementForm() {
     cmComplaintDescription: "",
   });
 
-  const [message, setMessage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
@@ -22,7 +22,6 @@ export default function CaseManagementForm() {
   const validateForm = () => {
     const newErrors = {};
 
-    // Trimmed values for validation
     const name = formData.cmName.trim();
     const mobile = formData.cmMobileNo.trim();
     const email = formData.cmEmail.trim();
@@ -36,20 +35,17 @@ export default function CaseManagementForm() {
 
     if (!mobile) {
       newErrors.cmMobileNo = "Mobile number is required";
+    } else if (mobile.length !== 10) {
+      newErrors.cmMobileNo = "Mobile number must be 10 digits";
     }
 
-    // if (!email) {
-    //   newErrors.cmEmail = "Email is required";
-    // } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    //   newErrors.cmEmail = "Enter a valid email address";
-    // }
+    // Email optional but validate if provided
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.cmEmail = "Enter a valid email address";
+    }
 
     if (!nationality) newErrors.cmNationality = "Nationality is required";
-
     if (!passport) newErrors.cmPassportIqama = "Passport/ Iqama is required";
-
-    // if (!city) newErrors.cmCity = "City is required";
-
     if (!client) newErrors.cmClientName = "Client name is required";
     if (!description)
       newErrors.cmComplaintDescription = "Complain detail is required";
@@ -70,21 +66,20 @@ export default function CaseManagementForm() {
     const { name, value } = e.target;
 
     if (name === "cmMobileNo") {
-      let cleaned = value.replace(/\D/g, ""); // only digits
+      let cleaned = value.replace(/\D/g, "");
       if (cleaned.length > 10) cleaned = cleaned.slice(0, 10);
       setFormData({ ...formData, [name]: cleaned });
     } else {
       setFormData({ ...formData, [name]: value });
     }
 
-    // Clear error when user starts typing
     if (errors[name]) {
       const { [name]: removed, ...rest } = errors;
       setErrors(rest);
     }
   };
 
-  // ✅ Handle submit with improved error handling
+  // ✅ Handle submit with toast messages
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -97,12 +92,10 @@ export default function CaseManagementForm() {
     setIsLoading(true);
 
     try {
-      // Trim all values before sending
       const normalizedData = Object.fromEntries(
         Object.entries(formData).map(([k, v]) => [k, v.trim()])
       );
 
-      // Convert camelCase → snake_case
       const payload = {
         cm_name: normalizedData.cmName,
         cm_mobile_no: normalizedData.cmMobileNo,
@@ -123,16 +116,15 @@ export default function CaseManagementForm() {
       const result = await res.json();
 
       if (!res.ok) {
-        // Handle structured backend errors
         if (result?.fieldErrors) {
-          setErrors(result.fieldErrors); // e.g., { cmEmail: "Already exists" }
+          setErrors(result.fieldErrors);
           throw new Error("Validation error from server");
         }
         throw new Error(result?.error || "Server error");
       }
 
       if (result?.success) {
-        setMessage({ text: "Form submitted successfully.", type: "success" });
+        toast.success("Form submitted successfully 🎉");
         setFormData({
           cmName: "",
           cmMobileNo: "",
@@ -145,29 +137,15 @@ export default function CaseManagementForm() {
         });
         setErrors({});
       } else {
-        setMessage({
-          text: `Error: ${result?.error || "Unknown error"}`,
-          type: "error",
-        });
+        toast.error(result?.error || "Unknown error");
       }
     } catch (error) {
       console.error(error);
-      setMessage({
-        text: `Failed to submit data: ${error.message}`,
-        type: "error",
-      });
+      toast.error(`Failed to submit data: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
   };
-
-  // ✅ Auto-clear success message
-  useEffect(() => {
-    if (message?.type === "success") {
-      const timer = setTimeout(() => setMessage(null), 4000);
-      return () => clearTimeout(timer);
-    }
-  }, [message]);
 
   // ✅ Word counter
   const wordCount = useMemo(() => {
@@ -182,17 +160,7 @@ export default function CaseManagementForm() {
 
       {/* Background Right with diagonal cut */}
       <div className="absolute inset-0 bg-blue-600 clip-diagonal" />
-      {message && (
-        <div
-          className={`mb-4 p-2 text-sm rounded ${
-            message.type === "success"
-              ? "bg-green-100 text-green-800"
-              : "bg-red-100 text-red-800"
-          }`}
-        >
-          {message.text}
-        </div>
-      )}
+
       {/* Form Container */}
       <div className="relative bg-white rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8 mx-4 sm:mx-auto max-w-lg w-full">
         <div className="flex flex-col items-center mb-6">
@@ -206,12 +174,11 @@ export default function CaseManagementForm() {
           </h2>
         </div>
 
-        {/* form … */}
+        {/* Form */}
         <form
           onSubmit={handleSubmit}
           className="grid grid-cols-1 md:grid-cols-2 gap-3"
         >
-          {/* Text fields */}
           {[
             {
               label: "Name",
