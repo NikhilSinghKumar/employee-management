@@ -38,17 +38,17 @@ export default function CaseManagementForm() {
       newErrors.cmMobileNo = "Mobile number is required";
     }
 
-    if (!email) {
-      newErrors.cmEmail = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.cmEmail = "Enter a valid email address";
-    }
+    // if (!email) {
+    //   newErrors.cmEmail = "Email is required";
+    // } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    //   newErrors.cmEmail = "Enter a valid email address";
+    // }
 
     if (!nationality) newErrors.cmNationality = "Nationality is required";
 
     if (!passport) newErrors.cmPassportIqama = "Passport/ Iqama is required";
 
-    if (!city) newErrors.cmCity = "City is required";
+    // if (!city) newErrors.cmCity = "City is required";
 
     if (!client) newErrors.cmClientName = "Client name is required";
 
@@ -104,10 +104,10 @@ export default function CaseManagementForm() {
       const payload = {
         cm_name: normalizedData.cmName,
         cm_mobile_no: normalizedData.cmMobileNo,
-        cm_email: normalizedData.cmEmail,
+        cm_email: normalizedData.cmEmail || null,
         cm_nationality: normalizedData.cmNationality,
         cm_passport_iqama: normalizedData.cmPassportIqama,
-        cm_city: normalizedData.cmCity,
+        cm_city: normalizedData.cmCity || null,
         cm_client_name: normalizedData.cmClientName,
         cm_complaint_description: normalizedData.cmComplaintDescription,
       };
@@ -205,7 +205,7 @@ export default function CaseManagementForm() {
             type: "text",
           },
           {
-            label: "Email*",
+            label: "Email",
             name: "cmEmail",
             placeholder: "Enter Email Id",
             type: "text",
@@ -220,7 +220,7 @@ export default function CaseManagementForm() {
             name: "cmPassportIqama",
             placeholder: "Enter Passport or Iqama",
           },
-          { label: "City*", name: "cmCity", placeholder: "Enter City" },
+          { label: "City", name: "cmCity", placeholder: "Enter City" },
           {
             label: "Client Name*",
             name: "cmClientName",
@@ -267,7 +267,7 @@ export default function CaseManagementForm() {
             htmlFor="cmComplaintDescription"
             className="text-sm font-medium text-gray-700 mb-1"
           >
-            Description
+            Complain Details*
           </label>
           <textarea
             id="cmComplaintDescription"
@@ -275,7 +275,7 @@ export default function CaseManagementForm() {
             value={formData.cmComplaintDescription}
             onChange={handleChange}
             rows={4}
-            placeholder="Write something..."
+            placeholder="Write your complain..."
             disabled={isLoading}
             aria-describedby={
               errors.cmComplaintDescription

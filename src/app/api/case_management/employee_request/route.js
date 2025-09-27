@@ -20,10 +20,10 @@ export async function POST(request) {
     const missingFields = [];
     if (!cm_name) missingFields.push("cm_name");
     if (!cm_mobile_no) missingFields.push("cm_mobile_no");
-    if (!cm_email) missingFields.push("cm_email");
+    // if (!cm_email) missingFields.push("cm_email");
     if (!cm_nationality) missingFields.push("cm_nationality");
     if (!cm_passport_iqama) missingFields.push("cm_passport_iqama");
-    if (!cm_city) missingFields.push("cm_city");
+    // if (!cm_city) missingFields.push("cm_city");
     if (!cm_client_name) missingFields.push("cm_client_name");
 
     if (missingFields.length > 0) {
@@ -45,7 +45,7 @@ export async function POST(request) {
       );
     }
 
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cm_email)) {
+    if (cm_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cm_email)) {
       return NextResponse.json(
         { success: false, error: "Invalid email address" },
         { status: 400 }
