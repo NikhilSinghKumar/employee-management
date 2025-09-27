@@ -65,3 +65,49 @@ export async function GET(request) {
     );
   }
 }
+
+export async function PUT(request) {
+  const authResult = await verifyAuth();
+  if (!authResult.success) {
+    return NextResponse.json(authResult, { status: 401 });
+  }
+
+  if (!authResult.user?.userId) {
+    return NextResponse.json(
+      { success: false, error: "Unauthorized" },
+      { status: 401 }
+    );
+  }
+
+  try {
+    const body = await request.json();
+    const { id, cm_status } = body;
+
+    if (!id || !cm_status) {
+      return NextResponse.json(
+        { success: false, error: "Missing required fields (id, cm_status)" },
+        { status: 400 }
+      );
+    }
+
+    const { data, error } = await supabase
+      .from("employee_request")
+      .update({ cm_status, updated_at: new Date().toISOString() })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return NextResponse.json(
+      { success: true, message: "Status updated successfully", data },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Error updating case status:", error);
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500 }
+    );
+  }
+}
