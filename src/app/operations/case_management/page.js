@@ -86,7 +86,7 @@ export default function CaseListPage() {
         <table className="w-full text-sm border border-gray-300 border-collapse">
           <thead>
             <tr className="bg-gray-100 text-center text-gray-700">
-              <th className="px-4 py-3 border border-gray-300">Token</th>
+              <th className="px-4 py-3 border border-gray-300">S. No.</th>
               <th className="px-4 py-3 border border-gray-300">Name</th>
               <th className="px-4 py-3 border border-gray-300">Mobile</th>
               <th className="px-4 py-3 border border-gray-300">Email</th>
@@ -125,7 +125,9 @@ export default function CaseListPage() {
                     idx % 2 === 0 ? "bg-white" : "bg-gray-50"
                   }`}
                 >
-                  <td className="px-4 py-3 border border-gray-300">{c.id}</td>
+                  <td className="px-4 py-3 text-center border border-gray-300">
+                    {idx + 1}.
+                  </td>
                   <td className="px-4 py-3 border border-gray-300">
                     {c.cm_name}
                   </td>
