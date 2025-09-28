@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
+import { toast } from "react-hot-toast";
 
 export default function JobApplicationForm() {
   const params = useParams();
@@ -23,7 +24,6 @@ export default function JobApplicationForm() {
     jobId: job_id || "",
   });
 
-  const [message, setMessage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const infoRef = useRef(null);
@@ -31,25 +31,16 @@ export default function JobApplicationForm() {
   // ✅ Validation
   const validateForm = () => {
     const newErrors = {};
-
     if (!formData.applicantName.trim())
       newErrors.applicantName = "Name is required";
-
-    // if (!/^[1-9][0-9]{9}$/.test(formData.applicantMobileNo)) {
-    //   newErrors.applicantMobileNo =
-    //     "Mobile number must be exactly 10 digits and cannot start with 0";
-    // }
     if (!formData.applicantMobileNo.trim())
       newErrors.applicantMobileNo = "Mobile number is required";
     if (!formData.applicantNationality.trim())
       newErrors.applicantNationality = "Nationality is required";
-
     if (!formData.applicantPassportIqama.trim())
       newErrors.applicantPassportIqama = "Passport/ Iqama is required";
-
     if (!formData.applicantCity.trim())
       newErrors.applicantCity = "City is required";
-
     if (
       formData.applicantIsNoticePeriod === "Yes" &&
       !formData.applicantNoticePeriodDays.trim()
@@ -70,13 +61,11 @@ export default function JobApplicationForm() {
         .trim()
         .split(/\s+/)
         .filter(Boolean).length;
-
       if (wordCount > 500) {
         newErrors.applicantDescription =
           "Description must not exceed 500 words";
       }
     }
-
     return newErrors;
   };
 
@@ -84,7 +73,6 @@ export default function JobApplicationForm() {
   const handleChange = (e) => {
     const { name, value, files, type } = e.target;
 
-    // File upload
     if (type === "file") {
       const file = files?.[0];
       if (!file) return;
@@ -95,6 +83,7 @@ export default function JobApplicationForm() {
           ...errors,
           applicantCV: "File size must be less than 500KB",
         });
+        toast.error("File size must be less than 500KB");
         return;
       }
 
@@ -109,6 +98,7 @@ export default function JobApplicationForm() {
           ...errors,
           applicantCV: "Only PDF or Word documents are allowed",
         });
+        toast.error("Only PDF or Word documents are allowed");
         return;
       }
 
@@ -117,18 +107,14 @@ export default function JobApplicationForm() {
       return;
     }
 
-    // ✅ Special handling for mobile number
     if (name === "applicantMobileNo") {
-      let cleaned = value.replace(/\D/g, ""); // only digits
-      if (cleaned.length > 10) {
-        cleaned = cleaned.slice(0, 10); // enforce max 10 digits
-      }
+      let cleaned = value.replace(/\D/g, "");
+      if (cleaned.length > 10) cleaned = cleaned.slice(0, 10);
       setFormData({ ...formData, [name]: cleaned });
       if (errors[name]) setErrors({ ...errors, [name]: "" });
       return;
     }
 
-    // Radio for Notice Period
     if (name === "applicantIsNoticePeriod") {
       setFormData({
         ...formData,
@@ -137,11 +123,9 @@ export default function JobApplicationForm() {
           value === "No" ? "0" : formData.applicantNoticePeriodDays || "0",
       });
     } else {
-      // Normal text/number inputs
       setFormData({ ...formData, [name]: value });
     }
 
-    // Clear error
     if (errors[name]) setErrors({ ...errors, [name]: "" });
   };
 
@@ -152,6 +136,7 @@ export default function JobApplicationForm() {
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
+      toast.error("Please fix the highlighted errors");
       return;
     }
 
@@ -179,7 +164,7 @@ export default function JobApplicationForm() {
       const result = await res.json();
 
       if (result.success) {
-        setMessage({ text: "Form submitted successfully.", type: "success" });
+        toast.success("Form submitted successfully 🎉");
         setFormData({
           applicantName: "",
           applicantMobileNo: "",
@@ -196,28 +181,16 @@ export default function JobApplicationForm() {
         });
         setErrors({});
       } else {
-        setMessage({
-          text: `Error: ${result.result || result.error}`,
-          type: "error",
-        });
+        toast.error(`Error: ${result.result || result.error}`);
       }
     } catch (error) {
       console.error(error);
-      setMessage({ text: "Failed to submit data.", type: "error" });
+      toast.error("Failed to submit data");
     } finally {
       setIsLoading(false);
     }
   };
 
-  // ✅ Auto-clear success message
-  useEffect(() => {
-    if (message?.type === "success") {
-      const timer = setTimeout(() => setMessage(null), 4000);
-      return () => clearTimeout(timer);
-    }
-  }, [message]);
-
-  // ✅ Word counter
   const wordCount = formData.applicantDescription
     .trim()
     .split(/\s+/)
@@ -242,7 +215,7 @@ export default function JobApplicationForm() {
           </h2>
         </div>
 
-        {/*  form code */}
+        {/* form */}
         <form
           onSubmit={handleSubmit}
           className="grid grid-cols-1 md:grid-cols-2 gap-3"
