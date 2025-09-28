@@ -19,6 +19,9 @@ export async function POST(req) {
     const applicantExpectedSalary = formData.get("applicantExpectedSalary");
     const applicantDescription = formData.get("applicantDescription");
 
+    const toNumberOrNull = (val) =>
+      val && val.trim() !== "" ? Number(val) : null;
+
     let applicantCVUrl = null;
 
     // ✅ Handle file upload
@@ -52,11 +55,11 @@ export async function POST(req) {
         applicant_nationality: applicantNationality,
         applicant_passport_iqama: applicantPassportIqama,
         applicant_city: applicantCity,
-        applicant_experience_years: applicantExperienceYears,
+        applicant_experience_years: toNumberOrNull(applicantExperienceYears),
         applicant_is_notice_period: applicantIsNoticePeriod,
-        applicant_notice_period_days: applicantNoticePeriodDays,
-        applicant_current_salary: applicantCurrentSalary,
-        applicant_expected_salary: applicantExpectedSalary,
+        applicant_notice_period_days: toNumberOrNull(applicantNoticePeriodDays),
+        applicant_current_salary: toNumberOrNull(applicantCurrentSalary),
+        applicant_expected_salary: toNumberOrNull(applicantExpectedSalary),
         applicant_cv_url: applicantCVUrl,
         applicant_description: applicantDescription,
         job_id: jobId,
