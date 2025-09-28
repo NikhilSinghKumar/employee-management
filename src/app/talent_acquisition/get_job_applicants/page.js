@@ -203,7 +203,7 @@ export default function JobApplicationsPage() {
             {!loading && applications.length === 0 && (
               <tr>
                 <td
-                  colSpan="8"
+                  colSpan="10"
                   className="text-center p-6 text-gray-500 border border-gray-200"
                 >
                   No job applications found
