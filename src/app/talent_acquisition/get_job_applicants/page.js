@@ -169,7 +169,7 @@ export default function JobApplicationsPage() {
                   {new Date(app.created_at).toLocaleDateString()}
                 </td>
                 <td className="px-3 py-2 border border-gray-200 text-center space-x-2">
-                  {app.applicant_cv_url && (
+                  {app.applicant_cv_url ? (
                     <Link
                       href={app.applicant_cv_url}
                       target="_blank"
@@ -178,19 +178,21 @@ export default function JobApplicationsPage() {
                     >
                       CV
                     </Link>
+                  ) : (
+                    <span className="text-gray-400">CV</span>
                   )}
-                  <button
-                    onClick={() => {
-                      const newStatus = prompt(
-                        "Enter new status: pending / shortlisted / rejected / hired",
-                        app.applicant_status
-                      );
-                      if (newStatus) updateStatus(app.id, newStatus);
-                    }}
-                    className="text-gray-600 hover:underline"
+
+                  <select
+                    value={app.applicant_status}
+                    onChange={(e) => updateStatus(app.id, e.target.value)}
+                    className="border rounded px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500"
                   >
-                    Update
-                  </button>
+                    <option value="pending">Pending</option>
+                    <option value="shortlisted">Shortlisted</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="hired">Hired</option>
+                  </select>
+
                   <button
                     onClick={() => deleteApplicant(app.id)}
                     className="text-red-600 hover:underline"
