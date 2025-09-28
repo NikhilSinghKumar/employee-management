@@ -187,7 +187,7 @@ export default function JobApplicationForm() {
           applicantPassportIqama: "",
           applicantCity: "",
           applicantExperienceYears: "",
-          applicantIsNoticePeriod: "",
+          applicantIsNoticePeriod: "No",
           applicantNoticePeriodDays: "0",
           applicantCurrentSalary: "",
           applicantExpectedSalary: "",
@@ -224,193 +224,218 @@ export default function JobApplicationForm() {
     .filter(Boolean).length;
 
   return (
-    <div className="max-w-4xl mx-auto p-6 sm:p-8 bg-gradient-to-br from-gray-30 to-gray-60 rounded-2xl shadow-xl">
-      <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">
-        Application Form
-      </h2>
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-gradient-to-tr from-blue-600 via-blue-500 to-green-400">
+      {/* Blobs */}
+      <div className="absolute top-[-100px] left-[-100px] w-[500px] h-[500px] bg-blue-700 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob"></div>
+      <div className="absolute bottom-[-100px] right-[-100px] w-[500px] h-[500px] bg-green-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
 
-      <div className="min-h-[24px] mb-4 text-center">
-        {message && (
-          <p
-            className={`text-sm font-medium transition-opacity duration-300 ${
-              message.type === "success" ? "text-green-600" : "text-red-600"
-            }`}
-          >
-            {message.text}
-          </p>
-        )}
-      </div>
+      {/* Form container */}
+      <div className="max-w-4xl mx-auto my-10 p-6 sm:p-10 lg:p-12 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl z-10">
+        <div className="flex flex-col items-center mb-6">
+          <img
+            src="/logo.png"
+            alt="Company Logo"
+            className="h-25 w-auto mb-2"
+          />
+          <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">
+            Application Form
+          </h2>
+        </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="grid grid-cols-1 md:grid-cols-2 gap-3"
-      >
-        {/* Text fields */}
-        {[
-          { label: "Name*", name: "applicantName", placeholder: "Enter Name" },
-          {
-            label: "Mobile No.*",
-            name: "applicantMobileNo",
-            placeholder: "Enter Mobile No.",
-            type: "text",
-          },
-          {
-            label: "Nationality*",
-            name: "applicantNationality",
-            placeholder: "Enter Nationality",
-          },
-          {
-            label: "Passport/ Iqama*",
-            name: "applicantPassportIqama",
-            placeholder: "Enter Passport or Iqama",
-          },
-          { label: "City*", name: "applicantCity", placeholder: "Enter City" },
-          {
-            label: "Experience (Years)*",
-            name: "applicantExperienceYears",
-            placeholder: "Enter years",
-            type: "number",
-          },
-          {
-            label: "Current Salary",
-            name: "applicantCurrentSalary",
-            placeholder: "Enter Current Salary",
-          },
-          {
-            label: "Expected Salary",
-            name: "applicantExpectedSalary",
-            placeholder: "Enter Expected Salary",
-          },
-        ].map(({ label, name, placeholder, type = "text" }) => (
-          <div key={name} className="flex flex-col">
+        {/*  form code */}
+        <form
+          onSubmit={handleSubmit}
+          className="grid grid-cols-1 md:grid-cols-2 gap-3"
+        >
+          {/* Text fields */}
+          {[
+            {
+              label: "Name",
+              name: "applicantName",
+              placeholder: "Enter Name",
+              required: true,
+            },
+            {
+              label: "Mobile No.",
+              name: "applicantMobileNo",
+              placeholder: "Enter Mobile No.",
+              type: "text",
+              required: true,
+            },
+            {
+              label: "Nationality",
+              name: "applicantNationality",
+              placeholder: "Enter Nationality",
+              required: true,
+            },
+            {
+              label: "Passport/ Iqama",
+              name: "applicantPassportIqama",
+              placeholder: "Enter Passport or Iqama",
+              required: true,
+            },
+            {
+              label: "City",
+              name: "applicantCity",
+              placeholder: "Enter City",
+              required: true,
+            },
+            {
+              label: "Experience (Years)",
+              name: "applicantExperienceYears",
+              placeholder: "Enter years",
+              type: "number",
+              required: true,
+            },
+            {
+              label: "Current Salary",
+              name: "applicantCurrentSalary",
+              placeholder: "Enter Current Salary",
+              required: false,
+            },
+            {
+              label: "Expected Salary",
+              name: "applicantExpectedSalary",
+              placeholder: "Enter Expected Salary",
+              required: false,
+            },
+          ].map(({ label, name, placeholder, type = "text", required }) => (
+            <div key={name} className="flex flex-col">
+              <label className="text-sm font-medium text-gray-700 mb-1">
+                {label}
+                {required && <span className="text-red-500">*</span>}
+              </label>
+              <input
+                type={type}
+                name={name}
+                value={formData[name]}
+                onChange={handleChange}
+                placeholder={placeholder}
+                inputMode={name === "applicantMobileNo" ? "numeric" : undefined}
+                maxLength={name === "applicantMobileNo" ? 10 : undefined}
+                className={`p-2 border rounded-md focus:ring-1 focus:ring-indigo-500 text-sm ${
+                  errors[name] ? "border-red-500" : "border-gray-300"
+                }`}
+              />
+              {errors[name] && (
+                <p className="text-xs text-red-500 mt-1">{errors[name]}</p>
+              )}
+            </div>
+          ))}
+
+          {/* Notice Period */}
+          <div className="flex flex-col">
             <label className="text-sm font-medium text-gray-700 mb-1">
-              {label}
+              Notice Period
+            </label>
+            <div className="flex space-x-4">
+              {["Yes", "No"].map((val) => (
+                <label
+                  key={val}
+                  className="flex items-center space-x-2 text-sm"
+                >
+                  <input
+                    type="radio"
+                    name="applicantIsNoticePeriod"
+                    value={val}
+                    checked={formData.applicantIsNoticePeriod === val}
+                    onChange={handleChange}
+                  />
+                  <span>{val}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Notice Period Days */}
+          <div className="flex flex-col">
+            <label className="text-sm font-medium text-gray-700 mb-1">
+              Notice Period Days
             </label>
             <input
-              type={type}
-              name={name}
-              value={formData[name]}
+              type="number"
+              name="applicantNoticePeriodDays"
+              min={0}
+              value={formData.applicantNoticePeriodDays}
               onChange={handleChange}
-              placeholder={placeholder}
-              inputMode={name === "applicantMobileNo" ? "numeric" : undefined}
-              maxLength={name === "applicantMobileNo" ? 10 : undefined}
+              placeholder="Days"
+              disabled={formData.applicantIsNoticePeriod === "No"}
               className={`p-2 border rounded-md focus:ring-1 focus:ring-indigo-500 text-sm ${
-                errors[name] ? "border-red-500" : "border-gray-300"
+                errors.applicantNoticePeriodDays
+                  ? "border-red-500"
+                  : "border-gray-300"
               }`}
             />
-            {errors[name] && (
-              <p className="text-xs text-red-500 mt-1">{errors[name]}</p>
-            )}
           </div>
-        ))}
 
-        {/* Notice Period */}
-        <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-700 mb-1">
-            Notice Period
-          </label>
-          <div className="flex space-x-4">
-            {["Yes", "No"].map((val) => (
-              <label key={val} className="flex items-center space-x-2 text-sm">
-                <input
-                  type="radio"
-                  name="applicantIsNoticePeriod"
-                  value={val}
-                  checked={formData.applicantIsNoticePeriod === val}
-                  onChange={handleChange}
-                />
-                <span>{val}</span>
-              </label>
-            ))}
+          {/* Upload CV */}
+          <div className="flex flex-col md:col-span-2">
+            <label className="text-sm font-medium text-gray-700 mb-1">
+              Upload CV
+            </label>
+            <input
+              key={formData.applicantCV ? formData.applicantCV.name : "empty"}
+              type="file"
+              name="applicantCV"
+              accept=".pdf,.doc,.docx"
+              onChange={handleChange}
+              className={`p-2 border rounded-md text-sm ${
+                errors.applicantCV ? "border-red-500" : "border-gray-300"
+              }`}
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              <span className="font-medium">Only PDF, DOC, DOCX</span> — Max
+              size: <span className="font-medium">500KB</span>.
+            </p>
+            <div className="h-5 mt-1 text-xs">
+              {errors.applicantCV ? (
+                <span className="text-red-500">{errors.applicantCV}</span>
+              ) : formData.applicantCV ? (
+                <span className="text-green-600">
+                  ✅ {formData.applicantCV.name} uploaded successfully
+                </span>
+              ) : null}
+            </div>
           </div>
-        </div>
 
-        {/* Notice Period Days */}
-        <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-700 mb-1">
-            Notice Period Days
-          </label>
-          <input
-            type="number"
-            name="applicantNoticePeriodDays"
-            min={0}
-            value={formData.applicantNoticePeriodDays}
-            onChange={handleChange}
-            placeholder="Days"
-            disabled={formData.applicantIsNoticePeriod === "No"}
-            className={`p-2 border rounded-md focus:ring-1 focus:ring-indigo-500 text-sm ${
-              errors.applicantNoticePeriodDays
-                ? "border-red-500"
-                : "border-gray-300"
-            }`}
-          />
-        </div>
-
-        {/* Upload CV */}
-        <div className="flex flex-col md:col-span-2">
-          <label className="text-sm font-medium text-gray-700 mb-1">
-            Upload CV
-          </label>
-          <input
-            key={formData.applicantCV ? formData.applicantCV.name : "empty"}
-            type="file"
-            name="applicantCV"
-            accept=".pdf,.doc,.docx"
-            onChange={handleChange}
-            className={`p-2 border rounded-md text-sm ${
-              errors.applicantCV ? "border-red-500" : "border-gray-300"
-            }`}
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            <span className="font-medium">Only PDF, DOC, DOCX</span> — Max size:{" "}
-            <span className="font-medium">500KB</span>.
-          </p>
-          <div className="h-5 mt-1 text-xs">
-            {errors.applicantCV ? (
-              <span className="text-red-500">{errors.applicantCV}</span>
-            ) : formData.applicantCV ? (
-              <span className="text-green-600">
-                ✅ {formData.applicantCV.name} uploaded successfully
-              </span>
-            ) : null}
+          {/* Description */}
+          <div className="flex flex-col md:col-span-2">
+            <label className="text-sm font-medium text-gray-700 mb-1">
+              Additional Information
+            </label>
+            <textarea
+              name="applicantDescription"
+              value={formData.applicantDescription}
+              onChange={handleChange}
+              rows={4}
+              placeholder="Write something..."
+              className={`p-2 border rounded-md text-sm focus:ring-1 focus:ring-indigo-500 ${
+                errors.applicantDescription
+                  ? "border-red-500"
+                  : "border-gray-300"
+              }`}
+            />
+            <p
+              className={`text-xs mt-1 ${
+                wordCount > 500 ? "text-red-500" : "text-gray-500"
+              }`}
+            >
+              {wordCount} / 500 words
+            </p>
           </div>
-        </div>
 
-        {/* Description */}
-        <div className="flex flex-col md:col-span-2">
-          <label className="text-sm font-medium text-gray-700 mb-1">
-            Additional Information
-          </label>
-          <textarea
-            name="applicantDescription"
-            value={formData.applicantDescription}
-            onChange={handleChange}
-            rows={4}
-            placeholder="Write something..."
-            className={`p-2 border rounded-md text-sm focus:ring-1 focus:ring-indigo-500 ${
-              errors.applicantDescription ? "border-red-500" : "border-gray-300"
-            }`}
-          />
-          <p
-            className={`text-xs mt-1 ${
-              wordCount > 500 ? "text-red-500" : "text-gray-500"
-            }`}
-          >
-            {wordCount} / 500 words
-          </p>
-        </div>
-
-        {/* Submit */}
-        <div className="md:col-span-2 flex justify-center">
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="bg-indigo-600 text-white py-2 px-6 rounded-md text-sm font-medium hover:bg-indigo-700 transition disabled:bg-indigo-400"
-          >
-            {isLoading ? "Submitting..." : "Submit"}
-          </button>
-        </div>
-      </form>
+          {/* Submit */}
+          <div className="md:col-span-2 flex justify-center">
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="bg-indigo-600 text-white py-2 px-6 rounded-md text-sm font-medium hover:bg-indigo-700 transition disabled:bg-indigo-400"
+            >
+              {isLoading ? "Submitting..." : "Submit"}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
