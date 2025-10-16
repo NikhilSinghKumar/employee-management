@@ -119,23 +119,6 @@ export default function Sidebar({ isOpen, onClose }) {
 
   const toggleMenu = (menu) => setOpenMenu(openMenu === menu ? null : menu);
 
-  const updateIndicator = (menuKey) => {
-    if (!sidebarRef.current) return;
-    const el = sidebarRef.current.querySelector(`[data-menu="${menuKey}"]`);
-    if (el) {
-      const rect = el.getBoundingClientRect();
-      const parentRect = sidebarRef.current.getBoundingClientRect();
-      setIndicatorPos({
-        top: rect.top - parentRect.top,
-        height: rect.height,
-      });
-    }
-  };
-
-  useEffect(() => {
-    updateIndicator(activeMenu);
-  }, [activeMenu, collapsed]);
-
   return (
     <div
       ref={sidebarRef}
@@ -165,16 +148,6 @@ export default function Sidebar({ isOpen, onClose }) {
         </button>
       </div>
 
-      {/* Indicator Bar */}
-      <span
-        className={`absolute left-0 w-1 rounded-r-md transition-all duration-300 ease-in-out
-          bg-gradient-to-b from-indigo-400 via-purple-500 to-pink-500
-          hover-animate-sidebarPulse`}
-        style={{
-          top: indicatorPos.top ?? 0,
-          height: indicatorPos.height ?? 0,
-        }}
-      />
       {/* Company Title - Desktop */}
       <div className="hidden md:block p-4 text-center border-b border-slate-700/40 relative">
         <h1
@@ -238,8 +211,6 @@ export default function Sidebar({ isOpen, onClose }) {
             <button
               onClick={() => !collapsed && toggleMenu(menu.key)}
               data-menu={menu.key}
-              onMouseEnter={() => updateIndicator(menu.key)}
-              onMouseLeave={() => updateIndicator(activeMenu)}
               className="flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg transition-all duration-200 hover:bg-slate-700/40 hover:shadow-md relative"
             >
               <span className="flex items-center gap-2 relative">
@@ -335,8 +306,6 @@ export default function Sidebar({ isOpen, onClose }) {
             href="/settings"
             onClick={() => setActiveMenu("/settings")}
             data-menu="/settings"
-            onMouseEnter={() => updateIndicator("/settings")}
-            onMouseLeave={() => updateIndicator(activeMenu)}
             className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-700/50 hover:text-white transition-all duration-200 relative"
             title={collapsed ? "Settings" : ""}
           >
