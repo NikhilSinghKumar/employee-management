@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function RegisterForm() {
   const [firstName, setFirstName] = useState("");
@@ -10,14 +11,17 @@ export default function RegisterForm() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState({ text: "", type: "" });
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    document.title = "New User! Register";
+    document.title = "Etmam | Register";
   }, []);
+
+  const clearMessage = () => setMessage({ text: "", type: "" });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage({ text: "", type: "" });
+    clearMessage();
 
     if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) {
       setMessage({ text: "Please enter a valid email.", type: "error" });
@@ -28,8 +32,9 @@ export default function RegisterForm() {
       return;
     }
 
+    setIsLoading(true);
+
     try {
-      // Proceed with custom auth API
       const res = await fetch(`/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -48,41 +53,59 @@ export default function RegisterForm() {
         setEmail("");
         setPassword("");
         setConfirmPassword("");
+        setIsLoading(false);
       } else {
         setMessage({
           text: data.message || "Registration failed.",
           type: "error",
         });
+        setIsLoading(false);
       }
     } catch (error) {
       setMessage({
         text: "Server error. Please try again later.",
         type: "error",
       });
+      setIsLoading(false);
     }
   };
 
   return (
-    <>
-      <div className="flex justify-center items-center h-screen">
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white p-6 rounded-lg shadow-md w-96"
-        >
-          <h2 className="text-xl font-semibold mb-4">New User!</h2>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#e9eef3] via-[#f7f9fb] to-[#e3e7eb] md:pt-10 md:pb-10">
+      <div className="bg-white/80 backdrop-blur-lg shadow-xl rounded-2xl p-8 w-[90%] sm:w-full max-w-md border border-[#cfd8df] mx-auto">
+        <div className="flex flex-col items-center mb-4">
+          <div className="relative w-20 h-20 mb-3 fade-in">
+            <Image
+              src="/ETMAM_Logo-no_bg.png"
+              alt="Etmam Logo"
+              fill
+              className="object-contain"
+              priority
+            />
+          </div>
+          <h1 className="text-xl sm:text-2xl font-semibold text-[#4A5A6A] fade-in">
+            Etmam Business Solutions
+          </h1>
+        </div>
 
+        {/* Fixed message container - always reserves space */}
+        <div className="flex justify-center items-center h-4 mb-3">
           {message.text && (
             <div
-              className={`p-1 mb-2 text-[14px] rounded-lg text-white ${
-                message.type === "success" ? "bg-green-500" : "bg-red-500"
+              className={`animate-fade-in text-sm ${
+                message.type === "success"
+                  ? "text-green-600"
+                  : "text-red-600 bg-red-100 p-3 rounded-lg"
               }`}
             >
               {message.text}
             </div>
           )}
+        </div>
 
-          <div className="mb-4">
-            <label className="block text-gray-700 text-[14px]">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label className="block text-gray-600 text-sm mb-1">
               First Name
             </label>
             <input
@@ -90,59 +113,59 @@ export default function RegisterForm() {
               value={firstName}
               onChange={(e) => {
                 setFirstName(e.target.value);
-                setMessage({ text: "", type: "" });
+                clearMessage();
               }}
-              className="w-full px-3 py-1 border rounded-lg text-[14px] focus:outline-none focus:ring focus:ring-blue-300"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4A5A6A] focus:outline-none transition"
               required
             />
           </div>
 
-          <div className="mb-4">
-            <label className="block text-gray-700 text-[14px]">Last Name</label>
+          <div>
+            <label className="block text-gray-600 text-sm mb-1">
+              Last Name
+            </label>
             <input
               type="text"
               value={lastName}
               onChange={(e) => {
                 setLastName(e.target.value);
-                setMessage({ text: "", type: "" });
+                clearMessage();
               }}
-              className="w-full px-3 py-1 border rounded-lg text-[14px] focus:outline-none focus:ring focus:ring-blue-300"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4A5A6A] focus:outline-none transition"
               required
             />
           </div>
 
-          <div className="mb-4">
-            <label className="block text-gray-700 text-[14px]">Email</label>
+          <div>
+            <label className="block text-gray-600 text-sm mb-1">Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
-                setMessage({ text: "", type: "" });
+                clearMessage();
               }}
-              className="w-full px-3 py-1 border rounded-lg text-[14px] focus:outline-none focus:ring focus:ring-blue-300"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4A5A6A] focus:outline-none transition"
               required
             />
           </div>
 
-          <div className="mb-4">
-            <label className="block text-gray-700 text-[14px]">
-              Set Password
-            </label>
+          <div>
+            <label className="block text-gray-600 text-sm mb-1">Password</label>
             <input
               type="password"
               value={password}
               onChange={(e) => {
                 setPassword(e.target.value);
-                setMessage({ text: "", type: "" });
+                clearMessage();
               }}
-              className="w-full px-3 py-1 border rounded-lg text-[14px] focus:outline-none focus:ring focus:ring-blue-300"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4A5A6A] focus:outline-none transition"
               required
             />
           </div>
 
-          <div className="mb-4">
-            <label className="block text-gray-700 text-[14px]">
+          <div>
+            <label className="block text-gray-600 text-sm mb-1">
               Confirm Password
             </label>
             <input
@@ -150,31 +173,38 @@ export default function RegisterForm() {
               value={confirmPassword}
               onChange={(e) => {
                 setConfirmPassword(e.target.value);
-                setMessage({ text: "", type: "" });
+                clearMessage();
               }}
-              className="w-full px-3 py-1 border rounded-lg text-[14px] focus:outline-none focus:ring focus:ring-blue-300"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4A5A6A] focus:outline-none transition"
               required
             />
           </div>
 
           <button
             type="submit"
-            className="w-35 bg-blue-500 text-white py-1 mb-3 rounded-lg hover:bg-blue-600 cursor-pointer"
+            disabled={isLoading}
+            className={`w-full py-2.5 rounded-lg text-white font-medium transition ${
+              isLoading
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-[#4A5A6A] hover:bg-[#3b4b59]"
+            }`}
           >
-            Register
+            {isLoading ? "Registering..." : "Register"}
           </button>
+        </form>
 
-          <p className="py-1 text-[14px]">
-            Already have an account? Please{" "}
+        <div className="text-center text-sm mt-6 text-gray-500">
+          <p>
+            Already have an account?{" "}
             <Link
               href="/"
-              className="text-blue-500 text-[14px] hover:text-blue-600"
+              className="text-[#4A5A6A] hover:underline font-medium"
             >
               Login
             </Link>
           </p>
-        </form>
+        </div>
       </div>
-    </>
+    </div>
   );
 }
