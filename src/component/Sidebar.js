@@ -124,7 +124,7 @@ export default function Sidebar({ isOpen, onClose }) {
       ref={sidebarRef}
       className={`fixed md:static inset-y-0 left-0 transform transition-all duration-300 ease-in-out z-40
         ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
-        ${collapsed ? "w-14" : "w-48"}
+        ${collapsed ? "w-14" : "w-52"}
         flex flex-col h-full bg-slate-900/70 backdrop-blur-lg text-white shadow-lg border-r border-slate-700/30 overflow-hidden`}
     >
       {/* Mobile Close Button */}
@@ -251,7 +251,7 @@ export default function Sidebar({ isOpen, onClose }) {
                   : "max-h-0 opacity-0"
               }`}
             >
-              <ul className="pl-8 flex flex-col gap-1 text-sm text-slate-300">
+              <ul className="pl-8 flex flex-col gap-1 text-md text-slate-300">
                 {menu.items.map((item) => (
                   <li
                     key={item.href}
