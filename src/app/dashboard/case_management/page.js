@@ -127,6 +127,7 @@ export default function CaseListPage() {
                   "Name",
                   "Mobile",
                   "Email",
+                  "PA / IQAMA No.",
                   "City",
                   "Client",
                   "Status",
@@ -162,6 +163,7 @@ export default function CaseListPage() {
                     <td className="p-2 border">{c.cm_name}</td>
                     <td className="p-2 border">{c.cm_mobile_no}</td>
                     <td className="p-2 border">{c.cm_email}</td>
+                    <td className="p-2 border">{c.cm_passport_iqama}</td>
                     <td className="p-2 border">{c.cm_city}</td>
                     <td className="p-2 border">{c.cm_client_name}</td>
                     <td className="p-2 border text-center">
