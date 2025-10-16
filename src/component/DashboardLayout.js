@@ -20,7 +20,6 @@ export default function DashboardLayout({ children }) {
       {/* Main content */}
       <div className="flex flex-col flex-1 relative z-0 min-w-0">
         <Topbar onMenuClick={() => setIsSidebarOpen(true)} />
-
         {/* 🔸 FIX 2: Allow only inner div to scroll horizontally */}
         <main className="flex-1 p-6 overflow-y-auto overflow-x-hidden">
           <div className="w-full h-full overflow-x-auto">{children}</div>
