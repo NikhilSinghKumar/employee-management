@@ -1,7 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { UserProvider } from "@/context/UserContext";
-import ClientLayout from "@/component/ClientLayout";
+import DashboardLayout from "@/component/DashboardLayout";
 import { NetworkStatusProvider } from "@/context/NetworkStatusProvider";
 import { Toaster } from "react-hot-toast";
 
@@ -28,9 +28,7 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <UserProvider>
-          <ClientLayout>
-            <NetworkStatusProvider>{children}</NetworkStatusProvider>
-          </ClientLayout>
+          <NetworkStatusProvider>{children}</NetworkStatusProvider>
           <Toaster position="top-center" reverseOrder={false} />
         </UserProvider>
       </body>

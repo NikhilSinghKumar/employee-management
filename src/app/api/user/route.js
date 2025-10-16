@@ -32,7 +32,7 @@ export async function GET() {
 
     const { data, error } = await supabase
       .from("users")
-      .select("first_name")
+      .select("first_name", "last_name")
       .eq("id", userId)
       .single();
 
@@ -40,9 +40,7 @@ export async function GET() {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    return NextResponse.json({
-      first_name: data.first_name,
-    });
+    return NextResponse.json(data);
   } catch (error) {
     console.error("Unexpected error:", error);
     return NextResponse.json(
