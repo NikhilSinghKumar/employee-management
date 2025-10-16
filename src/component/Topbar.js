@@ -90,7 +90,7 @@ export default function Topbar({ onMenuClick }) {
   };
 
   return (
-    <div className="w-full bg-gradient-to-r from-white via-slate-50 to-slate-100 shadow-sm border-b border-gray-200 flex justify-between items-center px-4 sm:px-6 py-3 sticky top-0 z-40">
+    <div className="w-full bg-gradient-to-r from-slate-50 via-slate-100 to-slate-200 border-b border-slate-200 shadow-sm flex justify-between items-center px-4 sm:px-6 py-2.5 sticky top-0 z-40">
       {/* Left: Hamburger + Search Box */}
       <div className="flex items-center gap-3 w-full sm:w-1/3">
         {/* ☰ Hamburger - visible on mobile */}
@@ -102,7 +102,7 @@ export default function Topbar({ onMenuClick }) {
         </button>
 
         {/* Search Box */}
-        <div className="relative flex-1 hidden sm:block">
+        {/* <div className="relative flex-1 hidden sm:block">
           <Search
             className="absolute left-3 top-2.5 text-gray-400 pointer-events-none z-10"
             size={18}
@@ -114,7 +114,7 @@ export default function Topbar({ onMenuClick }) {
                  focus:outline-none focus:ring-2 focus:ring-indigo-400/60 focus:border-transparent 
                  transition-all duration-200 backdrop-blur-sm hover:bg-white/20"
           />
-        </div>
+        </div> */}
       </div>
 
       {/* Right Section: Notifications */}
@@ -183,44 +183,46 @@ export default function Topbar({ onMenuClick }) {
           <div className="relative" ref={userRef}>
             <button
               onClick={toggleUserDropdown}
-              className="flex items-center gap-2 bg-white/70 hover:bg-white rounded-lg px-2 py-2 transition-all duration-200 shadow-sm hover:shadow-md"
+              className="flex items-center gap-1.5 bg-white/60 hover:bg-white rounded-md 
+  px-2 py-1.5 transition-all duration-200 border border-slate-200 shadow-sm"
             >
-              <div className="w-8 h-8 rounded-full overflow-hidden border border-gray-200 flex-shrink-0">
+              <div className="w-7 h-7 rounded-full overflow-hidden border border-gray-300 flex-shrink-0">
                 <img
-                  src="/person_icon.png" // Ensure this path is correct
+                  src="/person_icon.png"
                   alt="User Avatar"
                   className="w-full h-full object-cover"
                 />
               </div>
-              <div className="text-left leading-tight hidden sm:block">
-                <p className="text-sm font-semibold text-gray-700">
-                  {user.first_name} {user.last_name}
-                </p>
-                {/* <p className="text-xs text-gray-500">Admin</p> */}
-              </div>
+              <p className="hidden sm:block text-sm font-medium text-gray-700">
+                {user.first_name}
+              </p>
               <ChevronDown
-                size={16}
+                size={14}
                 className={`text-gray-500 transition-transform duration-200 ${
                   showUserDropdown ? "rotate-180" : "rotate-0"
                 }`}
               />
             </button>
+
             {/* User Dropdown Menu */}
             {showUserDropdown && (
               <div
-                className={`absolute right-0 mt-2 bg-white/95 backdrop-blur-sm border border-gray-100 rounded-xl shadow-lg w-40 overflow-hidden transform transition-all duration-200 ease-out origin-top-right
-              ${
-                isUserVisible
-                  ? "opacity-100 scale-100 translate-y-0"
-                  : "opacity-0 scale-95 -translate-y-1"
-              }`}
+                className={`absolute right-0 mt-1 bg-white/90 backdrop-blur-md border border-slate-200/70 rounded-lg shadow-md w-32
+      transform transition-all duration-200 ease-out origin-top-right
+      ${
+        isUserVisible
+          ? "opacity-100 scale-100 translate-y-0"
+          : "opacity-0 scale-95 -translate-y-1"
+      }`}
               >
                 <button
                   onClick={handleLogout}
-                  className="flex items-center gap-2 w-full text-left px-4 py-2.5 text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition-all duration-150 cursor-pointer"
+                  className="flex items-center gap-2 w-full text-left px-3 py-1.5 
+      text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 text-sm 
+      transition-all duration-150 cursor-pointer"
                 >
-                  <LogOut size={16} />
-                  <span className="text-sm font-medium">Logout</span>
+                  <LogOut size={14} />
+                  <span>Logout</span>
                 </button>
               </div>
             )}
