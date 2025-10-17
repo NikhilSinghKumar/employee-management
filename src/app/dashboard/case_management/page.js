@@ -121,7 +121,7 @@ export default function CaseListPage() {
         <div className="overflow-x-auto w-full transition-opacity duration-200">
           <table className="table-auto w-max border-collapse border border-gray-200 text-sm">
             <thead>
-              <tr className="bg-gray-200 text-gray-700">
+              <tr className="bg-gray-100 text-gray-700">
                 {[
                   "S. No.",
                   "Name",
@@ -251,7 +251,7 @@ export default function CaseListPage() {
                     onClick={() => setCurrentPage(page)}
                     className={`px-3 py-1 rounded ${
                       currentPage === page
-                        ? "bg-indigo-400 text-white"
+                        ? "bg-indigo-500 text-white"
                         : "bg-gray-200 text-gray-700 hover:bg-indigo-200"
                     }`}
                   >
