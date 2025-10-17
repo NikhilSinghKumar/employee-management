@@ -197,13 +197,13 @@ export default function JobApplicationForm() {
     .filter(Boolean).length;
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-gradient-to-tr from-blue-600 via-blue-500 to-green-400">
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden py-8 sm:py-12 bg-gradient-to-tr from-blue-600 via-blue-500 to-green-400">
       {/* Blobs */}
       <div className="absolute top-[-100px] left-[-100px] w-[500px] h-[500px] bg-blue-700 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob"></div>
       <div className="absolute bottom-[-100px] right-[-100px] w-[500px] h-[500px] bg-green-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
 
       {/* Form container */}
-      <div className="max-w-4xl mx-auto my-10 p-6 sm:p-10 lg:p-12 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl z-10">
+      <div className="relative bg-white rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8 mx-4 sm:mx-auto max-w-lg w-full z-10">
         <div className="flex flex-col items-center mb-6">
           <img
             src="/logo.png"
