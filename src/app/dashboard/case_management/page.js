@@ -74,7 +74,7 @@ export default function CaseListPage() {
         <select
           className="px-3 py-2 rounded-lg border border-slate-200 text-gray-800
     bg-white shadow-sm md:shadow-md md:hover:shadow-lg 
-    focus:outline-none focus:ring-2 focus:ring-indigo-400/60 focus:border-transparent
+    focus:outline-none focus:ring-2 focus:ring-[#4A5A6A]/60 focus:border-transparent
     transition-all duration-200 backdrop-blur-sm 
     w-[60%] sm:w-auto md:w-auto" // ✅ mobile smaller width
           value={statusFilter}
@@ -97,7 +97,7 @@ export default function CaseListPage() {
             type="text"
             placeholder="Search..."
             className="w-full  shadow-sm md:shadow-md md:hover:shadow-lg pl-10 pr-4 py-2 rounded-lg bg-white/10 text-gray-800 placeholder-gray-400
-      border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-400/60
+      border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#4A5A6A]/60
       focus:border-transparent transition-all duration-200 backdrop-blur-sm
       hover:bg-white/20"
             value={searchTerm}
@@ -110,7 +110,7 @@ export default function CaseListPage() {
       {loading && (
         <div className="flex justify-center items-center my-10">
           <div className="flex items-center gap-3 text-gray-600">
-            <div className="h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            <div className="h-5 w-5 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin"></div>
             <span className="text-base font-medium">Loading cases...</span>
           </div>
         </div>
@@ -121,7 +121,7 @@ export default function CaseListPage() {
         <div className="overflow-x-auto w-full transition-opacity duration-200">
           <table className="table-auto w-max border-collapse border border-gray-200 text-sm">
             <thead>
-              <tr className="bg-gray-100 text-gray-700">
+              <tr className="bg-gray-200 text-gray-700">
                 {[
                   "S. No.",
                   "Name",
@@ -249,10 +249,10 @@ export default function CaseListPage() {
                   <button
                     key={page}
                     onClick={() => setCurrentPage(page)}
-                    className={`px-3 py-1 rounded cursor-pointer ${
+                    className={`px-3 py-1 rounded ${
                       currentPage === page
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-200 text-gray-700 hover:bg-blue-100"
+                        ? "bg-indigo-400 text-white"
+                        : "bg-gray-200 text-gray-700 hover:bg-indigo-200"
                     }`}
                   >
                     {page}
