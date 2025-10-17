@@ -3,33 +3,35 @@
 import { useState, useEffect, useRef } from "react";
 import { FaCircleInfo } from "react-icons/fa6";
 
-export default function JobCreatePost() {
-  const [formData, setFormData] = useState({
-    jobId: "",
-    jobTitle: "",
-    jobLocation: "",
-    jobOpeningDate: "",
-    jobClosingDate: "",
-    jobDescription: "",
-    jobKeySkills: "",
-    jobSalary: "",
-    jobBenefits: "",
-  });
+const defaultFormData = {
+  jobId: "",
+  jobTitle: "",
+  jobLocation: "",
+  jobOpeningDate: "",
+  jobClosingDate: "",
+  jobDescription: "",
+  jobKeySkills: "",
+  jobSalary: "",
+  jobBenefits: "",
+};
 
-  const [message, setMessage] = useState(null);
-  const [showInfo, setShowInfo] = useState(false);
+export default function JobCreatePost() {
+  const [formData, setFormData] = useState(defaultFormData);
+  const [message, setMessage] = useState({ text: "", type: "" });
+  const [activeInfo, setActiveInfo] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const infoRef = useRef(null);
 
-  // ✅ universal input handler
+  const clearMessage = () => setMessage({ text: "", type: "" });
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
+    clearMessage();
   };
 
-  // ✅ form validation
   const validateForm = () => {
     const newErrors = {};
     if (!formData.jobId.trim()) newErrors.jobId = "Job ID is required";
@@ -58,9 +60,9 @@ export default function JobCreatePost() {
     return newErrors;
   };
 
-  // ✅ submit
   const handleSubmit = async (e) => {
     e.preventDefault();
+    clearMessage();
 
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
@@ -69,7 +71,6 @@ export default function JobCreatePost() {
     }
 
     setIsLoading(true);
-    setMessage(null);
 
     try {
       const res = await fetch("/api/talent_acquisition/job_management", {
@@ -82,187 +83,278 @@ export default function JobCreatePost() {
       const result = await res.json();
 
       if (result.success) {
-        setMessage({ text: "Job posted successfully.", type: "success" });
-        setFormData({
-          jobId: "",
-          jobTitle: "",
-          jobLocation: "",
-          jobOpeningDate: "",
-          jobClosingDate: "",
-          jobDescription: "",
-          jobKeySkills: "",
-          jobSalary: "",
-          jobBenefits: "",
+        setMessage({
+          text: "Job posted successfully.",
+          type: "success",
         });
+        setFormData(defaultFormData);
         setErrors({});
       } else {
         setMessage({
-          text: result.error || "Submission failed.",
+          text: result.error || "Submission failed!",
           type: "error",
         });
       }
     } catch (error) {
       console.error(error);
-      setMessage({ text: "Failed to submit data.", type: "error" });
+      setMessage({
+        text: "Server error. Please try again later.",
+        type: "error",
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    document.title = "Job Post";
-  });
-  // ✅ auto-hide message
+    document.title = "Create Job Post";
+  }, []);
+
   useEffect(() => {
-    if (message) {
-      const timer = setTimeout(() => setMessage(null), 2500);
+    if (message.text) {
+      const timer = setTimeout(() => clearMessage(), 3000);
       return () => clearTimeout(timer);
     }
-  }, [message]);
+  }, [message.text]);
+
+  // shows success message on submission
+  useEffect(() => {
+    if (message.text && message.type === "success") {
+      const messageElement = document.querySelector(".animate-fade-in");
+      if (messageElement) {
+        messageElement.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }
+    }
+  }, [message.text]);
 
   return (
-    <div className="max-w-3xl mx-auto mt-20 mb-10 p-6 bg-white rounded-xl shadow-md">
-      <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">
-        Create Job Post
-      </h2>
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="bg-white/80 backdrop-blur-lg shadow-xl rounded-2xl p-8 w-[95%] sm:w-full max-w-3xl border border-[#cfd8df] mx-auto">
+        <div className="flex flex-col items-center mb-2">
+          <h1 className="text-2xl font-semibold text-[#4A5A6A] text-center">
+            Create Job Post
+          </h1>
+        </div>
 
-      {message && (
-        <p
-          className={`text-sm font-medium text-center mb-4 ${
-            message.type === "success" ? "text-green-600" : "text-red-600"
-          }`}
-        >
-          {message.text}
-        </p>
-      )}
+        <div className="flex justify-center items-center h-4 mb-3">
+          {message.text && (
+            <div
+              className={`animate-fade-in text-sm ${
+                message.type === "success"
+                  ? "text-green-600"
+                  : "text-red-600 bg-red-100 p-3 rounded-lg"
+              }`}
+            >
+              {message.text}
+            </div>
+          )}
+        </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="grid grid-cols-1 md:grid-cols-2 gap-5"
-      >
-        {/* Inputs */}
-        {[
-          { label: "Job ID", name: "jobId", placeholder: "e.g. J123" },
-          {
-            label: "Job Title",
-            name: "jobTitle",
-            placeholder: "Software Engineer",
-          },
-          { label: "Location", name: "jobLocation", placeholder: "Bangalore" },
-          {
-            label: "Key Skills",
-            name: "jobKeySkills",
-            placeholder: "React, Node.js",
-            info: "Add core skills separated by commas",
-          },
-          { label: "Salary", name: "jobSalary", placeholder: "5k–6k/mo" },
-        ].map(({ label, name, placeholder, info }) => (
-          <div key={name}>
-            <label className="block text-sm font-medium text-gray-600 mb-1">
-              {label}
-              {info && (
-                <span className="ml-1 relative" ref={infoRef}>
-                  <button
-                    type="button"
-                    onClick={() => setShowInfo((s) => !s)}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    <FaCircleInfo className="inline" />
-                  </button>
-                  {showInfo && (
-                    <div className="absolute z-10 mt-2 w-56 rounded-md border bg-white p-2 text-xs text-gray-600 shadow">
-                      {info}
-                    </div>
-                  )}
-                </span>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-[#4A5A6A] text-sm mb-1 font-medium">
+                Job ID <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="jobId"
+                value={formData.jobId}
+                onChange={handleChange}
+                placeholder="e.g. J123"
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#4A5A6A] focus:outline-none transition bg-white ${
+                  errors.jobId ? "border-red-500" : "border-gray-300"
+                }`}
+                required
+              />
+              {errors.jobId && (
+                <p className="mt-1 text-xs text-red-500">{errors.jobId}</p>
               )}
+            </div>
+
+            <div>
+              <label className="block text-[#4A5A6A] text-sm mb-1 font-medium">
+                Job Title <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="jobTitle"
+                value={formData.jobTitle}
+                onChange={handleChange}
+                placeholder="Software Engineer"
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#4A5A6A] focus:outline-none transition bg-white ${
+                  errors.jobTitle ? "border-red-500" : "border-gray-300"
+                }`}
+                required
+              />
+              {errors.jobTitle && (
+                <p className="mt-1 text-xs text-red-500">{errors.jobTitle}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-[#4A5A6A] text-sm mb-1 font-medium">
+                Location <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="jobLocation"
+                value={formData.jobLocation}
+                onChange={handleChange}
+                placeholder="Bangalore"
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#4A5A6A] focus:outline-none transition bg-white ${
+                  errors.jobLocation ? "border-red-500" : "border-gray-300"
+                }`}
+                required
+              />
+              {errors.jobLocation && (
+                <p className="mt-1 text-xs text-red-500">
+                  {errors.jobLocation}
+                </p>
+              )}
+            </div>
+            <div>
+              <label className="block text-[#4A5A6A] text-sm mb-1 font-medium">
+                Salary
+              </label>
+              <input
+                type="text"
+                name="jobSalary"
+                value={formData.jobSalary}
+                onChange={handleChange}
+                placeholder="₹5L–₹6L / annum"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4A5A6A] focus:outline-none transition bg-white"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-[#4A5A6A] text-sm mb-1 font-medium">
+                Opening Date <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="date"
+                name="jobOpeningDate"
+                value={formData.jobOpeningDate}
+                onChange={handleChange}
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#4A5A6A] focus:outline-none transition bg-white ${
+                  errors.jobOpeningDate ? "border-red-500" : "border-gray-300"
+                }`}
+                required
+              />
+              {errors.jobOpeningDate && (
+                <p className="mt-1 text-xs text-red-500">
+                  {errors.jobOpeningDate}
+                </p>
+              )}
+            </div>
+            <div>
+              <label className="block text-[#4A5A6A] text-sm mb-1 font-medium">
+                Closing Date
+              </label>
+              <input
+                type="date"
+                name="jobClosingDate"
+                value={formData.jobClosingDate}
+                onChange={handleChange}
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#4A5A6A] focus:outline-none transition bg-white ${
+                  errors.jobClosingDate ? "border-red-500" : "border-gray-300"
+                }`}
+              />
+              {errors.jobClosingDate && (
+                <p className="mt-1 text-xs text-red-500">
+                  {errors.jobClosingDate}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[#4A5A6A] text-sm mb-1 font-medium">
+              Key Skills
+              <span className="ml-1 relative" ref={infoRef}>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setActiveInfo(
+                      activeInfo === "jobKeySkills" ? null : "jobKeySkills"
+                    )
+                  }
+                  className="text-gray-400 hover:text-[#4A5A6A] ml-1"
+                >
+                  <FaCircleInfo className="inline text-xs" />
+                </button>
+                {activeInfo === "jobKeySkills" && (
+                  <div className="absolute z-10 mt-2 w-56 rounded-lg border bg-white p-2 text-xs text-gray-600 shadow-lg">
+                    Add core skills separated by commas
+                  </div>
+                )}
+              </span>
             </label>
             <input
               type="text"
-              name={name}
-              value={formData[name]}
+              name="jobKeySkills"
+              value={formData.jobKeySkills}
               onChange={handleChange}
-              placeholder={placeholder}
-              className={`w-full px-3 py-2 text-sm border rounded-md focus:ring-1 focus:ring-indigo-500 ${
-                errors[name] ? "border-red-500" : "border-gray-300"
-              }`}
+              placeholder="React, Node.js"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4A5A6A] focus:outline-none transition bg-white"
             />
-            {errors[name] && (
-              <p className="mt-1 text-xs text-red-500">{errors[name]}</p>
+          </div>
+
+          <div>
+            <label className="block text-[#4A5A6A] text-sm mb-1 font-medium">
+              Benefits
+            </label>
+            <textarea
+              name="jobBenefits"
+              value={formData.jobBenefits}
+              onChange={handleChange}
+              rows={2}
+              placeholder="Perks, insurance, WFH policy..."
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4A5A6A] focus:outline-none transition resize-none bg-white"
+            />
+          </div>
+
+          <div>
+            <label className="block text-[#4A5A6A] text-sm mb-1 font-medium">
+              Job Description
+            </label>
+            <textarea
+              name="jobDescription"
+              value={formData.jobDescription}
+              onChange={handleChange}
+              rows={5}
+              placeholder="Responsibilities, required skills, etc."
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4A5A6A] focus:outline-none transition resize-none bg-white"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              {
+                formData.jobDescription.trim().split(/\s+/).filter(Boolean)
+                  .length
+              }{" "}
+              / 2000 words
+            </p>
+            {errors.jobDescription && (
+              <p className="mt-1 text-xs text-red-500">
+                {errors.jobDescription}
+              </p>
             )}
           </div>
-        ))}
 
-        {/* Dates */}
-        <div>
-          <label className="block text-sm font-medium text-gray-600 mb-1">
-            Opening Date
-          </label>
-          <input
-            type="date"
-            name="jobOpeningDate"
-            value={formData.jobOpeningDate}
-            onChange={handleChange}
-            className={`w-full px-3 py-2 text-sm border rounded-md focus:ring-1 focus:ring-indigo-500 ${
-              errors.jobOpeningDate ? "border-red-500" : "border-gray-300"
-            }`}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-600 mb-1">
-            Closing Date
-          </label>
-          <input
-            type="date"
-            name="jobClosingDate"
-            value={formData.jobClosingDate}
-            onChange={handleChange}
-            className={`w-full px-3 py-2 text-sm border rounded-md focus:ring-1 focus:ring-indigo-500 ${
-              errors.jobClosingDate ? "border-red-500" : "border-gray-300"
-            }`}
-          />
-        </div>
-
-        {/* Benefits */}
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-600 mb-1">
-            Benefits
-          </label>
-          <textarea
-            name="jobBenefits"
-            value={formData.jobBenefits}
-            onChange={handleChange}
-            rows={2}
-            placeholder="Perks, insurance, WFH policy..."
-            className="w-full px-3 py-2 text-sm border rounded-md focus:ring-1 focus:ring-indigo-500 border-gray-300"
-          />
-        </div>
-
-        {/* Description */}
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-600 mb-1">
-            Job Description
-          </label>
-          <textarea
-            name="jobDescription"
-            value={formData.jobDescription}
-            onChange={handleChange}
-            rows={5}
-            placeholder="Responsibilities, required skills, etc."
-            className="w-full px-3 py-2 text-sm border rounded-md focus:ring-1 focus:ring-indigo-500 border-gray-300"
-          />
-          <p className="mt-1 text-xs text-gray-400">
-            {formData.jobDescription.trim().split(/\s+/).filter(Boolean).length}{" "}
-            / 2000 words
-          </p>
-        </div>
-
-        {/* Submit */}
-        <div className="md:col-span-2 flex justify-center">
           <button
             type="submit"
             disabled={isLoading}
-            className="bg-indigo-600 text-white px-6 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 disabled:bg-indigo-400 flex items-center gap-2"
+            className={`max-w-xs w-full md:max-w-sm py-2.5 rounded-lg text-white font-medium transition-all duration-200 ${
+              isLoading
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-[#4A5A6A] hover:bg-[#3b4b59] hover:shadow-md"
+            } flex items-center justify-center gap-2 mx-auto`}
           >
             {isLoading && (
               <svg
@@ -286,10 +378,10 @@ export default function JobCreatePost() {
                 ></path>
               </svg>
             )}
-            {isLoading ? "Submitting..." : "Submit"}
+            {isLoading ? "Submitting..." : "Create Job Post"}
           </button>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 }
