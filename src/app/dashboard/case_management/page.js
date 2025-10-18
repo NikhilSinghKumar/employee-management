@@ -58,7 +58,7 @@ export default function CaseListPage() {
     const delay = setTimeout(() => {
       setCurrentPage(1);
       fetchCases();
-    }, 400);
+    }, 500);
     return () => clearTimeout(delay);
   }, [searchTerm]);
 
@@ -73,10 +73,10 @@ export default function CaseListPage() {
         {/* Filter Dropdown */}
         <select
           className="px-3 py-2 rounded-lg border border-slate-200 text-gray-800
-    bg-white shadow-sm md:shadow-md md:hover:shadow-lg 
-    focus:outline-none focus:ring-2 focus:ring-[#4A5A6A]/60 focus:border-transparent
-    transition-all duration-200 backdrop-blur-sm 
-    w-[60%] sm:w-auto md:w-auto" // ✅ mobile smaller width
+          bg-white shadow-sm md:shadow-md md:hover:shadow-lg 
+          focus:outline-none focus:ring-2 focus:ring-[#4A5A6A]/60 focus:border-transparent
+          transition-all duration-200 backdrop-blur-sm 
+          w-[60%] sm:w-auto md:w-auto"
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
         >
@@ -88,7 +88,6 @@ export default function CaseListPage() {
 
         {/* Search Bar */}
         <div className="relative w-[85%] sm:w-72 md:w-96">
-          {/* ✅ smaller width on mobile */}
           <Search
             className="absolute left-3 top-2.5 text-gray-400 pointer-events-none z-10"
             size={18}
@@ -96,65 +95,69 @@ export default function CaseListPage() {
           <input
             type="text"
             placeholder="Search..."
-            className="w-full  shadow-sm md:shadow-md md:hover:shadow-lg pl-10 pr-4 py-2 rounded-lg bg-white/10 text-gray-800 placeholder-gray-400
-      border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#4A5A6A]/60
-      focus:border-transparent transition-all duration-200 backdrop-blur-sm
-      hover:bg-white/20"
+            className="w-full shadow-sm md:shadow-md md:hover:shadow-lg pl-10 pr-4 py-2 rounded-lg bg-white/10 text-gray-800 placeholder-gray-400
+            border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#4A5A6A]/60
+            focus:border-transparent transition-all duration-200 backdrop-blur-sm
+            hover:bg-white/20"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
       </div>
 
-      {/* Loading indicator outside table */}
+      {/* 🩶 Shimmer Loading Skeleton */}
       {loading && (
-        <div className="flex justify-center items-center my-10">
-          <div className="flex items-center gap-3 text-gray-600">
-            <div className="h-5 w-5 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin"></div>
-            <span className="text-base font-medium">Loading cases...</span>
-          </div>
+        <div className="space-y-4 my-10 animate-pulse">
+          {[...Array(4)].map((_, i) => (
+            <div
+              key={i}
+              className="p-4 border rounded-lg shadow bg-gray-100/60 backdrop-blur-sm"
+            >
+              <div className="h-4 w-1/3 bg-gray-300 rounded mb-3"></div>
+              <div className="h-3 w-2/3 bg-gray-300 rounded mb-2"></div>
+              <div className="h-3 w-1/2 bg-gray-300 rounded mb-2"></div>
+              <div className="h-3 w-1/4 bg-gray-300 rounded"></div>
+            </div>
+          ))}
         </div>
       )}
 
-      {/* Table */}
+      {/* 📋 Table Section */}
       {!loading && (
-        <div className="overflow-x-auto w-full transition-opacity duration-200">
-          <table className="table-auto w-max border-collapse border border-gray-200 text-sm">
-            <thead>
-              <tr className="bg-gray-100 text-gray-700">
-                {[
-                  "S. No.",
-                  "Name",
-                  "Mobile",
-                  "Email",
-                  "PA / IQAMA No.",
-                  "City",
-                  "Client",
-                  "Status",
-                  "Created",
-                  "Updated",
-                  "Action",
-                ].map((header) => (
-                  <th key={header} className="p-2 border font-medium">
-                    {header}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {cases.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan="10"
-                    className="text-center py-6 text-gray-500 border"
-                  >
-                    No cases found
-                  </td>
+        <div className="overflow-x-auto w-full fade-in">
+          {cases.length === 0 ? (
+            <p className="text-center text-gray-600 py-6">
+              {searchTerm
+                ? `No results found for “${searchTerm}”.`
+                : "No cases available at the moment."}
+            </p>
+          ) : (
+            <table className="table-auto min-w-full border-collapse border border-gray-200 text-sm">
+              <thead>
+                <tr className="bg-gray-100 text-gray-700">
+                  {[
+                    "S. No.",
+                    "Name",
+                    "Mobile",
+                    "Email",
+                    "PA / IQAMA No.",
+                    "City",
+                    "Client",
+                    "Status",
+                    "Created",
+                    "Updated",
+                    "Action",
+                  ].map((header) => (
+                    <th key={header} className="p-2 border font-medium">
+                      {header}
+                    </th>
+                  ))}
                 </tr>
-              ) : (
-                cases.map((c, idx) => (
+              </thead>
+              <tbody>
+                {cases.map((c, idx) => (
                   <tr
-                    key={c.id}
+                    key={c.id || `${idx}-${c.cm_name}`}
                     className="odd:bg-white even:bg-gray-50 hover:bg-blue-50 transition-colors"
                   >
                     <td className="p-2 border text-center">
@@ -196,14 +199,14 @@ export default function CaseListPage() {
                       </button>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       )}
 
-      {/* Pagination */}
+      {/* 📄 Pagination */}
       {!loading &&
         totalCount > 0 &&
         (() => {
@@ -225,7 +228,7 @@ export default function CaseListPage() {
           if (totalPages > 1) pages.push(totalPages);
 
           return (
-            <div className="flex justify-center items-center gap-1 mt-6 flex-wrap">
+            <div className="flex justify-center items-center gap-1 mt-6 flex-wrap fade-in">
               <button
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((p) => p - 1)}
@@ -240,7 +243,7 @@ export default function CaseListPage() {
               {pages.map((page, idx) =>
                 page === "..." ? (
                   <span
-                    key={`ellipsis-${idx}`}
+                    key={`ellipsis-${page}-${idx}`}
                     className="px-2 py-1 text-gray-500"
                   >
                     ...
@@ -274,7 +277,7 @@ export default function CaseListPage() {
           );
         })()}
 
-      {/* Modal */}
+      {/* 🧾 Modal */}
       {selectedCase && (
         <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex justify-center items-center z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-xl w-full p-6 relative">
