@@ -31,10 +31,15 @@ export async function GET(request) {
     const url = new URL(request.url);
     const statusFilter = url.searchParams.get("status");
     const searchTerm = url.searchParams.get("search");
+    const page = parseInt(url.searchParams.get("page")) || 1;
+    const pageSize = parseInt(url.searchParams.get("pageSize")) || 10;
+
+    const start = (page - 1) * pageSize;
+    const end = start + pageSize - 1;
 
     let query = supabase
       .from("employee_request")
-      .select("*")
+      .select("*", { count: "exact" })
       .eq("is_deleted", false);
 
     // Apply status filter
@@ -49,14 +54,18 @@ export async function GET(request) {
         `cm_name.ilike.${search},cm_email.ilike.${search},cm_city.ilike.${search},id_as_text.ilike.${search},cm_mobile_no.ilike.${search}`
       );
     }
-    const { data, error } = await query.order("created_at", {
-      ascending: false,
-    });
+
+    // Apply ordering and pagination
+    const { data, count, error } = await query
+      .order("created_at", { ascending: false })
+      .range(start, end);
 
     if (error) throw error;
 
-    // Always return { data: [...] } for frontend consistency
-    return NextResponse.json({ success: true, data }, { status: 200 });
+    return NextResponse.json(
+      { success: true, data, totalCount: count || 0 },
+      { status: 200 }
+    );
   } catch (error) {
     console.error("Error fetching cases:", error);
     return NextResponse.json(
