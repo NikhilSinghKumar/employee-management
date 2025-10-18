@@ -148,7 +148,11 @@ export default function CareersPage() {
           />
         </div>
       </div>
-
+      {error && (
+        <div className="max-w-lg mx-auto bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded-md text-center mb-4">
+          {error}
+        </div>
+      )}
       {/* ⏳ Loading shimmer */}
       {loading && (
         <div className="space-y-4 my-10 animate-pulse">
