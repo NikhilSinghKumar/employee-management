@@ -51,7 +51,7 @@ export async function GET(request) {
     if (searchTerm) {
       const search = `%${searchTerm}%`;
       query = query.or(
-        `cm_name.ilike.${search},cm_email.ilike.${search},cm_city.ilike.${search},id_as_text.ilike.${search},cm_mobile_no.ilike.${search}`
+        `cm_name.ilike.${search},cm_email.ilike.${search},cm_passport_iqama.ilike.${search},cm_city.ilike.${search},id_as_text.ilike.${search},cm_mobile_no.ilike.${search}`
       );
     }
 
