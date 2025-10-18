@@ -12,7 +12,7 @@ async function verifyAuth() {
   return authenticateToken(token);
 }
 
-export async function GET() {
+export async function GET(req) {
   const authResult = await verifyAuth();
   if (!authResult.success) {
     return NextResponse.json(authResult, { status: 401 });
@@ -24,15 +24,28 @@ export async function GET() {
       { status: 401 }
     );
   }
+
+  // ✅ Extract search query from URL
+  const { searchParams } = new URL(req.url);
+  const search = searchParams.get("search") || "";
+
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from("job_list")
       .select(
         `id, job_id, job_title, job_location, job_salary, job_opening_date, job_closing_date, job_description, job_key_skills, job_benefits, job_status`
       )
       .eq("is_deleted", false)
-      .order("job_opening_date", { ascending: false });
+      .order("created_at", { ascending: false });
 
+    // ✅ Apply search filter if user provided one
+    if (search.trim() !== "") {
+      query = query.or(
+        `job_title.ilike.%${search}%,job_location.ilike.%${search}%,job_id.ilike.%${search}%`
+      );
+    }
+
+    const { data, error } = await query;
     if (error) throw error;
 
     return NextResponse.json({ success: true, jobs: data }, { status: 200 });
