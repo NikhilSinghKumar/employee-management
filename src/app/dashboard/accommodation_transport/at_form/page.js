@@ -2,25 +2,28 @@
 
 import { useState, useEffect } from "react";
 
-export default function AccommodationTransportForm() {
-  const [formData, setFormData] = useState({
-    checkinId: "",
-    checkinName: "",
-    nationality: "",
-    passportNumber: "",
-    iqamaNumber: "",
-    clientName: "",
-    clientNumber: "",
-    location: "",
-    contractType: "",
-    checkinDate: "",
-    checkoutDate: "",
-    checkinStatus: "",
-  });
+const defaultFormData = {
+  checkinId: "",
+  checkinName: "",
+  nationality: "",
+  passportNumber: "",
+  iqamaNumber: "",
+  clientName: "",
+  clientNumber: "",
+  location: "",
+  contractType: "",
+  checkinDate: "",
+  checkoutDate: "",
+  checkinStatus: "",
+};
 
-  const [message, setMessage] = useState(null);
+export default function AccommodationTransportForm() {
+  const [formData, setFormData] = useState(defaultFormData);
+  const [message, setMessage] = useState({ text: "", type: "" });
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
+
+  const clearMessage = () => setMessage({ text: "", type: "" });
 
   const validateForm = () => {
     const newErrors = {};
@@ -43,21 +46,34 @@ export default function AccommodationTransportForm() {
   };
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    if (errors[e.target.name]) {
-      setErrors({ ...errors, [e.target.name]: "" });
-    }
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
+    clearMessage();
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    clearMessage();
+
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
+      // ✅ FIXED: Scroll to message on VALIDATION ERROR
+      setTimeout(() => {
+        const messageElement = document.querySelector(".animate-fade-in");
+        if (messageElement) {
+          messageElement.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+        }
+      }, 100);
       return;
     }
 
     setIsLoading(true);
+
     const payload = { ...formData };
 
     try {
@@ -75,230 +91,352 @@ export default function AccommodationTransportForm() {
           text: "Check-in data inserted successfully.",
           type: "success",
         });
-        setFormData({
-          checkinId: "",
-          checkinName: "",
-          nationality: "",
-          passportNumber: "",
-          iqamaNumber: "",
-          clientName: "",
-          clientNumber: "",
-          location: "",
-          contractType: "Accommodation",
-          checkinDate: "",
-          checkoutDate: "",
-          checkinStatus: "Active",
-        });
+        setFormData(defaultFormData);
         setErrors({});
       } else {
         setMessage({
-          text: `Error: ${result.result || result.error}`,
+          text: result.result || result.error || "Submission failed!",
           type: "error",
         });
       }
     } catch (error) {
       console.error(error);
-      setMessage({ text: "Failed to submit data.", type: "error" });
+      setMessage({
+        text: "Server error. Please try again later.",
+        type: "error",
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    if (message) {
-      const timer = setTimeout(() => setMessage(null), 2000);
+    document.title = "Workers Check-in Form";
+  }, []);
+
+  useEffect(() => {
+    if (message.text) {
+      const timer = setTimeout(() => clearMessage(), 3000);
       return () => clearTimeout(timer);
     }
-  }, [message]);
+  }, [message.text]);
+
+  // ✅ FIXED: Scroll to message for BOTH success AND error
+  useEffect(() => {
+    if (message.text) {
+      const messageElement = document.querySelector(".animate-fade-in");
+      if (messageElement) {
+        messageElement.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }
+    }
+  }, [message.text]);
 
   return (
-    <div className="max-w-4xl mx-auto p-6 sm:p-8 bg-gradient-to-br from-gray-30 to-gray-60 rounded-2xl shadow-xl mt-16">
-      <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">
-        Workers/ Check-in Form
-      </h2>
-
-      <div className="min-h-[24px] mb-4 text-center">
-        {message && (
-          <p
-            className={`text-sm font-medium transition-opacity duration-300 ${
-              message.type === "success" ? "text-green-600" : "text-red-600"
-            }`}
-          >
-            {message.text}
-          </p>
-        )}
-      </div>
-
-      <form
-        onSubmit={handleSubmit}
-        className="grid grid-cols-1 md:grid-cols-2 gap-4"
-      >
-        {[
-          { label: "ID No.", name: "checkinId", placeholder: "Enter ID No." },
-          { label: "Name", name: "checkinName", placeholder: "Enter Name" },
-          {
-            label: "Nationality",
-            name: "nationality",
-            placeholder: "Enter Nationality",
-          },
-          {
-            label: "Passport Number",
-            name: "passportNumber",
-            placeholder: "Enter Passport Number",
-          },
-          {
-            label: "Iqama Number",
-            name: "iqamaNumber",
-            placeholder: "Enter Iqama Number",
-          },
-          {
-            label: "Client Name",
-            name: "clientName",
-            placeholder: "Enter Client Name",
-          },
-          {
-            label: "Client Number",
-            name: "clientNumber",
-            placeholder: "Enter Client Number",
-          },
-          {
-            label: "Location",
-            name: "location",
-            placeholder: "Enter Location",
-          },
-        ].map(({ label, name, placeholder }) => (
-          <div key={name} className="flex items-center">
-            <label className="text-medium font-medium text-gray-700 w-1/3">
-              {label}
-            </label>
-            <input
-              type="text"
-              name={name}
-              value={formData[name]}
-              onChange={handleChange}
-              placeholder={placeholder || ""} // Default to empty string if placeholder is undefined
-              className={`w-2/3 p-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 ${
-                errors[name] ? "border-red-500" : "border-gray-300"
-              } bg-gray-100`}
-              required={name !== "iqamaNumber"}
-            />
-            {errors[name] && (
-              <p className="mt-1 text-sm text-red-600 animate-pulse">
-                {errors[name]}
-              </p>
-            )}
-          </div>
-        ))}
-
-        <div className="flex items-center">
-          <label className="text-medium font-medium text-gray-700 w-1/3">
-            Contract Type
-          </label>
-          <select
-            name="contractType"
-            value={formData.contractType}
-            onChange={handleChange}
-            className="w-2/3 p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 bg-gray-100"
-            required
-          >
-            <option value="">Select Contract Type</option>
-            <option>Accommodation</option>
-            <option>Transport</option>
-            <option>Acc & Trans</option>
-          </select>
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="bg-white/80 backdrop-blur-lg shadow-xl rounded-2xl p-8 w-[95%] sm:w-full max-w-4xl border border-[#cfd8df] mx-auto">
+        <div className="flex flex-col items-center mb-2">
+          <h1 className="text-2xl font-semibold text-[#4A5A6A] text-center">
+            Workers Check-in Form
+          </h1>
         </div>
 
-        <div className="flex items-center">
-          <label className="text-medium font-medium text-gray-700 w-1/3">
-            Check-in Date
-          </label>
-          <input
-            type="date"
-            name="checkinDate"
-            value={formData.checkinDate}
-            onChange={handleChange}
-            placeholder="Select Check-in Date"
-            className={`w-2/3 p-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 ${
-              errors.checkinDate ? "border-red-500" : "border-gray-300"
-            } bg-gray-100`}
-            required
-          />
-          {errors.checkinDate && (
-            <p className="mt-1 text-sm text-red-600 animate-pulse">
-              {errors.checkinDate}
-            </p>
+        <div className="flex justify-center items-center h-4 mb-5">
+          {message.text && (
+            <div
+              className={`animate-fade-in text-sm ${
+                message.type === "success"
+                  ? "text-green-600"
+                  : "text-red-600 bg-red-100 p-3 rounded-lg"
+              }`}
+            >
+              {message.text}
+            </div>
           )}
         </div>
 
-        <div className="flex items-center">
-          <label className="text-medium font-medium text-gray-700 w-1/3">
-            Check-out Date
-          </label>
-          <input
-            type="date"
-            name="checkoutDate"
-            value={formData.checkoutDate}
-            onChange={handleChange}
-            placeholder="Select Check-out Date"
-            className="w-2/3 p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 bg-gray-100"
-          />
-        </div>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-[#4A5A6A] text-sm mb-1 font-medium">
+                ID No. <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="checkinId"
+                value={formData.checkinId}
+                onChange={handleChange}
+                placeholder="Enter ID No."
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#4A5A6A] focus:outline-none transition bg-white ${
+                  errors.checkinId ? "border-red-500" : "border-gray-300"
+                }`}
+                required
+              />
+              {errors.checkinId && (
+                <p className="mt-1 text-xs text-red-500">{errors.checkinId}</p>
+              )}
+            </div>
 
-        <div className="flex items-center">
-          <label className="text-medium font-medium text-gray-700 w-1/3">
-            Status
-          </label>
-          <select
-            name="checkinStatus"
-            value={formData.checkinStatus}
-            onChange={handleChange}
-            className="w-2/3 p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 bg-gray-100"
-            required
-          >
-            <option value="">Select Status</option>
-            <option>Active</option>
-            <option>Inactive</option>
-          </select>
-        </div>
+            <div>
+              <label className="block text-[#4A5A6A] text-sm mb-1 font-medium">
+                Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="checkinName"
+                value={formData.checkinName}
+                onChange={handleChange}
+                placeholder="Enter Name"
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#4A5A6A] focus:outline-none transition bg-white ${
+                  errors.checkinName ? "border-red-500" : "border-gray-300"
+                }`}
+                required
+              />
+              {errors.checkinName && (
+                <p className="mt-1 text-xs text-red-500">
+                  {errors.checkinName}
+                </p>
+              )}
+            </div>
+          </div>
 
-        <div className="md:col-span-2 flex justify-center">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-[#4A5A6A] text-sm mb-1 font-medium">
+                Nationality <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="nationality"
+                value={formData.nationality}
+                onChange={handleChange}
+                placeholder="Enter Nationality"
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#4A5A6A] focus:outline-none transition bg-white ${
+                  errors.nationality ? "border-red-500" : "border-gray-300"
+                }`}
+                required
+              />
+              {errors.nationality && (
+                <p className="mt-1 text-xs text-red-500">
+                  {errors.nationality}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-[#4A5A6A] text-sm mb-1 font-medium">
+                Passport Number <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="passportNumber"
+                value={formData.passportNumber}
+                onChange={handleChange}
+                placeholder="Enter Passport Number"
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#4A5A6A] focus:outline-none transition bg-white ${
+                  errors.passportNumber ? "border-red-500" : "border-gray-300"
+                }`}
+                required
+              />
+              {errors.passportNumber && (
+                <p className="mt-1 text-xs text-red-500">
+                  {errors.passportNumber}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-[#4A5A6A] text-sm mb-1 font-medium">
+                Iqama Number
+                {/* ✅ FIXED: No red * - clearly optional */}
+              </label>
+              <input
+                type="text"
+                name="iqamaNumber"
+                value={formData.iqamaNumber}
+                onChange={handleChange}
+                placeholder="Enter Iqama Number"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4A5A6A] focus:outline-none transition bg-white"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[#4A5A6A] text-sm mb-1 font-medium">
+                Client Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="clientName"
+                value={formData.clientName}
+                onChange={handleChange}
+                placeholder="Enter Client Name"
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#4A5A6A] focus:outline-none transition bg-white ${
+                  errors.clientName ? "border-red-500" : "border-gray-300"
+                }`}
+                required
+              />
+              {errors.clientName && (
+                <p className="mt-1 text-xs text-red-500">{errors.clientName}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-[#4A5A6A] text-sm mb-1 font-medium">
+                Client Number <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="clientNumber"
+                value={formData.clientNumber}
+                onChange={handleChange}
+                placeholder="Enter Client Number"
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#4A5A6A] focus:outline-none transition bg-white ${
+                  errors.clientNumber ? "border-red-500" : "border-gray-300"
+                }`}
+                required
+              />
+              {errors.clientNumber && (
+                <p className="mt-1 text-xs text-red-500">
+                  {errors.clientNumber}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-[#4A5A6A] text-sm mb-1 font-medium">
+                Location <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="location"
+                value={formData.location}
+                onChange={handleChange}
+                placeholder="Enter Location"
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#4A5A6A] focus:outline-none transition bg-white ${
+                  errors.location ? "border-red-500" : "border-gray-300"
+                }`}
+                required
+              />
+              {errors.location && (
+                <p className="mt-1 text-xs text-red-500">{errors.location}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-[#4A5A6A] text-sm mb-1 font-medium">
+                Contract Type <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="contractType"
+                value={formData.contractType}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4A5A6A] focus:outline-none transition bg-white"
+                required
+              >
+                <option value="">Select Contract Type</option>
+                <option>Accommodation</option>
+                <option>Transport</option>
+                <option>Acc & Trans</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[#4A5A6A] text-sm mb-1 font-medium">
+                Status <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="checkinStatus"
+                value={formData.checkinStatus}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4A5A6A] focus:outline-none transition bg-white"
+                required
+              >
+                <option value="">Select Status</option>
+                <option>Active</option>
+                <option>Inactive</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-[#4A5A6A] text-sm mb-1 font-medium">
+                Check-in Date <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="date"
+                name="checkinDate"
+                value={formData.checkinDate}
+                onChange={handleChange}
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#4A5A6A] focus:outline-none transition bg-white ${
+                  errors.checkinDate ? "border-red-500" : "border-gray-300"
+                }`}
+                required
+              />
+              {errors.checkinDate && (
+                <p className="mt-1 text-xs text-red-500">
+                  {errors.checkinDate}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-[#4A5A6A] text-sm mb-1 font-medium">
+                Check-out Date
+              </label>
+              <input
+                type="date"
+                name="checkoutDate"
+                value={formData.checkoutDate}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4A5A6A] focus:outline-none transition bg-white"
+              />
+            </div>
+          </div>
+
           <button
             type="submit"
             disabled={isLoading}
-            className={`bg-indigo-600 text-white py-2 px-8 rounded-lg font-semibold hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-200 disabled:bg-indigo-400 disabled:cursor-not-allowed flex items-center justify-center ${
-              isLoading ? "opacity-75" : ""
-            }`}
+            className={`max-w-xs w-full md:max-w-sm py-2.5 rounded-lg text-white font-medium transition-all duration-200 ${
+              isLoading
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-[#4A5A6A] hover:bg-[#3b4b59] hover:shadow-md"
+            } flex items-center justify-center gap-2 mx-auto`}
           >
-            {isLoading ? (
-              <>
-                <svg
-                  className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-                Submitting...
-              </>
-            ) : (
-              "Submit"
+            {isLoading && (
+              <svg
+                className="animate-spin h-4 w-4 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
             )}
+            {isLoading ? "Submitting..." : "Submit Check-in"}
           </button>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 }
