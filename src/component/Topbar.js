@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 export default function Topbar({ onMenuClick }) {
+  const [loggingOut, setLoggingOut] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const [isUserVisible, setIsUserVisible] = useState(false);
@@ -75,17 +76,19 @@ export default function Topbar({ onMenuClick }) {
 
   const handleLogout = async () => {
     try {
+      setLoggingOut(true);
       const response = await fetch("/api/auth/logout", {
         method: "POST",
         credentials: "include",
       });
 
       if (response.ok) {
-        await fetchUser();
         router.push("/");
       }
     } catch (error) {
       console.error("Logout failed:", error);
+    } finally {
+      setLoggingOut(false);
     }
   };
 
@@ -222,7 +225,7 @@ export default function Topbar({ onMenuClick }) {
       transition-all duration-150 cursor-pointer"
                 >
                   <LogOut size={14} />
-                  <span>Logout</span>
+                  <span>{loggingOut ? "..." : "Logout"}</span>
                 </button>
               </div>
             )}
