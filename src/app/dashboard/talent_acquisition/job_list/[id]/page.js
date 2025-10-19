@@ -45,7 +45,17 @@ export default function JobDetailsPage() {
     );
 
   return (
-    <div className="max-w-4xl mx-auto px-6 mt-14 py-10">
+    <div className="max-w-4xl mx-auto px-6 p-2">
+      {/* Back to Listings */}
+      <div className="m-2">
+        <Link
+          href="/talent_acquisition/job_list"
+          className="inline-flex items-center text-sm font-medium text-gray-600 hover:text-indigo-600 transition"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Job List
+        </Link>
+      </div>
       <div className="bg-white rounded-2xl shadow-md p-8 border border-gray-100">
         {/* Job Header */}
         <div className="mb-6">
@@ -107,16 +117,6 @@ export default function JobDetailsPage() {
             </ul>
           </section>
         )}
-      </div>
-      {/* Back to Listings */}
-      <div className="mt-4">
-        <Link
-          href="/talent_acquisition/job_list"
-          className="inline-flex items-center text-sm font-medium text-gray-600 hover:text-indigo-600 transition"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Job List
-        </Link>
       </div>
     </div>
   );
