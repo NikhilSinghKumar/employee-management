@@ -201,7 +201,7 @@ export default function CareersPage() {
                     {job.job_description}
                   </p>
                   <Link
-                    href={`/talent_acquisition/job_list/${job.job_id}`}
+                    href={`/dashboard/talent_acquisition/job_list/${job.job_id}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-indigo-600 text-sm font-medium hover:underline"
