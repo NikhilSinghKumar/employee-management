@@ -202,8 +202,8 @@ export default function CareersPage() {
                   </p>
                   <Link
                     href={`/dashboard/talent_acquisition/job_list/${job.job_id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    /* target="_blank"
+                    rel="noopener noreferrer" */
                     className="text-indigo-600 text-sm font-medium hover:underline"
                   >
                     View Details →
