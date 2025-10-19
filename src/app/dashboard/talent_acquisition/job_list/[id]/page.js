@@ -49,7 +49,7 @@ export default function JobDetailsPage() {
       {/* Back to Listings */}
       <div className="m-2">
         <Link
-          href="/talent_acquisition/job_list"
+          href="/dashboard/talent_acquisition/job_list"
           className="inline-flex items-center text-sm font-medium text-gray-600 hover:text-indigo-600 transition"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
