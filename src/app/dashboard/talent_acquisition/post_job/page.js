@@ -139,7 +139,7 @@ export default function JobCreatePost() {
           </h1>
         </div>
 
-        <div className="flex justify-center items-center h-4 mb-3">
+        <div className="flex justify-center items-center h-4 mb-5">
           {message.text && (
             <div
               className={`animate-fade-in text-sm ${
