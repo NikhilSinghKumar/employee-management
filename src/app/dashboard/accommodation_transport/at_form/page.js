@@ -136,7 +136,7 @@ export default function AccommodationTransportForm() {
 
   return (
     <div className="min-h-screen flex items-center justify-center">
-      <div className="bg-white/80 backdrop-blur-lg shadow-xl rounded-2xl p-8 w-[95%] sm:w-full max-w-4xl border border-[#cfd8df] mx-auto">
+      <div className="bg-white/80 backdrop-blur-lg shadow-xl rounded-2xl p-8 w-[95%] sm:w-full max-w-3xl border border-[#cfd8df] mx-auto">
         <div className="flex flex-col items-center mb-2">
           <h1 className="text-2xl font-semibold text-[#4A5A6A] text-center">
             Workers Check-in Form
