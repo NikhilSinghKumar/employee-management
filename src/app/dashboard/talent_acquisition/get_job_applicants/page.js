@@ -124,7 +124,6 @@ export default function JobApplicationsPage() {
           {error}
         </div>
       )}
-      {/* ⏳ Shimmer Loader*/}
       {/* ⏳ Shimmer Loader DESKTOP */}
       {loading && (
         <div className="space-y-4 my-10 animate-pulse">
@@ -196,7 +195,7 @@ export default function JobApplicationsPage() {
             </p>
           ) : (
             // ✅  DESKTOP: Full Table
-            <div className="hidden md:block overflow-x-auto border rounded-lg shadow-sm">
+            <div className="hidden md:block overflow-x-auto border border-gray-400 rounded-lg shadow-sm">
               <table className="min-w-full text-sm border-collapse border border-gray-200">
                 <thead className="bg-gray-100 text-gray-700 text-xs uppercase">
                   <tr>
