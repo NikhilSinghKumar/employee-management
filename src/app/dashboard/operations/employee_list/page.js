@@ -252,8 +252,7 @@ export default function EmployeeList() {
           ) : searchResultCount > 0 ? (
             <>
               Found <span className="font-medium">{searchResultCount}</span>{" "}
-              results for{" "}
-              <span className="font-medium">"{debouncedSearch}"</span>
+              results for <span className="font-medium">{debouncedSearch}</span>
             </>
           ) : (
             <span className="text-gray-400">
