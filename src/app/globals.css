@@ -1,4 +1,8 @@
 @import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 
 :root {
   --background: #ffffff;
@@ -38,13 +42,45 @@ body {
   color: #1e293b; /* dark gray text */
 }
 
-input, select, textarea {
+/* input, select, textarea {
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
 
   background-color: white !important;
   color: #1e293b !important;
+} */
+
+/* Apply custom appearance only to text-like inputs */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+select,
+textarea {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+
+  background-color: white !important;
+  color: #1e293b !important;
+}
+
+/* Keep dropdown arrow visible */
+
+select {
+  appearance: auto; /* 👈 restores the native dropdown arrow */
+  background-color: white !important;
+  color: #1e293b !important;
+  cursor: pointer;
+}
+
+/* Keep radios and checkboxes visible */
+input[type="radio"],
+input[type="checkbox"] {
+  appearance: auto; /* restore native browser circle/tick */
+  accent-color: #2563eb; /* Tailwind's blue-600 */
+  cursor: pointer;
 }
 
 .table-cell-style {
