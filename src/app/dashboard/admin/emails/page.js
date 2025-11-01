@@ -95,7 +95,7 @@ export default function AdminEmails() {
           <button
             onClick={() => handleBulkToggle(false, setIsRestrictLoading)}
             disabled={isRestrictLoading}
-            className="px-4 py-2 bg-red-600 text-white rounded-lg flex items-center gap-2 hover:bg-red-700 disabled:opacity-50 transition text-sm sm:text-base"
+            className="px-4 py-2 bg-red-600 text-white rounded-lg flex items-center gap-2 hover:bg-red-700 disabled:opacity-50 transition text-sm sm:text-base cursor-pointer"
           >
             {isRestrictLoading ? (
               <Loader2 className="animate-spin w-4 h-4" />
@@ -107,7 +107,7 @@ export default function AdminEmails() {
           <button
             onClick={() => handleBulkToggle(true, setIsEnableLoading)}
             disabled={isEnableLoading}
-            className="px-4 py-2 bg-green-600 text-white rounded-lg flex items-center gap-2 hover:bg-green-700 disabled:opacity-50 transition text-sm sm:text-base"
+            className="px-4 py-2 bg-green-600 text-white rounded-lg flex items-center gap-2 hover:bg-green-700 disabled:opacity-50 transition text-sm sm:text-base cursor-pointer"
           >
             {isEnableLoading ? (
               <Loader2 className="animate-spin w-4 h-4" />
@@ -228,7 +228,7 @@ export default function AdminEmails() {
                           email.email === "nikhilsk369@gmail.com" &&
                           loggedInEmail !== "nikhilsk369@gmail.com"
                         }
-                        className={`px-4 py-2 rounded-lg text-white text-sm font-medium flex items-center gap-2 ${
+                        className={`px-4 py-2 rounded-lg text-white text-sm font-medium flex items-center gap-2 cursor-pointer ${
                           email.is_active
                             ? "bg-red-600 hover:bg-red-700"
                             : "bg-green-600 hover:bg-green-700"
@@ -313,7 +313,7 @@ export default function AdminEmails() {
                     email.email === "nikhilsk369@gmail.com" &&
                     loggedInEmail !== "nikhilsk369@gmail.com"
                   }
-                  className={`mt-1 px-4 py-2 rounded-lg text-white text-sm font-medium flex items-center justify-center gap-2 ${
+                  className={`mt-1 px-4 py-2 rounded-lg text-white text-sm font-medium flex items-center justify-center gap-2 cursor-pointer ${
                     email.is_active
                       ? "bg-red-600 hover:bg-red-700"
                       : "bg-green-600 hover:bg-green-700"
