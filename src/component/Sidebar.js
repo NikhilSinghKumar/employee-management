@@ -1,5 +1,6 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useContext } from "react";
+import { UserContext } from "@/context/UserContext";
 import {
   ChevronRight,
   Users,
@@ -21,6 +22,9 @@ export default function Sidebar({ isOpen, onClose }) {
   const [activeMenu, setActiveMenu] = useState("");
   const [collapsed, setCollapsed] = useState(false);
   const sidebarRef = useRef(null);
+
+  const { user } = useContext(UserContext);
+  const role = user?.role;
 
   const menus = [
     {
@@ -323,26 +327,28 @@ export default function Sidebar({ isOpen, onClose }) {
         </div>
 
         {/* Admin */}
-        <div className="mt-auto relative group ">
-          <Link
-            href="/dashboard/admin/emails"
-            onClick={() => setActiveMenu("/admin")}
-            data-menu="/admin"
-            className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-700/50 hover:text-white transition-all duration-200 relative"
-            title={collapsed ? "Admin" : ""}
-          >
-            <ShieldUser className="w-5 h-5 text-indigo-400" />
-            <span
-              className={`transition-all duration-300 ${
-                collapsed
-                  ? "opacity-0 scale-0 w-0"
-                  : "opacity-100 scale-100 w-auto"
-              }`}
+        {role === "super_admin" && (
+          <div className="mt-auto relative group ">
+            <Link
+              href="/dashboard/admin/emails"
+              onClick={() => setActiveMenu("/admin")}
+              data-menu="/admin"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-700/50 hover:text-white transition-all duration-200 relative"
+              title={collapsed ? "Admin" : ""}
             >
-              Admin
-            </span>
-          </Link>
-        </div>
+              <ShieldUser className="w-5 h-5 text-indigo-400" />
+              <span
+                className={`transition-all duration-300 ${
+                  collapsed
+                    ? "opacity-0 scale-0 w-0"
+                    : "opacity-100 scale-100 w-auto"
+                }`}
+              >
+                Admin
+              </span>
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );
