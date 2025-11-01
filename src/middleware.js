@@ -1,43 +1,52 @@
 import { NextResponse } from "next/server";
-import { authenticateToken } from "./lib/middleware/auth";
+import { authenticateToken } from "./lib/auth/authenticateToken"; // helper logic only
 
 export async function middleware(request) {
-  const authRoutes = ["/", "/register"];
   const pathname = request.nextUrl.pathname;
 
-  if (authRoutes.includes(pathname)) {
+  // 1. Public routes (login, register) → allow access
+  const publicRoutes = ["/", "/register"];
+  if (publicRoutes.includes(pathname)) {
     return NextResponse.next();
   }
 
   try {
+    // 2. Block direct access if no auth token (Prevents direct URL visits)
     const token = request.cookies.get("token")?.value;
+    if (!token) {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
 
-    const authResult = token
-      ? await authenticateToken(token)
-      : { success: false, message: "No token provided" };
-
+    // 3. Verify token for authentication
+    const authResult = await authenticateToken(token);
     if (!authResult.success) {
       return NextResponse.redirect(new URL("/", request.url));
     }
 
+    // 4. Role-based protected routes (Authorization)
     const protectedRoutes = {
-      "/dashboard/:path*": "dashboard",
-      "/operations/:path*": "operations",
-      "/human_resource/:path*": "human_resource",
-      "/accommodation_transport/:path*": "accommodation_transport",
-      "/admin/:path*": "admin",
+      "/dashboard": "dashboard",
+      "/operations": "operations",
+      "/human_resource": "human_resource",
+      "/accommodation_transport": "accommodation_transport",
+      "/admin": "admin",
     };
 
-    const matchingRoute = Object.keys(protectedRoutes).find((route) =>
-      pathname.startsWith(route.split(":")[0])
+    const requiredSection = Object.keys(protectedRoutes).find((route) =>
+      pathname.startsWith(route)
     );
-    const requiredSection = matchingRoute ? protectedRoutes[matchingRoute] : null;
 
     if (requiredSection) {
-      const sectionAuthResult = await authenticateToken(token, requiredSection);
-      if (!sectionAuthResult.success) {
+      const sectionAuth = await authenticateToken(
+        token,
+        protectedRoutes[requiredSection]
+      );
+      if (!sectionAuth.success) {
         return NextResponse.redirect(
-          new URL(`/unauthorized?error=${encodeURIComponent(sectionAuthResult.message)}`, request.url)
+          new URL(
+            `/unauthorized?error=${encodeURIComponent(sectionAuth.message)}`,
+            request.url
+          )
         );
       }
     }
@@ -49,12 +58,13 @@ export async function middleware(request) {
   }
 }
 
+// 5. Apply middleware only to protected routes
 export const config = {
   matcher: [
     "/dashboard/:path*",
     "/operations/:path*",
     "/human_resource/:path*",
     "/accommodation_transport/:path*",
-    "/admin/:path*"
+    "/admin/:path*",
   ],
 };
