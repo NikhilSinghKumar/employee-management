@@ -1,5 +1,5 @@
 import { supabase } from "@/utils/supabaseClient";
-import { authenticateToken } from "@/lib/middleware/auth";
+import { authenticateToken } from "@/lib/auth/authenticateToken";
 import { cookies } from "next/headers";
 import ExcelJS from "exceljs";
 import fs from "fs/promises";

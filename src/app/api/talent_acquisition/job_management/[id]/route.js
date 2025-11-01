@@ -1,7 +1,7 @@
 import { supabase } from "@/utils/supabaseClient";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { authenticateToken } from "@/lib/middleware/auth";
+import { authenticateToken } from "@/lib/auth/authenticateToken";
 
 async function verifyAuth() {
   const cookieStore = await cookies();

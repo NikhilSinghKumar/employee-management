@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { authenticateToken } from "@/lib/middleware/auth";
+import { authenticateToken } from "@/lib/auth/authenticateToken";
 import { supabase } from "@/utils/supabaseClient";
 
 async function verifyAuth() {

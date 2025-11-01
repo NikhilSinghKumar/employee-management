@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/utils/supabaseClient";
-import { authenticateToken } from "@/lib/middleware/auth";
+import { authenticateToken } from "@/lib/auth/authenticateToken";
 
 export async function GET(req) {
   try {

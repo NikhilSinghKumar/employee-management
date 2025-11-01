@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/utils/supabaseClient";
-import { authenticateToken } from "@/lib/middleware/auth";
+import { authenticateToken } from "@/lib/auth/authenticateToken";
 
 export async function POST(req) {
   try {
@@ -75,15 +75,14 @@ export async function POST(req) {
 
     return NextResponse.json(
       {
-        message: `All emails ${is_active ? "enabled" : "restricted"} successfully.`,
+        message: `All emails ${
+          is_active ? "enabled" : "restricted"
+        } successfully.`,
       },
       { status: 200 }
     );
   } catch (error) {
     console.error("Restrict all emails error:", error);
-    return NextResponse.json(
-      { message: "Server error." },
-      { status: 500 }
-    );
+    return NextResponse.json({ message: "Server error." }, { status: 500 });
   }
 }

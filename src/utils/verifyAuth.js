@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { authenticateToken } from "@/lib/middleware/auth";
+import { authenticateToken } from "@/lib/auth/authenticateToken";
 
 export async function verifyAuth() {
   const cookieStore = await cookies();

@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/utils/supabaseClient";
-import { authenticateToken } from "@/lib/middleware/auth";
+import { authenticateToken } from "@/lib/auth/authenticateToken";
 
 export async function POST(req) {
   try {
     const cookieHeader = req.headers.get("cookie");
     let token = null;
     if (cookieHeader) {
-      const cookies = cookieHeader.split("; ").find((row) => row.startsWith("token="));
+      const cookies = cookieHeader
+        .split("; ")
+        .find((row) => row.startsWith("token="));
       token = cookies?.split("=")[1];
     }
 
@@ -36,7 +38,10 @@ export async function POST(req) {
     }
 
     // Protect nikhilsk369@gmail.com from being restricted by another super admin
-    if (email === "nikhilsk369@gmail.com" && authResult.user.email !== "nikhilsk369@gmail.com") {
+    if (
+      email === "nikhilsk369@gmail.com" &&
+      authResult.user.email !== "nikhilsk369@gmail.com"
+    ) {
       return NextResponse.json(
         { message: "Cannot restrict this super admin." },
         { status: 403 }
@@ -76,14 +81,15 @@ export async function POST(req) {
     });
 
     return NextResponse.json(
-      { message: `Email ${email} ${is_active ? "enabled" : "restricted"} successfully.` },
+      {
+        message: `Email ${email} ${
+          is_active ? "enabled" : "restricted"
+        } successfully.`,
+      },
       { status: 200 }
     );
   } catch (error) {
     console.error("Restrict email error:", error);
-    return NextResponse.json(
-      { message: "Server error." },
-      { status: 500 }
-    );
+    return NextResponse.json({ message: "Server error." }, { status: 500 });
   }
 }

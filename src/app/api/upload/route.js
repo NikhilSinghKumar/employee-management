@@ -3,7 +3,7 @@ import { supabase } from "@/utils/supabaseClient";
 import * as XLSX from "xlsx";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { authenticateToken } from "@/lib/middleware/auth";
+import { authenticateToken } from "@/lib/auth/authenticateToken";
 
 export async function POST(req) {
   try {
