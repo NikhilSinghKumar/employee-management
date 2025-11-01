@@ -187,7 +187,7 @@ export default function Topbar({ onMenuClick }) {
             <button
               onClick={toggleUserDropdown}
               className="flex items-center gap-1.5 bg-white/60 hover:bg-white rounded-md 
-  px-2 py-1.5 transition-all duration-200 border border-slate-200 shadow-sm"
+                px-2 py-1.5 transition-all duration-200 border border-slate-200 shadow-sm"
             >
               <div className="w-7 h-7 rounded-full overflow-hidden border border-gray-300 flex-shrink-0">
                 <img
@@ -197,7 +197,7 @@ export default function Topbar({ onMenuClick }) {
                 />
               </div>
               <p className="hidden sm:block text-sm font-medium text-gray-700">
-                {user.first_name}
+                {user.first_name} {user.last_name}
               </p>
               <ChevronDown
                 size={14}
