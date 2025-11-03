@@ -32,7 +32,7 @@ export async function GET() {
 
     const { data, error } = await supabase
       .from("users")
-      .select("first_name, last_name, email, role")
+      .select("first_name, last_name, email, role, allowed_sections")
       .eq("id", userId)
       .single();
 
