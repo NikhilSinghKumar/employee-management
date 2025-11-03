@@ -40,7 +40,6 @@ export async function middleware(request) {
       : null;
 
     if (requiredSection) {
-      console.log("🧭 Path:", pathname, "→ Required:", requiredSection);
       const sectionAuthResult = await authenticateToken(token, requiredSection);
       if (!sectionAuthResult.success) {
         return NextResponse.redirect(
