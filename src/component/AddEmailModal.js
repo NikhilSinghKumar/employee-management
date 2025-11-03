@@ -19,6 +19,7 @@ export default function AddEmailModal({ onClose, onSuccess }) {
     "User",
   ];
   const sectionOptions = [
+    "Dashboard",
     "AT",
     "HR",
     "Finance",
