@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
+import AddEmailModal from "@/component/AddEmailModal";
+import EditEmailModal from "@/component/EditEmailModal";
 import {
   Ban,
   CheckCircle2,
@@ -8,6 +10,10 @@ import {
   Mail,
   ShieldCheck,
   Search,
+  Plus,
+  SquarePen,
+  Trash2,
+  ShieldBan,
 } from "lucide-react";
 
 export default function AdminEmails() {
@@ -17,8 +23,10 @@ export default function AdminEmails() {
   const [isRestrictLoading, setIsRestrictLoading] = useState(false);
   const [isEnableLoading, setIsEnableLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [editModal, setEditModal] = useState(null);
 
-  const fetchAllowedEmails = async () => {
+  const fetchEmails = async () => {
     try {
       setLoading(true);
       const res = await fetch("/api/admin/allowed_emails", {
@@ -31,6 +39,25 @@ export default function AdminEmails() {
       toast.error("Server error while fetching emails.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const deleteEmail = async (email) => {
+    if (!confirm("Are you sure you want to delete this email?")) return;
+
+    const res = await fetch("/api/admin/allowed_emails", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ email }),
+    });
+
+    const json = await res.json();
+    if (res.ok) {
+      toast.success("Email deleted!");
+      fetchEmails();
+    } else {
+      toast.error(json.message || "Failed to delete.");
     }
   };
 
@@ -54,7 +81,7 @@ export default function AdminEmails() {
       const json = await res.json();
       if (res.ok) {
         toast.success(json.message);
-        await fetchAllowedEmails();
+        await fetchEmails();
       } else toast.error(json.message || "Bulk update failed.");
     } catch {
       toast.error("Server error during bulk update.");
@@ -68,7 +95,7 @@ export default function AdminEmails() {
       const res = await fetch("/api/auth/me", { credentials: "include" });
       const json = await res.json();
       if (res.ok && json.success) setLoggedInEmail(json.user.email);
-      fetchAllowedEmails();
+      fetchEmails();
     })();
   }, []);
 
@@ -77,6 +104,30 @@ export default function AdminEmails() {
   );
 
   const activeCount = emails.filter((e) => e.is_active).length;
+
+  const toggleStatus = async (email) => {
+    try {
+      const res = await fetch(`/api/admin/restrict_email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email.email,
+          is_active: !email.is_active,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        toast.success(data.message || "Status updated");
+        fetchEmails(); // refresh the table immediately
+      } else {
+        toast.error(data.message || "Update failed.");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Server error");
+    }
+  };
 
   return (
     <div className="p-4 sm:p-6 max-w-6xl mx-auto min-h-screen bg-gray-50">
@@ -125,31 +176,32 @@ export default function AdminEmails() {
               type="text"
               placeholder="Search..."
               className="w-full sm:w-64 shadow-sm md:shadow-md md:hover:shadow-lg pl-10 pr-4 py-2 rounded-lg bg-white/10 text-gray-800 placeholder-gray-400
-            border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#4A5A6A]/60
-            focus:border-transparent transition-all duration-200 backdrop-blur-sm
+            border border-slate-170 focus:outline-none focus:ring-2 focus:ring-[#4A5A6A]/60
+            focus:border-transparent transition-all duration-170 backdrop-blur-sm
             hover:bg-white/20"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2 hover:bg-blue-700 shadow-sm hover:shadow-md transition text-sm sm:text-base cursor-pointer"
+          >
+            <Plus size={16} /> Add Email
+          </button>
           <span className="ml-auto text-xs sm:text-sm text-gray-600">
             Active: <b>{activeCount}</b> / {emails.length}
           </span>
         </div>
       </div>
 
-      {!loading && filteredEmails.length === 0 && emails.length > 0 && (
-        <div className="text-center text-gray-500 text-base sm:text-lg py-10">
-          No emails match “{searchTerm}”
-        </div>
-      )}
-
       {/* Loader / Empty State */}
       {loading ? (
         <div className="flex justify-center py-20">
           <Loader2 className="animate-spin text-blue-500 w-8 h-8" />
-          <span className="ml-3 text-gray-600">Loading emails...</span>
+          <span className="ml-3 text-gray-600 animate-pulse">
+            Loading emails...
+          </span>
         </div>
       ) : emails.length === 0 ? (
         <div className="text-center text-gray-500 text-lg py-16">
@@ -163,7 +215,7 @@ export default function AdminEmails() {
               <thead className="bg-gray-100 text-gray-700 text-sm uppercase tracking-wider">
                 <tr>
                   <th className="px-6 py-3 text-left">Email</th>
-                  <th className="px-6 py-3 text-left">Sections</th>
+                  <th className="px-6 py-3 text-left">Permission</th>
                   <th className="px-6 py-3 text-left">Status</th>
                   <th className="px-6 py-3 text-left">Action</th>
                 </tr>
@@ -179,7 +231,13 @@ export default function AdminEmails() {
                       {email.email}
                     </td>
                     <td className="px-6 py-3 text-gray-600">
-                      {email.allowed_sections?.join(", ") || "-"}
+                      <span className="font-medium">{email.role || "-"}</span>
+                      <br />
+                      <span className="text-sm text-gray-500">
+                        {email.allowed_sections?.length
+                          ? email.allowed_sections.join(", ")
+                          : "-"}
+                      </span>
                     </td>
                     <td className="px-6 py-3">
                       <span
@@ -193,54 +251,52 @@ export default function AdminEmails() {
                       </span>
                     </td>
                     <td className="px-6 py-3">
-                      <button
-                        onClick={async () => {
-                          try {
-                            const res = await fetch(
-                              "/api/admin/restrict_email",
-                              {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                credentials: "include",
-                                body: JSON.stringify({
-                                  email: email.email,
-                                  is_active: !email.is_active,
-                                }),
-                              }
-                            );
-                            const json = await res.json();
-                            if (res.ok) {
-                              toast.success(json.message);
-                              setEmails((prev) =>
-                                prev.map((e) =>
-                                  e.email === email.email
-                                    ? { ...e, is_active: !e.is_active }
-                                    : e
-                                )
-                              );
-                            } else
-                              toast.error(json.message || "Update failed.");
-                          } catch {
-                            toast.error("Server error during update.");
-                          }
-                        }}
-                        disabled={
-                          email.email === "nikhilsk369@gmail.com" &&
-                          loggedInEmail !== "nikhilsk369@gmail.com"
-                        }
-                        className={`px-4 py-2 rounded-lg text-white text-sm font-medium flex items-center gap-2 cursor-pointer ${
-                          email.is_active
-                            ? "bg-red-600 hover:bg-red-700"
-                            : "bg-green-600 hover:bg-green-700"
-                        } disabled:opacity-50`}
-                      >
-                        {email.is_active ? (
-                          <Ban size={16} />
-                        ) : (
-                          <CheckCircle2 size={16} />
+                      <div className="flex items-center gap-2 border border-red-300/40 rounded-md px-2 py-1 bg-white shadow-sm">
+                        {/* Toggle Status */}
+                        {email.email !== loggedInEmail && (
+                          <button
+                            onClick={() => toggleStatus(email)}
+                            className="p-1.5 rounded-md hover:bg-gray-100 hover:scale-110 transition-transform duration-170 cursor-pointer"
+                            title={
+                              email.is_active
+                                ? "Disable Access"
+                                : "Enable Access"
+                            }
+                          >
+                            {email.is_active ? (
+                              <ShieldBan
+                                className="text-orange-600"
+                                size={18}
+                              />
+                            ) : (
+                              <ShieldCheck
+                                className="text-green-600"
+                                size={18}
+                              />
+                            )}
+                          </button>
                         )}
-                        {email.is_active ? "Restrict" : "Enable"}
-                      </button>
+
+                        {/* Edit */}
+                        <button
+                          onClick={() => setEditModal(email)}
+                          className="p-1.5 rounded-md hover:bg-gray-100 hover:scale-110 transition-transform duration-170 cursor-pointer"
+                          title="Edit Role & Permissions"
+                        >
+                          <SquarePen size={18} className="text-blue-600" />
+                        </button>
+
+                        {/* Delete */}
+                        {email.email !== loggedInEmail && (
+                          <button
+                            onClick={() => deleteEmail(email.email)}
+                            className="p-1.5 rounded-md hover:bg-gray-100 hover:scale-110 transition-transform duration-200 cursor-pointer"
+                            title="Delete Email"
+                          >
+                            <Trash2 size={18} className="text-red-600" />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -273,63 +329,91 @@ export default function AdminEmails() {
                   </span>
                 </div>
 
+                {/* Role */}
+                <div>
+                  <p className="text-xs text-gray-500 uppercase mb-1">Role</p>
+                  <p className="text-sm text-gray-800 font-medium">
+                    {email.role || "-"}
+                  </p>
+                </div>
+
+                {/* Allowed Sections */}
                 <div>
                   <p className="text-xs text-gray-500 uppercase mb-1">
                     Sections
                   </p>
-                  <p className="text-sm text-gray-700">
-                    {email.allowed_sections?.join(", ") || "-"}
+                  <p className="text-sm text-gray-700 break-words">
+                    {email.allowed_sections?.length
+                      ? email.allowed_sections.join(", ")
+                      : "-"}
                   </p>
                 </div>
 
-                <button
-                  onClick={async () => {
-                    try {
-                      const res = await fetch("/api/admin/restrict_email", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        credentials: "include",
-                        body: JSON.stringify({
-                          email: email.email,
-                          is_active: !email.is_active,
-                        }),
-                      });
-                      const json = await res.json();
-                      if (res.ok) {
-                        toast.success(json.message);
-                        setEmails((prev) =>
-                          prev.map((e) =>
-                            e.email === email.email
-                              ? { ...e, is_active: !e.is_active }
-                              : e
-                          )
-                        );
-                      } else toast.error(json.message || "Update failed.");
-                    } catch {
-                      toast.error("Server error during update.");
-                    }
-                  }}
-                  disabled={
-                    email.email === "nikhilsk369@gmail.com" &&
-                    loggedInEmail !== "nikhilsk369@gmail.com"
-                  }
-                  className={`mt-1 px-4 py-2 rounded-lg text-white text-sm font-medium flex items-center justify-center gap-2 cursor-pointer ${
-                    email.is_active
-                      ? "bg-red-600 hover:bg-red-700"
-                      : "bg-green-600 hover:bg-green-700"
-                  } disabled:opacity-50`}
-                >
-                  {email.is_active ? (
-                    <Ban size={14} />
-                  ) : (
-                    <CheckCircle2 size={14} />
-                  )}
-                  {email.is_active ? "Restrict" : "Enable"}
-                </button>
+                <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                  <div className="flex items-center gap-3">
+                    {/* Toggle Status */}
+                    {email.email !== loggedInEmail && (
+                      <button
+                        onClick={() => toggleStatus(email)}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-xs font-medium transition-transform hover:scale-105 active:scale-95"
+                      >
+                        {email.is_active ? (
+                          <>
+                            <ShieldBan size={14} className="text-red-500" />
+                            <span>Disable</span>
+                          </>
+                        ) : (
+                          <>
+                            <ShieldCheck size={14} className="text-green-600" />
+                            <span>Enable</span>
+                          </>
+                        )}
+                      </button>
+                    )}
+
+                    {/* Edit */}
+                    <button
+                      onClick={() => setEditModal(email)}
+                      className="flex items-center gap-1 px-3 py-1.5 bg-blue-100 hover:bg-blue-200 rounded-lg text-xs font-medium text-blue-700 transition-transform hover:scale-105 active:scale-95"
+                    >
+                      <SquarePen size={14} />
+                      <span>Edit</span>
+                    </button>
+
+                    {/* Delete */}
+                    {email.email !== loggedInEmail && (
+                      <button
+                        onClick={() => deleteEmail(email.email)}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-red-100 hover:bg-red-200 rounded-lg text-xs font-medium text-red-600 transition-transform hover:scale-105 active:scale-95"
+                      >
+                        <Trash2 size={14} />
+                        <span>Delete</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
             ))}
           </div>
         </>
+      )}
+      {!loading && filteredEmails.length === 0 && emails.length > 0 && (
+        <div className="text-center text-gray-500 text-base sm:text-lg py-10">
+          No emails match “{searchTerm}”
+        </div>
+      )}
+      {showAddModal && (
+        <AddEmailModal
+          onClose={() => setShowAddModal(false)}
+          onSuccess={fetchEmails}
+        />
+      )}
+      {editModal && (
+        <EditEmailModal
+          emailData={editModal}
+          onClose={() => setEditModal(null)}
+          onSuccess={fetchEmails}
+        />
       )}
     </div>
   );
