@@ -25,12 +25,13 @@ export default function Sidebar({ isOpen, onClose }) {
 
   const { user } = useContext(UserContext);
   const role = user?.role;
+  const allowedSections = user?.allowed_sections || [];
 
-  const menus = [
+  const allMenus = [
     {
       title: "HR",
       icon: <Users className="w-5 h-5" />,
-      key: "hr",
+      key: "HR",
       items: [
         {
           name: "Staff Form",
@@ -49,13 +50,13 @@ export default function Sidebar({ isOpen, onClose }) {
     {
       title: "Finance",
       icon: <BadgeDollarSign className="w-5 h-5" />,
-      key: "finance",
-      items: [{ name: "Invoices", href: "/dashboard/invoices" }],
+      key: "Finance",
+      items: [{ name: "Invoices", href: "/dashboard/finance/invoices" }],
     },
     {
       title: "Operations",
       icon: <Cog className="w-5 h-5" />,
-      key: "operations",
+      key: "Operations",
       items: [
         { name: "Add Employee", href: "/dashboard/operations/add_employee" },
         { name: "Onboarding", href: "/dashboard/operations/onboarding" },
@@ -70,17 +71,17 @@ export default function Sidebar({ isOpen, onClose }) {
     {
       title: "Sales",
       icon: <BriefcaseBusiness className="w-5 h-5" />,
-      key: "sales",
+      key: "Sales",
       items: [
-        { name: "Opportunities", href: "/opportunities" },
-        { name: "Contracts", href: "/contracts" },
-        { name: "Quotation", href: "/quotation" },
+        { name: "Opportunities", href: "/dashboard/sales/opportunities" },
+        { name: "Quotation", href: "/dashboard/sales/quotation" },
+        { name: "Contracts", href: "/dashboard/sales/contracts" },
       ],
     },
     {
       title: "A&T",
       icon: <Building2 className="w-5 h-5" />,
-      key: "at",
+      key: "AT",
       items: [
         {
           name: "A&T Form",
@@ -99,7 +100,7 @@ export default function Sidebar({ isOpen, onClose }) {
     {
       title: "T&A",
       icon: <ContactRound className="w-5 h-5" />,
-      key: "ta",
+      key: "TA",
       items: [
         { name: "Post Job", href: "/dashboard/talent_acquisition/post_job" },
         { name: "Job List", href: "/dashboard/talent_acquisition/job_list" },
@@ -116,10 +117,15 @@ export default function Sidebar({ isOpen, onClose }) {
     {
       title: "CM",
       icon: <ToolCase className="w-5 h-5" />,
-      key: "cm",
+      key: "CM",
       items: [{ name: "Cases", href: "/dashboard/case_management" }],
     },
   ];
+
+  const menus =
+    role === "super_admin"
+      ? allMenus // show all for super admin
+      : allMenus.filter((menu) => allowedSections.includes(menu.key));
 
   const toggleMenu = (menu) => setOpenMenu(openMenu === menu ? null : menu);
 
