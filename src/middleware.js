@@ -21,11 +21,15 @@ export async function middleware(request) {
     }
 
     const protectedRoutes = {
-      "/dashboard/:path*": "dashboard",
-      "/operations/:path*": "operations",
-      "/human_resource/:path*": "human_resource",
-      "/accommodation_transport/:path*": "accommodation_transport",
-      "/admin/:path*": "admin",
+      "/dashboard/:path*": "Dashboard",
+      "/operations/:path*": "Operations",
+      "/human_resource/:path*": "HR",
+      "/accommodation_transport/:path*": "AT",
+      "/case_management/:path*": "CM",
+      "/finance/:path*": "Finance",
+      "/sales/:path*": "Sales",
+      "/admin/:path*": "Admin",
+      "/talent_acquisition/:path*": "TA",
     };
 
     const matchingRoute = Object.keys(protectedRoutes).find((route) =>
@@ -36,6 +40,7 @@ export async function middleware(request) {
       : null;
 
     if (requiredSection) {
+      console.log("🧭 Path:", pathname, "→ Required:", requiredSection);
       const sectionAuthResult = await authenticateToken(token, requiredSection);
       if (!sectionAuthResult.success) {
         return NextResponse.redirect(
@@ -62,6 +67,10 @@ export const config = {
     "/operations/:path*",
     "/human_resource/:path*",
     "/accommodation_transport/:path*",
+    "/case_management/:path*",
+    "/finance/:path*",
+    "/sales/:path*",
     "/admin/:path*",
+    "/talent_acquisition/:path*",
   ],
 };
