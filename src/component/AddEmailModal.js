@@ -140,7 +140,7 @@ export default function AddEmailModal({ onClose, onSuccess }) {
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50 cursor-pointer"
           >
             {loading ? "Saving..." : "Add Email"}
           </button>
