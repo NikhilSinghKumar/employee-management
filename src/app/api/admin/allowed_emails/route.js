@@ -22,23 +22,38 @@ export async function GET(req) {
     }
 
     const authResult = await authenticateToken(token);
+    const user = authResult?.user;
 
-    if (!authResult.success || authResult.user.role !== "super_admin") {
+    if (!authResult.success || !user?.role) {
       return NextResponse.json(
-        { message: "Super admin access required." },
+        { message: "Invalid or missing role." },
         { status: 403 }
       );
     }
 
-    const { data, error } = await supabase
+    // Only allow super_admin or admin
+    if (!["super_admin", "Admin"].includes(user.role)) {
+      return NextResponse.json(
+        { message: "Access denied. Admins only." },
+        { status: 403 }
+      );
+    }
+
+    // Base query
+    let query = supabase
       .from("allowed_emails")
-      .select("email,role, allowed_sections, is_active")
+      .select("email, role, allowed_sections, is_active")
       .eq("is_deleted", false)
       .order("id", { ascending: true });
 
-    if (error) {
-      throw error;
+    // If user is admin, exclude super_admin emails
+    if (user.role === "Admin") {
+      query = query.neq("role", "super_admin");
     }
+
+    const { data, error } = await query;
+
+    if (error) throw error;
 
     return NextResponse.json({ data }, { status: 200 });
   } catch (error) {
@@ -122,11 +137,13 @@ export async function POST(req) {
 // ✅ PATCH (Update Role or Sections or is_active)
 export async function PATCH(req) {
   try {
+    // ✅ 1. Extract Token
     const cookieHeader = req.headers.get("cookie");
-    const token = cookieHeader
-      ?.split("; ")
-      .find((c) => c.startsWith("token="))
-      ?.split("=")[1];
+    const token =
+      cookieHeader
+        ?.split("; ")
+        .find((c) => c.startsWith("token="))
+        ?.split("=")[1] || null;
 
     if (!token) {
       return NextResponse.json(
@@ -135,6 +152,7 @@ export async function PATCH(req) {
       );
     }
 
+    // ✅ 2. Authenticate Token & Check Role
     const auth = await authenticateToken(token);
     if (!auth.success || auth.user.role !== "super_admin") {
       return NextResponse.json(
@@ -143,8 +161,8 @@ export async function PATCH(req) {
       );
     }
 
+    // ✅ 3. Input Validation
     const { email, role, allowed_sections, is_active } = await req.json();
-
     if (!email) {
       return NextResponse.json(
         { message: "Email is required." },
@@ -152,7 +170,8 @@ export async function PATCH(req) {
       );
     }
 
-    const { error } = await supabase
+    // ✅ 4. Update allowed_emails Table
+    const { error: allowEmailError } = await supabase
       .from("allowed_emails")
       .update({
         ...(role !== undefined && { role }),
@@ -161,8 +180,21 @@ export async function PATCH(req) {
       })
       .eq("email", email);
 
-    if (error) throw error;
+    if (allowEmailError) throw allowEmailError;
 
+    // ✅ 5. Update users Table
+    const { error: userError } = await supabase
+      .from("users")
+      .update({
+        ...(role !== undefined && { role }),
+        ...(allowed_sections !== undefined && { allowed_sections }),
+        ...(is_active !== undefined && { is_active }),
+      })
+      .eq("email", email);
+
+    if (userError) throw userError;
+
+    // ✅ 6. Success Response
     return NextResponse.json(
       { message: "Updated successfully." },
       { status: 200 }
