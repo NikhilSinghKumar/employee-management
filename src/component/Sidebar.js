@@ -121,11 +121,11 @@ export default function Sidebar({ isOpen, onClose }) {
       items: [{ name: "Cases", href: "/dashboard/case_management" }],
     },
   ];
+  const adminRoles = ["super_admin", "Admin"];
 
-  const menus =
-    role === "super_admin"
-      ? allMenus // show all for super admin
-      : allMenus.filter((menu) => allowedSections.includes(menu.key));
+  const menus = adminRoles.includes(role)
+    ? allMenus // show all for super admin and admin
+    : allMenus.filter((menu) => allowedSections.includes(menu.key));
 
   const toggleMenu = (menu) => setOpenMenu(openMenu === menu ? null : menu);
 
@@ -333,7 +333,7 @@ export default function Sidebar({ isOpen, onClose }) {
         </div>
 
         {/* Admin */}
-        {role === "super_admin" && (
+        {adminRoles.includes(role) && (
           <div className="mt-auto relative group ">
             <Link
               href="/dashboard/admin/emails"
