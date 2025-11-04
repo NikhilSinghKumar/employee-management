@@ -67,7 +67,7 @@ export async function POST(req) {
     const cookieHeader = req.headers.get("cookie");
     const token = cookieHeader
       ?.split("; ")
-      .find((c) => c.startsWith("token="))
+      ?.find((c) => c.startsWith("token="))
       ?.split("=")[1];
 
     if (!token) {
@@ -78,14 +78,20 @@ export async function POST(req) {
     }
 
     const auth = await authenticateToken(token);
-    if (!auth.success || auth.user.role !== "super_admin") {
+    const userRole = auth.user.role || "";
+    const ROLE_SUPER = "super_admin";
+    const ROLE_ADMIN = "Admin";
+
+    // ✅ Allow only super_admin or admin
+    if (!auth.success || (userRole !== ROLE_SUPER && userRole !== ROLE_ADMIN)) {
       return NextResponse.json(
-        { message: "Super admin access required." },
+        { message: "Access denied. Admin only." },
         { status: 403 }
       );
     }
 
     const { email, role, allowed_sections } = await req.json();
+
     if (!email || !role) {
       return NextResponse.json(
         { message: "Email and role are required." },
@@ -93,7 +99,15 @@ export async function POST(req) {
       );
     }
 
-    // ✅ Duplicate email check
+    // ✅ Admins cannot create Super Admins
+    if (userRole === ROLE_ADMIN && role === ROLE_SUPER) {
+      return NextResponse.json(
+        { message: "Access denied. Admins cannot add Super Admins." },
+        { status: 403 }
+      );
+    }
+
+    // ✅ Check if email already exists
     const { data: existingEmail } = await supabase
       .from("allowed_emails")
       .select("email")
@@ -107,7 +121,7 @@ export async function POST(req) {
       );
     }
 
-    // ✅ Insert new email
+    // ✅ Insert new record
     const { error: insertError } = await supabase
       .from("allowed_emails")
       .insert([
@@ -116,6 +130,7 @@ export async function POST(req) {
           role,
           allowed_sections: allowed_sections || [],
           is_active: true,
+          is_deleted: false,
         },
       ]);
 
@@ -137,7 +152,7 @@ export async function POST(req) {
 // ✅ PATCH (Update Role or Sections or is_active)
 export async function PATCH(req) {
   try {
-    // ✅ 1. Extract Token
+    // 1) extract token
     const cookieHeader = req.headers.get("cookie");
     const token =
       cookieHeader
@@ -152,16 +167,20 @@ export async function PATCH(req) {
       );
     }
 
-    // ✅ 2. Authenticate Token & Check Role
+    // 2) authenticate
     const auth = await authenticateToken(token);
-    if (!auth.success || auth.user.role !== "super_admin") {
+    if (!auth || !auth.success || !auth.user) {
       return NextResponse.json(
-        { message: "Super admin access required." },
-        { status: 403 }
+        { message: "Invalid token or authentication failed." },
+        { status: 401 }
       );
     }
 
-    // ✅ 3. Input Validation
+    const userRole = auth.user.role;
+    const ROLE_SUPER = "super_admin";
+    const ROLE_ADMIN = "Admin";
+
+    // 3) parse body
     const { email, role, allowed_sections, is_active } = await req.json();
     if (!email) {
       return NextResponse.json(
@@ -170,31 +189,84 @@ export async function PATCH(req) {
       );
     }
 
-    // ✅ 4. Update allowed_emails Table
+    // 4) ensure caller is admin or super_admin
+    if (![ROLE_SUPER, ROLE_ADMIN].includes(userRole)) {
+      return NextResponse.json(
+        { message: "Access denied. Admins only." },
+        { status: 403 }
+      );
+    }
+
+    // 5) fetch target user's current role (to enforce restrictions)
+    const { data: target, error: targetErr } = await supabase
+      .from("allowed_emails")
+      .select("role")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (targetErr) {
+      console.error("Error fetching target:", targetErr);
+      return NextResponse.json({ message: "Server error." }, { status: 500 });
+    }
+
+    // if no target found, return 404
+    if (!target) {
+      return NextResponse.json(
+        { message: "Target email not found." },
+        { status: 404 }
+      );
+    }
+
+    const targetRole = (target.role || "").toString().toLowerCase();
+
+    // 6) Admin-specific restrictions:
+    // - Admin cannot modify super_admin accounts
+    // - Admin cannot elevate anyone to super_admin
+    if (userRole === ROLE_ADMIN) {
+      if (targetRole === ROLE_SUPER) {
+        return NextResponse.json(
+          { message: "Admins cannot modify super admin accounts." },
+          { status: 403 }
+        );
+      }
+
+      // if admin is trying to set role to super_admin, block it
+      if (role && role.toString().toLowerCase() === ROLE_SUPER) {
+        return NextResponse.json(
+          { message: "Admins cannot assign super_admin role." },
+          { status: 403 }
+        );
+      }
+    }
+
+    // 7) build update payload (only include provided fields)
+    const updatePayload = {
+      ...(role !== undefined && { role }),
+      ...(allowed_sections !== undefined && { allowed_sections }),
+      ...(is_active !== undefined && { is_active }),
+    };
+
+    // 8) perform updates in a safe order
     const { error: allowEmailError } = await supabase
       .from("allowed_emails")
-      .update({
-        ...(role !== undefined && { role }),
-        ...(allowed_sections !== undefined && { allowed_sections }),
-        ...(is_active !== undefined && { is_active }),
-      })
+      .update(updatePayload)
       .eq("email", email);
 
-    if (allowEmailError) throw allowEmailError;
+    if (allowEmailError) {
+      console.error("allowed_emails update error:", allowEmailError);
+      throw allowEmailError;
+    }
 
-    // ✅ 5. Update users Table
     const { error: userError } = await supabase
       .from("users")
-      .update({
-        ...(role !== undefined && { role }),
-        ...(allowed_sections !== undefined && { allowed_sections }),
-        ...(is_active !== undefined && { is_active }),
-      })
+      .update(updatePayload)
       .eq("email", email);
 
-    if (userError) throw userError;
+    if (userError) {
+      console.error("users table update error:", userError);
+      throw userError;
+    }
 
-    // ✅ 6. Success Response
     return NextResponse.json(
       { message: "Updated successfully." },
       { status: 200 }
@@ -208,6 +280,7 @@ export async function PATCH(req) {
 // ✅ DELETE (Soft delete = is_deleted = true)
 export async function DELETE(req) {
   try {
+    // 1️⃣ Extract token
     const cookieHeader = req.headers.get("cookie");
     const token = cookieHeader
       ?.split("; ")
@@ -221,14 +294,20 @@ export async function DELETE(req) {
       );
     }
 
+    // 2️⃣ Authenticate
     const auth = await authenticateToken(token);
-    if (!auth.success || auth.user.role !== "super_admin") {
+    const userRole = auth?.user?.role || "";
+    const ROLE_SUPER = "super_admin";
+    const ROLE_ADMIN = "Admin";
+
+    if (!auth.success || !userRole) {
       return NextResponse.json(
-        { message: "Super admin access required." },
+        { message: "Invalid or missing role." },
         { status: 403 }
       );
     }
 
+    // 3️⃣ Validate input
     const { email } = await req.json();
     if (!email) {
       return NextResponse.json(
@@ -237,6 +316,41 @@ export async function DELETE(req) {
       );
     }
 
+    // 4️⃣ Allow only Super Admins and Admins
+    if (![ROLE_SUPER, ROLE_ADMIN].includes(userRole)) {
+      return NextResponse.json(
+        { message: "Access denied. Admins only." },
+        { status: 403 }
+      );
+    }
+
+    // 5️⃣ Fetch target user's role
+    const { data: target, error: targetErr } = await supabase
+      .from("allowed_emails")
+      .select("role")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (targetErr) throw targetErr;
+
+    if (!target) {
+      return NextResponse.json(
+        { message: "Target email not found." },
+        { status: 404 }
+      );
+    }
+
+    const targetRole = target.role?.trim() || "";
+
+    // 6️⃣ Prevent Admins from deleting Super Admins
+    if (userRole === ROLE_ADMIN && targetRole === ROLE_SUPER) {
+      return NextResponse.json(
+        { message: "Admins cannot delete Super Admin accounts." },
+        { status: 403 }
+      );
+    }
+
+    // 7️⃣ Perform soft delete
     const { error } = await supabase
       .from("allowed_emails")
       .update({ is_deleted: true, is_active: false })
