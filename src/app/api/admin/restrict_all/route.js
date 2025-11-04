@@ -22,10 +22,19 @@ export async function POST(req) {
     }
 
     const authResult = await authenticateToken(token);
+    const userRole = authResult?.user?.role || "";
+    const userEmail = authResult?.user?.email?.toLowerCase();
 
-    if (!authResult.success || authResult.user.role !== "super_admin") {
+    const ROLE_SUPER = "super_admin";
+    const ROLE_ADMIN = "Admin";
+
+    // ✅ Allow both Super Admin & Admin
+    if (
+      !authResult.success ||
+      (userRole !== ROLE_SUPER && userRole !== ROLE_ADMIN)
+    ) {
       return NextResponse.json(
-        { message: "Super admin access required." },
+        { message: "Access denied. Admin only." },
         { status: 403 }
       );
     }
@@ -38,38 +47,41 @@ export async function POST(req) {
       );
     }
 
-    // Define protected emails (cannot be restricted)
-    const protectedEmails = [
-      authResult.user.email.toLowerCase(),
-      "nikhilsk369@gmail.com",
-    ];
+    // ✅ Protected emails (cannot be restricted)
+    const protectedEmails = [userEmail, "nikhilsk369@gmail.com"];
 
-    const protectedEmailsStr = `(${protectedEmails.join(",")})`;
-
-    // Update allowed_emails table (exclude protected emails)
-    const { error: allowedError } = await supabase
+    // ✅ Admins cannot affect Super Admins
+    let filterQuery = supabase
       .from("allowed_emails")
       .update({ is_active })
-      .not("email", "in", protectedEmailsStr);
+      .not("email", "in", `(${protectedEmails.join(",")})`)
+      .eq("is_deleted", false);
 
-    if (allowedError) {
-      throw allowedError;
+    if (userRole === ROLE_ADMIN) {
+      filterQuery = filterQuery.neq("role", ROLE_SUPER); // block affecting super_admins
     }
 
-    // Update users table (exclude protected emails)
-    const { error: userError } = await supabase
+    const { error: allowedError } = await filterQuery;
+    if (allowedError) throw allowedError;
+
+    // ✅ Update users table similarly
+    let userUpdateQuery = supabase
       .from("users")
       .update({ is_active })
-      .not("email", "in", protectedEmailsStr);
+      .not("email", "in", `(${protectedEmails.join(",")})`);
 
-    if (userError) {
-      throw userError;
+    if (userRole === ROLE_ADMIN) {
+      // Prevent affecting super_admins in users table
+      userUpdateQuery = userUpdateQuery.neq("role", ROLE_SUPER);
     }
 
-    // Log the event
+    const { error: userError } = await userUpdateQuery;
+    if (userError) throw userError;
+
+    // ✅ Log the event
     await supabase.from("logs").insert({
       event: is_active ? "all_emails_enabled" : "all_emails_restricted",
-      user_email: null,
+      user_email: userEmail,
       created_by: authResult.user.userId,
     });
 
