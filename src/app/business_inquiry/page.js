@@ -27,7 +27,7 @@ export default function BusinessEnquiryForm() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/sales/business_enquiry_list", {
+      const res = await fetch("/api/sales/business_enquiry_post_public", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
