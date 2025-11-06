@@ -4,12 +4,15 @@ import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { Search } from "lucide-react";
 import BusinessEnquiryActions from "@/component/BusinessEnquiryActions";
+import StatusUpdateDialog from "@/component/StatusUpdateDialog";
 
 export default function BusinessEnquiryPage() {
   const [enquiries, setEnquiries] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedEnquiry, setSelectedEnquiry] = useState(null);
+  const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
 
   // 🔹 Fetch data
   const fetchEnquiries = async () => {
@@ -18,9 +21,11 @@ export default function BusinessEnquiryPage() {
       const res = await fetch(
         `/api/sales/business_enquiry_private?search=${encodeURIComponent(
           searchTerm
-        )}`
+        )}`,
+        { cache: "no-cache" }
       );
       const result = await res.json();
+      console.log(result.enquiries);
       if (result.success) {
         setEnquiries(result.enquiries || []);
         setError(null);
@@ -50,15 +55,33 @@ export default function BusinessEnquiryPage() {
       case "assign":
         toast(`Assigning ${enquiry.company_name}`);
         break;
-      case "status":
-        toast(`Updating status for ${enquiry.company_name}`);
+      case "updateStatus":
+        setSelectedEnquiry(enquiry);
+        setIsStatusDialogOpen(true);
         break;
       case "delete":
-        await fetch(`/api/sales/business_enquiry_list/${enquiry.id}`, {
-          method: "DELETE",
-        });
-        toast.success("Deleted successfully");
-        fetchData();
+        try {
+          const confirmDelete = window.confirm(
+            "Are you sure you want to delete?"
+          );
+          if (!confirmDelete) return;
+
+          const res = await fetch(
+            `/api/sales/business_enquiry_private/${enquiry.id}`,
+            { method: "DELETE" }
+          );
+
+          const result = await res.json();
+          if (result.success) {
+            toast.success("Deleted successfully");
+            fetchEnquiries(); // ✅ refresh table
+          } else {
+            toast.error(result.error || "Failed to delete");
+          }
+        } catch (err) {
+          console.error("Delete error:", err);
+          toast.error("Something went wrong");
+        }
         break;
       default:
         toast.error("Unknown action");
@@ -305,6 +328,12 @@ export default function BusinessEnquiryPage() {
           )}
         </>
       )}
+      <StatusUpdateDialog
+        enquiry={selectedEnquiry}
+        open={isStatusDialogOpen}
+        onClose={() => setIsStatusDialogOpen(false)}
+        onUpdated={fetchEnquiries}
+      />
     </div>
   );
 }
