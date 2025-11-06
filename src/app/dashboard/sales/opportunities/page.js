@@ -161,7 +161,9 @@ export default function BusinessEnquiryPage() {
                       <th className="px-4 py-3 border border-gray-200 text-left">
                         Status
                       </th>
-                      <th className="py-3 px-4 text-right">Actions</th>
+                      <th className="py-3 px-4 border border-gray-200 text-right">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -211,7 +213,7 @@ export default function BusinessEnquiryPage() {
                             {item.status || "New"}
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-right">
+                        <td className="py-3 px-4 border border-gray-200 text-right">
                           <BusinessEnquiryActions
                             enquiry={item}
                             onAction={handleAction}
