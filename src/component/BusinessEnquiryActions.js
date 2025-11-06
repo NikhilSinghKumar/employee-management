@@ -50,7 +50,7 @@ export default function BusinessEnquiryActions({ enquiry, onAction }) {
         <DropdownMenuItem onClick={() => handleAction("assign")}>
           <UserCheck className="w-4 h-4 mr-2 text-amber-500" /> Assign
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => handleAction("status")}>
+        <DropdownMenuItem onClick={() => handleAction("updateStatus")}>
           <Edit2 className="w-4 h-4 mr-2 text-green-600" /> Update Status
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => handleAction("delete")}>
