@@ -88,12 +88,15 @@ export default function BusinessEnquiryForm() {
               Business Enquiry Form
             </h1>
             <p className="text-gray-600 mb-8">
-              Fill in the details below and our team will get back to you
-              shortly.
+              Please, fill in the details below and our team will get back to
+              you shortly.
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form
+            onSubmit={handleSubmit}
+            className="grid grid-cols-1 md:grid-cols-2 gap-6"
+          >
             {/* Company Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -109,6 +112,47 @@ export default function BusinessEnquiryForm() {
                 required
               />
             </div>
+            {/* Company CR Number */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Company CR Number<span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="company_cr_number"
+                value={formData.company_cr_number}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition"
+                placeholder="Enter company registration number"
+                required
+              />
+            </div>
+
+            {/* Request Type */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Request Type<span className="text-red-500">*</span>
+              </label>
+              <select
+                name="request_type"
+                value={formData.request_type}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition"
+                required
+              >
+                <option value="">Select request type</option>
+                <option value="Manpower Request (Business Solution)">
+                  Manpower Request (Business Solution)
+                </option>
+                <option value="Accommodation Service Request">
+                  Accommodation Service Request
+                </option>
+                <option value="Talent Acquisition Request">
+                  Talent Acquisition Request
+                </option>
+                <option value="IT Services Request">IT Services Request</option>
+              </select>
+            </div>
 
             {/* Contact Person */}
             <div>
@@ -122,22 +166,6 @@ export default function BusinessEnquiryForm() {
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition"
                 placeholder="Enter contact person name"
-                required
-              />
-            </div>
-
-            {/* Company CR Number */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Company CR Number<span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="company_cr_number"
-                value={formData.company_cr_number}
-                onChange={handleChange}
-                className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition"
-                placeholder="Enter company registration number"
                 required
               />
             </div>
@@ -180,34 +208,8 @@ export default function BusinessEnquiryForm() {
               </div>
             </div>
 
-            {/* Request Type */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Request Type<span className="text-red-500">*</span>
-              </label>
-              <select
-                name="request_type"
-                value={formData.request_type}
-                onChange={handleChange}
-                className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition"
-                required
-              >
-                <option value="">Select request type</option>
-                <option value="Manpower Request (Business Solution)">
-                  Manpower Request (Business Solution)
-                </option>
-                <option value="Accommodation Service Request">
-                  Accommodation Service Request
-                </option>
-                <option value="Talent Acquisition Request">
-                  Talent Acquisition Request
-                </option>
-                <option value="IT Services Request">IT Services Request</option>
-              </select>
-            </div>
-
             {/* Description */}
-            <div>
+            <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Description / Additional Details
               </label>
@@ -225,7 +227,7 @@ export default function BusinessEnquiryForm() {
             </div>
 
             {/* Submit */}
-            <div className="pt-4 text-center">
+            <div className="md:col-span-2 pt-4 text-center">
               <button
                 type="submit"
                 disabled={loading}
