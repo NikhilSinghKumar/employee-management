@@ -35,20 +35,7 @@ export async function GET(req) {
     // 🧩 Base Supabase query
     let query = supabase
       .from("business_enquiry")
-      .select(
-        `
-        id,
-        company_name,
-        contact_person_name,
-        company_cr_number,
-        mobile_no,
-        email_id,
-        request_type,
-        description,
-        is_deleted,
-        created_at
-        `
-      )
+      .select("*")
       .eq("is_deleted", false)
       .order("created_at", { ascending: false });
 
