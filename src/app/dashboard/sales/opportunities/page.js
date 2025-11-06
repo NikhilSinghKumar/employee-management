@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { Search } from "lucide-react";
+import BusinessEnquiryActions from "@/component/BusinessEnquiryActions";
 
 export default function BusinessEnquiryPage() {
   const [enquiries, setEnquiries] = useState([]);
@@ -40,6 +41,29 @@ export default function BusinessEnquiryPage() {
     }, 500);
     return () => clearTimeout(delay);
   }, [searchTerm]);
+
+  async function handleAction(action, enquiry) {
+    switch (action) {
+      case "view":
+        toast(`Viewing ${enquiry.company_name}`);
+        break;
+      case "assign":
+        toast(`Assigning ${enquiry.company_name}`);
+        break;
+      case "status":
+        toast(`Updating status for ${enquiry.company_name}`);
+        break;
+      case "delete":
+        await fetch(`/api/sales/business_enquiry_list/${enquiry.id}`, {
+          method: "DELETE",
+        });
+        toast.success("Deleted successfully");
+        fetchData();
+        break;
+      default:
+        toast.error("Unknown action");
+    }
+  }
 
   return (
     <div className="max-w-7xl mx-auto p-2">
@@ -134,6 +158,10 @@ export default function BusinessEnquiryPage() {
                       <th className="px-4 py-3 border border-gray-200 text-left">
                         Created At
                       </th>
+                      <th className="px-4 py-3 border border-gray-200 text-left">
+                        Status
+                      </th>
+                      <th className="py-3 px-4 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -165,6 +193,29 @@ export default function BusinessEnquiryPage() {
                         </td>
                         <td className="px-4 py-3 border border-gray-200 text-gray-500">
                           {new Date(item.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-4 py-3 border border-gray-200 text-gray-500">
+                          <span
+                            className={`px-2 py-1 text-xs rounded-full ${
+                              item.status === "converted"
+                                ? "bg-green-200 text-green-700"
+                                : item.status === "in_progress"
+                                ? "bg-yellow-200 text-yellow-700"
+                                : item.status === "contacted"
+                                ? "bg-blue-200 text-blue-700"
+                                : item.status === "rejected"
+                                ? "bg-red-200 text-red-700"
+                                : "bg-rose-200 text-gray-700"
+                            }`}
+                          >
+                            {item.status || "New"}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-right">
+                          <BusinessEnquiryActions
+                            enquiry={item}
+                            onAction={handleAction}
+                          />
                         </td>
                       </tr>
                     ))}
@@ -215,6 +266,34 @@ export default function BusinessEnquiryPage() {
                       <div className="col-span-2">
                         <span className="text-gray-500">Description:</span>
                         <p>{item.description || "-"}</p>
+                      </div>
+                    </div>
+
+                    {/* ✅ Status & Actions Section */}
+                    <div className="mt-4 flex items-center justify-between">
+                      {/* Status */}
+                      <span
+                        className={`px-2 py-1 text-xs rounded-full font-medium ${
+                          item.status === "converted"
+                            ? "bg-green-200 text-green-700"
+                            : item.status === "in_progress"
+                            ? "bg-yellow-200 text-yellow-700"
+                            : item.status === "contacted"
+                            ? "bg-blue-200 text-blue-700"
+                            : item.status === "rejected"
+                            ? "bg-red-200 text-red-700"
+                            : "bg-pink-200 text-gray-700"
+                        }`}
+                      >
+                        {item.status || "New"}
+                      </span>
+
+                      {/* Actions */}
+                      <div className="flex items-center space-x-2">
+                        <BusinessEnquiryActions
+                          enquiry={item}
+                          onAction={handleAction}
+                        />
                       </div>
                     </div>
                   </div>
