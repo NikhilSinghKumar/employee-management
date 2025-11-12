@@ -75,7 +75,7 @@ export async function GET(request) {
   }
 }
 
-export async function PUT(request) {
+export async function PATCH(request) {
   const authResult = await verifyAuth();
   if (!authResult.success) {
     return NextResponse.json(authResult, { status: 401 });
@@ -114,6 +114,53 @@ export async function PUT(request) {
     );
   } catch (error) {
     console.error("Error updating case status:", error);
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request) {
+  const authResult = await verifyAuth();
+  if (!authResult.success) {
+    return NextResponse.json(authResult, { status: 401 });
+  }
+
+  if (!authResult.user?.userId) {
+    return NextResponse.json(
+      { success: false, error: "Unauthorized" },
+      { status: 401 }
+    );
+  }
+
+  try {
+    const body = await request.json();
+    const { id } = body;
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: "Missing required field: id" },
+        { status: 400 }
+      );
+    }
+
+    // Perform soft delete
+    const { data, error } = await supabase
+      .from("employee_request")
+      .update({ is_deleted: true, updated_at: new Date().toISOString() })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return NextResponse.json(
+      { success: true, message: "Case deleted successfully", data },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Error deleting case:", error);
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500 }
