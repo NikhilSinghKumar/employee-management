@@ -16,7 +16,9 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import { Check } from "lucide-react"; // ✅ tick icon
 import { toast } from "react-hot-toast";
+import { cn } from "@/lib/utils"; // ✅ optional helper (shadcn utility for class merge)
 
 export default function StatusUpdateDialog({
   enquiry,
@@ -92,14 +94,26 @@ export default function StatusUpdateDialog({
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select new status" />
             </SelectTrigger>
+
             <SelectContent>
               {statusOptions.map((s) => (
-                <SelectItem key={s.value} value={s.value}>
-                  <span
-                    className={`px-2 py-1 rounded-full text-sm font-medium ${s.color}`}
+                <SelectItem
+                  key={s.value}
+                  value={s.value}
+                  className="flex justify-between items-center"
+                >
+                  <div
+                    className={cn(
+                      "flex items-center justify-between w-full px-2 py-1 rounded-full text-sm font-medium",
+                      s.color
+                    )}
                   >
                     {s.label}
-                  </span>
+                    {/* ✅ the checkmark appears automatically when selected */}
+                    <span className="ml-2 opacity-0 group-data-[state=checked]:opacity-100 transition-opacity">
+                      <Check className="h-4 w-4" />
+                    </span>
+                  </div>
                 </SelectItem>
               ))}
             </SelectContent>
