@@ -90,9 +90,9 @@ export async function PATCH(request) {
 
   try {
     const body = await request.json();
-    const { id, cm_status } = body;
+    const { id, cm_status, remarks } = body;
 
-    if (!id || !cm_status) {
+    if (!id || !cm_status || !remarks) {
       return NextResponse.json(
         { success: false, error: "Missing required fields (id, cm_status)" },
         { status: 400 }
@@ -101,7 +101,7 @@ export async function PATCH(request) {
 
     const { data, error } = await supabase
       .from("employee_request")
-      .update({ cm_status, updated_at: new Date().toISOString() })
+      .update({ cm_status, remarks, updated_at: new Date().toISOString() })
       .eq("id", id)
       .select()
       .single();
