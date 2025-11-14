@@ -4,7 +4,9 @@ import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { Search } from "lucide-react";
 import BusinessEnquiryActions from "@/component/BusinessEnquiryActions";
-import StatusUpdateDialog from "@/component/StatusUpdateDialog";
+// import StatusUpdateDialog from "@/component/StatusUpdateDialog";
+import ViewModal from "@/component/business_enquiry_actions/ViewModal";
+import StatusModal from "@/component/business_enquiry_actions/StatusModal";
 
 export default function BusinessEnquiryPage() {
   const [enquiries, setEnquiries] = useState([]);
@@ -13,6 +15,8 @@ export default function BusinessEnquiryPage() {
   const [loading, setLoading] = useState(true);
   const [selectedEnquiry, setSelectedEnquiry] = useState(null);
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
+  const [selectedViewEnquiry, setSelectedViewEnquiry] = useState(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
   // 🔹 Fetch data
   const fetchEnquiries = async () => {
@@ -50,15 +54,19 @@ export default function BusinessEnquiryPage() {
   async function handleAction(action, enquiry) {
     switch (action) {
       case "view":
-        toast(`Viewing ${enquiry.company_name}`);
+        setSelectedViewEnquiry(enquiry);
+        setIsViewModalOpen(true);
         break;
+
       case "assign":
         toast(`Assigning ${enquiry.company_name}`);
         break;
+
       case "updateStatus":
         setSelectedEnquiry(enquiry);
         setIsStatusDialogOpen(true);
         break;
+
       case "delete":
         try {
           const confirmDelete = window.confirm(
@@ -74,7 +82,7 @@ export default function BusinessEnquiryPage() {
           const result = await res.json();
           if (result.success) {
             toast.success("Deleted successfully");
-            fetchEnquiries(); // ✅ refresh table
+            fetchEnquiries();
           } else {
             toast.error(result.error || "Failed to delete");
           }
@@ -83,6 +91,7 @@ export default function BusinessEnquiryPage() {
           toast.error("Something went wrong");
         }
         break;
+
       default:
         toast.error("Unknown action");
     }
@@ -173,16 +182,13 @@ export default function BusinessEnquiryPage() {
                         Email
                       </th>
                       <th className="px-4 py-3 border border-gray-200 text-left">
-                        Request Type
-                      </th>
-                      <th className="px-4 py-3 border border-gray-200 text-left">
-                        Description
-                      </th>
-                      <th className="px-4 py-3 border border-gray-200 text-left">
                         Created At
                       </th>
                       <th className="px-4 py-3 border border-gray-200 text-left">
                         Status
+                      </th>
+                      <th className="px-4 py-3 border border-gray-200 text-left">
+                        Remarks
                       </th>
                       <th className="py-3 px-4 border border-gray-200 text-right">
                         Actions
@@ -210,12 +216,7 @@ export default function BusinessEnquiryPage() {
                         <td className="px-4 py-3 border border-gray-200 text-gray-700">
                           {item.email_id}
                         </td>
-                        <td className="px-4 py-3 border border-gray-200">
-                          {item.request_type}
-                        </td>
-                        <td className="px-4 py-3 border border-gray-200 text-gray-600">
-                          {item.description || "-"}
-                        </td>
+
                         <td className="px-4 py-3 border border-gray-200 text-gray-500">
                           {new Date(item.created_at).toLocaleDateString()}
                         </td>
@@ -235,6 +236,9 @@ export default function BusinessEnquiryPage() {
                           >
                             {item.status || "New"}
                           </span>
+                        </td>
+                        <td className="px-4 py-3 border border-gray-200 text-gray-700">
+                          {item.remarks}
                         </td>
                         <td className="py-3 px-4 border border-gray-200 text-right">
                           <BusinessEnquiryActions
@@ -328,11 +332,16 @@ export default function BusinessEnquiryPage() {
           )}
         </>
       )}
-      <StatusUpdateDialog
-        enquiry={selectedEnquiry}
+      <StatusModal
         open={isStatusDialogOpen}
         onClose={() => setIsStatusDialogOpen(false)}
+        enquiry={selectedEnquiry}
         onUpdated={fetchEnquiries}
+      />
+      <ViewModal
+        open={isViewModalOpen}
+        onClose={() => setIsViewModalOpen(false)}
+        enquiry={selectedViewEnquiry}
       />
     </div>
   );
