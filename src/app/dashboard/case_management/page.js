@@ -202,7 +202,7 @@ export default function CaseListPage() {
                       "Client",
                       "Status",
                       "Created",
-                      "Updated",
+                      "Remarks",
                       "Action",
                     ].map((header) => (
                       <th key={header} className="p-2 border font-medium">
@@ -232,11 +232,12 @@ export default function CaseListPage() {
                       <td className="p-2 border">
                         {new Date(c.created_at).toLocaleDateString()}
                       </td>
-                      <td className="p-2 border">
+                      {/* <td className="p-2 border">
                         {c.updated_at
                           ? new Date(c.updated_at).toLocaleDateString()
                           : "-"}
-                      </td>
+                      </td> */}
+                      <td className="p-2 border">{c.remarks}</td>
                       <td className="p-2 border text-center">
                         <CaseManagementActions
                           enquiry={c}
