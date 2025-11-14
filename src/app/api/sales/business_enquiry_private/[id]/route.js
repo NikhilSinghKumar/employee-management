@@ -65,7 +65,7 @@ export async function DELETE(req, { params }) {
       return NextResponse.json(authResult, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await params;
     if (!id) {
       return NextResponse.json(
         { success: false, error: "Missing enquiry ID" },
