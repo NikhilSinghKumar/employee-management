@@ -17,7 +17,7 @@ async function verifyAuth() {
 export async function PATCH(req, { params }) {
   try {
     const { id } = await params;
-    const { status } = await req.json();
+    const { status, remarks } = await req.json();
 
     // optional auth
     const cookieHeader = req.headers.get("cookie");
@@ -35,7 +35,7 @@ export async function PATCH(req, { params }) {
     // ✅ Update in Supabase
     const { data, error } = await supabase
       .from("business_enquiry")
-      .update({ status })
+      .update({ status, remarks, updated_at: new Date().toISOString() })
       .eq("id", id)
       .select();
 
