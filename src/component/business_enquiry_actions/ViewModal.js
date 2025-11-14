@@ -29,7 +29,7 @@ export default function ViewModal({ open, onClose, enquiry }) {
           </div>
 
           <div>
-            <p className="text-sm font-medium text-gray-500">Description</p>
+            <p className="text-sm font-bold text-gray-500">Description</p>
             <p className="text-base text-gray-800">
               {enquiry.description || "No description provided."}
             </p>
