@@ -1,7 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { MoreVertical, Eye, UserCheck, Edit2, Trash2 } from "lucide-react";
+import {
+  MoreVertical,
+  Eye,
+  UserCheck,
+  NotebookPen,
+  Edit2,
+  Trash2,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -52,6 +59,9 @@ export default function BusinessEnquiryActions({ enquiry, onAction }) {
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => handleAction("updateStatus")}>
           <Edit2 className="w-4 h-4 mr-2 text-green-600" /> Update Status
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleAction("updateStatus")}>
+          <NotebookPen className="w-4 h-4 mr-2 text-purple-600" /> Gen. Quo.
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => handleAction("delete")}>
           <Trash2 className="w-4 h-4 mr-2 text-red-500" /> Delete
