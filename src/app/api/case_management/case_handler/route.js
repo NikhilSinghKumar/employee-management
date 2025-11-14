@@ -92,7 +92,7 @@ export async function PATCH(request) {
     const body = await request.json();
     const { id, cm_status, remarks } = body;
 
-    if (!id || !cm_status || !remarks) {
+    if (!id || !cm_status) {
       return NextResponse.json(
         { success: false, error: "Missing required fields (id, cm_status)" },
         { status: 400 }
