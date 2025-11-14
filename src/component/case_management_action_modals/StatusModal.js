@@ -78,19 +78,19 @@ export default function StatusModal({
               </SelectItem>
 
               <SelectItem value="open">
-                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-slate-100 text-yellow-700">
                   Open
                 </span>
               </SelectItem>
 
               <SelectItem value="in-progress">
-                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-orange-700">
                   In Progress
                 </span>
               </SelectItem>
 
               <SelectItem value="resolved">
-                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
                   Resolved
                 </span>
               </SelectItem>
