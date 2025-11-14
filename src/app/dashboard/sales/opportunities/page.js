@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { Search } from "lucide-react";
 import BusinessEnquiryActions from "@/component/BusinessEnquiryActions";
-// import StatusUpdateDialog from "@/component/StatusUpdateDialog";
 import ViewModal from "@/component/business_enquiry_actions/ViewModal";
 import StatusModal from "@/component/business_enquiry_actions/StatusModal";
 
