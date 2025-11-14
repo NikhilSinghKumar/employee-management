@@ -305,7 +305,7 @@ export default function BusinessEnquiryPage() {
                           item.status === "converted"
                             ? "bg-green-200 text-green-700"
                             : item.status === "in_progress"
-                            ? "bg-yellow-200 text-yellow-700"
+                            ? "bg-yellow-100 text-orange-700"
                             : item.status === "contacted"
                             ? "bg-blue-200 text-blue-700"
                             : item.status === "rejected"
