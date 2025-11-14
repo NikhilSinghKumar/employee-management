@@ -4,7 +4,7 @@ import React from "react";
 import clsx from "clsx"; // optional, helps combine class names
 
 const statusColors = {
-  new: "bg-blue-100 text-blue-700",
+  new: "bg-pink-200 text-gray-700",
   contacted: "bg-blue-100 text-blue-700",
   "in-progress": "bg-yellow-100 text-orange-700",
   converted: "bg-green-100 text-green-700",
