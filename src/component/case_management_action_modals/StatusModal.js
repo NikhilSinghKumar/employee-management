@@ -25,9 +25,11 @@ export default function StatusModal({
   onStatusUpdated,
 }) {
   const [status, setStatus] = useState(caseData?.cm_status || "");
+  const [remarks, setRemarks] = useState(caseData?.remarks || "");
 
   useEffect(() => {
     setStatus(caseData?.cm_status || "");
+    setRemarks(caseData?.remarks || "");
   }, [caseData]);
 
   const handleUpdate = async () => {
@@ -35,7 +37,11 @@ export default function StatusModal({
       const res = await fetch(`/api/case_management/case_handler`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: caseData.id, cm_status: status }),
+        body: JSON.stringify({
+          id: caseData.id,
+          cm_status: status,
+          remarks: remarks,
+        }),
       });
 
       if (!res.ok) throw new Error("Failed to update");
@@ -96,6 +102,16 @@ export default function StatusModal({
               </SelectItem>
             </SelectContent>
           </Select>
+          {/* ✅ Remarks input */}
+          <label className="text-sm font-medium text-gray-700 mt-3">
+            Remarks
+          </label>
+          <textarea
+            value={remarks}
+            onChange={(e) => setRemarks(e.target.value)}
+            placeholder="Add remarks..."
+            className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
         </div>
 
         <DialogFooter className="mt-4">
