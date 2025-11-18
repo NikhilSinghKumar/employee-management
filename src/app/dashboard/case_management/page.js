@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { Search } from "lucide-react";
 import CaseManagementActions from "@/component/CaseManagementActions";
-import ConfirmDeleteDialog from "@/component/ConfirmDeleteDialog";
+import ConfirmDeleteDialog from "@/component/case_management_action_modals/ConfirmDeleteDialog";
 import ViewCaseModal from "@/component/case_management_action_modals/ViewCaseModal";
 import StatusModal from "@/component/case_management_action_modals/StatusModal";
 import AssignModal from "@/component/case_management_action_modals/AssignModal";
