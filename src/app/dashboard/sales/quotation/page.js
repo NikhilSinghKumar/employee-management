@@ -325,7 +325,7 @@ export default function GenerateQuotationPage() {
 
                 <div className="md:col-span-2">
                   <label className="block text-[#4A5A6A] text-sm mb-1 font-medium">
-                    Client's Commitments
+                    Client&apos;s Commitments
                   </label>
                   <textarea
                     name="client_commitments"
