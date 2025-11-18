@@ -208,7 +208,7 @@ export default function GenerateQuotationPage() {
 
   return (
     <>
-      <div className="min-h-screen py-6 px-2 flex justify-center">
+      <div className="min-h-screen flex justify-center">
         <div
           className="w-full max-w-4xl bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl 
     border border-[#cfd8df] p-4 sm:p-6 md:p-10"
@@ -307,7 +307,7 @@ export default function GenerateQuotationPage() {
                     value={form.remarks}
                     onChange={handleChange}
                     rows="3"
-                    className="w-full px-4 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-[#4A5A6A]"
+                    className="w-full border rounded-lg bg-white focus:ring-2 focus:ring-[#4A5A6A]"
                     placeholder="Short remarks or description"
                   />
                 </div>
@@ -620,13 +620,14 @@ export default function GenerateQuotationPage() {
 
             {/* 3️⃣ FOOTER BUTTONS */}
             <div className="flex flex-col sm:flex-row sm:justify-between gap-3 mt-4">
-              <button
+              <Button
                 type="button"
+                variant="destructive"
                 onClick={handleReset}
-                className="w-full sm:w-auto px-5 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
+                className="w-full sm:w-auto"
               >
                 Reset
-              </button>
+              </Button>
 
               <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
                 <Button
@@ -638,13 +639,13 @@ export default function GenerateQuotationPage() {
                   Preview
                 </Button>
 
-                <button
+                <Button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full sm:w-auto px-6 py-2 rounded-lg bg-[#4A5A6A] text-white hover:bg-[#3b4b59]"
+                  className="w-full sm:w-auto"
                 >
                   {isLoading ? "Processing..." : "Generate Quotation"}
-                </button>
+                </Button>
               </div>
             </div>
           </form>
