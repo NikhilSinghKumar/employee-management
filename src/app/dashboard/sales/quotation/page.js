@@ -208,8 +208,11 @@ export default function GenerateQuotationPage() {
 
   return (
     <>
-      <div className="min-h-screen flex items-center justify-center py-8 px-3">
-        <div className="w-full max-w-4xl bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-[#cfd8df] p-10">
+      <div className="min-h-screen py-6 px-2 flex justify-center">
+        <div
+          className="w-full max-w-4xl bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl 
+    border border-[#cfd8df] p-4 sm:p-6 md:p-10"
+        >
           <div className="flex items-center justify-center mt-4 mb-6">
             <h1 className="text-2xl font-semibold text-[#4A5A6A]">
               Generate Quotation
@@ -616,20 +619,21 @@ export default function GenerateQuotationPage() {
             </div>
 
             {/* 3️⃣ FOOTER BUTTONS */}
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-3 mt-4">
               <button
                 type="button"
                 onClick={handleReset}
-                className="px-5 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
+                className="w-full sm:w-auto px-5 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
               >
                 Reset
               </button>
 
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setPreviewOpen(true)}
+                  className="w-full sm:w-auto"
                 >
                   Preview
                 </Button>
@@ -637,7 +641,7 @@ export default function GenerateQuotationPage() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="px-6 py-2 rounded-lg bg-[#4A5A6A] text-white hover:bg-[#3b4b59]"
+                  className="w-full sm:w-auto px-6 py-2 rounded-lg bg-[#4A5A6A] text-white hover:bg-[#3b4b59]"
                 >
                   {isLoading ? "Processing..." : "Generate Quotation"}
                 </button>
