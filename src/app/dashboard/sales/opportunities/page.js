@@ -68,6 +68,18 @@ export default function BusinessEnquiryPage() {
         setIsStatusDialogOpen(true);
         break;
 
+      case "generateQuotation":
+        const query = new URLSearchParams({
+          company_name: enquiry.company_name || "",
+          contact_person_name: enquiry.contact_person_name || "",
+          email_id: enquiry.email_id || "",
+          mobile_no: enquiry.mobile_no || "",
+          company_cr_number: enquiry.company_cr_number || "",
+        }).toString();
+
+        window.open(`/dashboard/sales/quotation?${query}`, "_blank");
+        break;
+
       case "delete":
         setSelectedEnquiry(enquiry);
         setIsDeleteDialogOpen(true);
