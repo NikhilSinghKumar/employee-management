@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "react-hot-toast";
 import PreviewQuotationModal from "@/component/quotations/PreviewQuotationModal";
 import { Button } from "@/components/ui/button";
+import { useSearchParams } from "next/navigation";
 
 const defaultForm = {
   date: "",
@@ -42,9 +43,21 @@ export default function GenerateQuotationPage() {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     document.title = "Generate Quotation";
+  }, []);
+
+  useEffect(() => {
+    setForm((prev) => ({
+      ...prev,
+      company_name: searchParams.get("company_name") || "",
+      person_name: searchParams.get("contact_person_name") || "",
+      email: searchParams.get("email_id") || "",
+      mobile_no: searchParams.get("mobile_no") || "",
+      company_cr_number: searchParams.get("company_cr_number") || "",
+    }));
   }, []);
 
   // compute monthly cost per worker whenever components change
