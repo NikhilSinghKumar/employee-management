@@ -60,7 +60,7 @@ export default function BusinessEnquiryActions({ enquiry, onAction }) {
         <DropdownMenuItem onClick={() => handleAction("updateStatus")}>
           <Edit2 className="w-4 h-4 mr-2 text-green-600" /> Update Status
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => handleAction("updateStatus")}>
+        <DropdownMenuItem onClick={() => handleAction("generateQuotation")}>
           <NotebookPen className="w-4 h-4 mr-2 text-purple-600" /> Gen. Quo.
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => handleAction("delete")}>
