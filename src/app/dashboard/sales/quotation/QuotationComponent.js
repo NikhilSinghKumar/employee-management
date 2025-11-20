@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { toast } from "react-hot-toast";
+import { toast, Toaster } from "react-hot-toast";
 import PreviewQuotationModal from "@/component/quotations/PreviewQuotationModal";
 import { Button } from "@/components/ui/button";
 import { useSearchParams } from "next/navigation";
@@ -222,6 +222,13 @@ export default function GenerateQuotationPage() {
   return (
     <>
       <div className="min-h-screen flex justify-center">
+        <Toaster
+          position="top-center"
+          toastOptions={{
+            className: "bg-gray-900 text-white text-center",
+            duration: 3000,
+          }}
+        />
         <div
           className="w-full max-w-4xl bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl 
     border border-[#cfd8df] p-4 sm:p-6 md:p-10"
@@ -320,7 +327,7 @@ export default function GenerateQuotationPage() {
                     value={form.remarks}
                     onChange={handleChange}
                     rows="3"
-                    className="w-full border rounded-lg bg-white focus:ring-2 focus:ring-[#4A5A6A]"
+                    className="w-full px-4 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-[#4A5A6A]"
                     placeholder="Short remarks or description"
                   />
                 </div>
