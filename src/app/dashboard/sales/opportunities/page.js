@@ -14,6 +14,7 @@ export default function BusinessEnquiryPage() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedEnquiry, setSelectedEnquiry] = useState(null);
+  const [statusFilter, setStatusFilter] = useState("");
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
   const [selectedViewEnquiry, setSelectedViewEnquiry] = useState(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -23,14 +24,19 @@ export default function BusinessEnquiryPage() {
   const fetchEnquiries = async () => {
     try {
       setLoading(true);
-      const res = await fetch(
-        `/api/sales/business_enquiry_private?search=${encodeURIComponent(
-          searchTerm
-        )}`,
-        { cache: "no-cache" }
-      );
+
+      const query = new URLSearchParams({
+        search: searchTerm || "",
+        status: statusFilter || "",
+      }).toString();
+
+      const res = await fetch(`/api/sales/business_enquiry_private?${query}`, {
+        cache: "no-cache",
+      });
+
       const result = await res.json();
       console.log(result.enquiries);
+
       if (result.success) {
         setEnquiries(result.enquiries || []);
         setError(null);
@@ -38,6 +44,7 @@ export default function BusinessEnquiryPage() {
         setError(result.error || "Failed to load enquiries");
       }
     } catch (err) {
+      console.error("Fetch error:", err);
       setError("Something went wrong while fetching data");
     } finally {
       setLoading(false);
@@ -50,7 +57,7 @@ export default function BusinessEnquiryPage() {
       fetchEnquiries();
     }, 500);
     return () => clearTimeout(delay);
-  }, [searchTerm]);
+  }, [statusFilter, searchTerm]);
 
   async function handleAction(action, enquiry) {
     switch (action) {
@@ -122,6 +129,22 @@ export default function BusinessEnquiryPage() {
 
         {/* 🔍 Search Bar */}
         <div className="flex flex-wrap justify-center items-center gap-4 mb-8 w-full">
+          <select
+            className="px-3 py-2 rounded-lg border border-slate-200 text-gray-800
+          bg-white shadow-sm md:shadow-md md:hover:shadow-lg 
+          focus:outline-none focus:ring-2 focus:ring-[#4A5A6A]/60 focus:border-transparent
+          transition-all duration-200 backdrop-blur-sm 
+          w-[60%] sm:w-auto md:w-auto"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="">All Status</option>
+            <option value="new">New</option>
+            <option value="contacted">Contacted</option>
+            <option value="in_progress">In Progress</option>
+            <option value="converted">Converted</option>
+            <option value="rejected">Rejected</option>
+          </select>
           <div className="relative w-[85%] sm:w-72 md:w-96">
             <Search
               className="absolute left-3 top-2.5 text-gray-400 pointer-events-none z-10"
