@@ -27,23 +27,27 @@ export async function GET(req) {
     );
   }
 
-  // ✅ Extract optional search query
   const { searchParams } = new URL(req.url);
   const search = searchParams.get("search")?.trim() || "";
+  const status = searchParams.get("status")?.trim() || ""; // ⭐ NEW
 
   try {
-    // 🧩 Base Supabase query
     let query = supabase
       .from("business_enquiry")
       .select("*")
       .eq("is_deleted", false)
       .order("created_at", { ascending: false });
 
-    // 🔍 Optional search filter (case-insensitive, partial match)
+    // 🔍 Apply search
     if (search !== "") {
       query = query.or(
         `company_name.ilike.%${search}%,contact_person_name.ilike.%${search}%,company_cr_number.ilike.%${search}%,mobile_no.ilike.%${search}%,email_id.ilike.%${search}%,request_type.ilike.%${search}%`
       );
+    }
+
+    // 🔍 Apply status filter
+    if (status !== "") {
+      query = query.eq("status", status); // ⭐ STATUS FILTER WORKS NOW
     }
 
     const { data, error } = await query;
