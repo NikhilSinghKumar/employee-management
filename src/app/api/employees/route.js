@@ -50,7 +50,8 @@ export async function GET(req) {
     // Calculate unique client count
     const { data: allClientsData, error: clientError } = await supabase
       .from("employees")
-      .select("client_number");
+      .select("client_number")
+      .eq("is_deleted", false);
     if (clientError) {
       console.error("Supabase client count error:", clientError);
       throw new Error(clientError.message);
