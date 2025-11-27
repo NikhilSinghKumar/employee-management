@@ -30,6 +30,10 @@ export async function POST(request) {
       employees = data;
     }
 
+    employees = employees.filter(
+      (emp) => String(emp.is_deleted).toUpperCase() !== "TRUE"
+    );
+
     // Format data for Excel, including computed totalAllowance and formatted dates
     const formattedData = employees.map((employee, index) => ({
       "Sr. No.": index + 1,
