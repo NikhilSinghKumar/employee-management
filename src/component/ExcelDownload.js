@@ -2,28 +2,44 @@
 
 import { useState } from "react";
 import { IoMdCloudDownload } from "react-icons/io";
+import { toast } from "react-hot-toast";
 
 export default function ExcelDownload({ data, searchQuery }) {
   const [loading, setLoading] = useState(false);
 
   const handleDownload = async () => {
     setLoading(true);
+
+    // 🚫 If searching and no filtered result
+    if (searchQuery && (!data || data.length === 0)) {
+      toast.error("No matching records found to download.", {
+        position: "top-center",
+      });
+      setLoading(false);
+      return;
+    }
+
     try {
-      // If searchQuery exists, send the filtered data; otherwise, fetch all data
       const response = await fetch(
         `/api/download?searchQuery=${encodeURIComponent(searchQuery)}`,
         {
-          method: "POST", // Changed to POST to send data
-          credentials: "include", // Include JWT in cookies
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: searchQuery ? JSON.stringify(data) : undefined, // Send data only if searchQuery exists
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: searchQuery ? JSON.stringify(data) : undefined,
         }
       );
 
       if (!response.ok) {
-        throw new Error("Failed to download the file.");
+        let errorMessage = "Failed to download file.";
+
+        try {
+          const err = await response.json();
+          if (err?.error) errorMessage = err.error;
+        } catch {}
+
+        toast.error(errorMessage, { position: "top-center" });
+        return;
       }
 
       const blob = await response.blob();
@@ -37,9 +53,15 @@ export default function ExcelDownload({ data, searchQuery }) {
       document.body.removeChild(a);
 
       window.URL.revokeObjectURL(url);
+
+      toast.success("Excel downloaded successfully!", {
+        position: "top-center",
+      });
     } catch (error) {
       console.error("Download failed:", error);
-      alert("Error downloading the file. Please try again.");
+      toast.error("Unexpected error. Please try again.", {
+        position: "top-center",
+      });
     } finally {
       setLoading(false);
     }
