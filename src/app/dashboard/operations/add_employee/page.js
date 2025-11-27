@@ -762,6 +762,11 @@ export default function AddEmployee() {
             </button>
           </div>
         </form>
+        <div className="flex justify-center items-center mt-4">
+          <div className="w-auto min-w-[200px]">
+            <ExcelUpload />
+          </div>
+        </div>
       </div>
     </div>
   );
