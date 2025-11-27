@@ -75,6 +75,7 @@ export default function Sidebar({ isOpen, onClose }) {
       items: [
         { name: "Opportunities", href: "/dashboard/sales/opportunities" },
         { name: "Quotation", href: "/dashboard/sales/quotation" },
+        { name: "All Quotations", href: "/dashboard/sales/quotation_list" },
         { name: "Contracts", href: "/dashboard/sales/contracts" },
       ],
     },
