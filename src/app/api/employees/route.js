@@ -23,7 +23,10 @@ export async function GET(req) {
   const search = searchParams.get("search")?.toLowerCase() || "";
 
   try {
-    let query = supabase.from("employees").select("*", { count: "exact" });
+    let query = supabase
+      .from("employees")
+      .select("*", { count: "exact" })
+      .eq("is_deleted", false);
 
     if (search) {
       query = query.or(
