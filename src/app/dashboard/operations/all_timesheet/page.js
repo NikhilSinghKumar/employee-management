@@ -291,7 +291,7 @@ export default function TimesheetPage() {
                         <button
                           onClick={() =>
                             router.push(
-                              `/operations/timesheet/${
+                              `/dashboard/operations/timesheet/${
                                 entry.client_number
                               }/${year}/${entry.timesheet_month.slice(5, 7)}`
                             )
@@ -303,7 +303,7 @@ export default function TimesheetPage() {
                         <button
                           onClick={() =>
                             router.push(
-                              `/operations/edit_timesheet/${
+                              `/dashboard/operations/edit_timesheet/${
                                 entry.client_number
                               }/${year}/${entry.timesheet_month.slice(5, 7)}`
                             )
