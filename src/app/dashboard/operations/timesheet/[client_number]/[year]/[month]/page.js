@@ -203,7 +203,9 @@ export default function ClientTimesheetPage() {
                 <th className="table-cell-style table-cell-center">
                   Basic Salary
                 </th>
-                <th className="table-cell-style table-cell-center">Allowance</th>
+                <th className="table-cell-style table-cell-center">
+                  Allowance
+                </th>
                 <th className="table-cell-style table-cell-center">
                   Total Salary
                 </th>
@@ -213,15 +215,23 @@ export default function ClientTimesheetPage() {
                 <th className="table-cell-style table-cell-center">
                   Overtime Hrs
                 </th>
-                <th className="table-cell-style table-cell-center">Absent Hrs</th>
+                <th className="table-cell-style table-cell-center">
+                  Absent Hrs
+                </th>
                 <th className="table-cell-style table-cell-center">Overtime</th>
-                <th className="table-cell-style table-cell-center">Incentives</th>
+                <th className="table-cell-style table-cell-center">
+                  Incentives
+                </th>
                 <th className="table-cell-style table-cell-center">Penalty</th>
-                <th className="table-cell-style table-cell-center">Deductions</th>
+                <th className="table-cell-style table-cell-center">
+                  Deductions
+                </th>
                 <th className="table-cell-style table-cell-center">
                   Adjusted Salary
                 </th>
-                <th className="table-cell-style table-cell-center">Etmam Cost</th>
+                <th className="table-cell-style table-cell-center">
+                  Etmam Cost
+                </th>
                 <th className="table-cell-style table-cell-center font-bold">
                   Total Cost
                 </th>
@@ -344,14 +354,16 @@ export default function ClientTimesheetPage() {
 
       <div className="flex justify-center gap-4 mt-8 mb-8">
         <button
-          onClick={() => router.push("/operations/all_timesheet")}
+          onClick={() => router.push("/dashboard/operations/all_timesheet")}
           className="bg-cyan-700 text-white px-4 py-2 cursor-pointer rounded hover:bg-cyan-800"
         >
           Back to Client Timesheet
         </button>
         <button
           onClick={() =>
-            router.push(`/operations/edit_timesheet/${client_number}/${year}/${month}`)
+            router.push(
+              `/dashboard/operations/edit_timesheet/${client_number}/${year}/${month}`
+            )
           }
           className="bg-fuchsia-700 text-white px-4 py-2 rounded hover:bg-fuchsia-800"
         >
