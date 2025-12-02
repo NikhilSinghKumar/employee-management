@@ -17,12 +17,30 @@ export default function TimesheetPage() {
   const pageSize = 10;
   const router = useRouter();
 
-  // Derive month and year from currentDate
-  const currentMonth = String(currentDate.getMonth() + 1).padStart(2, "0");
-  const currentYear = currentDate.getFullYear().toString();
-  const formattedMonth = currentDate.toLocaleString("default", {
+  // Month/Year based on 15-day window rule
+  const today = new Date();
+  const dayOfMonth = today.getDate();
+
+  // If today <= 15 → show previous month
+  let displayDate = new Date(today);
+
+  if (dayOfMonth <= 15) {
+    displayDate.setMonth(displayDate.getMonth() - 1);
+  }
+
+  // These are the month/year you must use
+  const currentMonth = String(displayDate.getMonth() + 1).padStart(2, "0");
+  const currentYear = displayDate.getFullYear().toString();
+  const formattedMonth = displayDate.toLocaleString("default", {
     month: "long",
   });
+
+  // // Derive month and year from currentDate
+  // const currentMonth = String(currentDate.getMonth() + 1).padStart(2, "0");
+  // const currentYear = currentDate.getFullYear().toString();
+  // const formattedMonth = currentDate.toLocaleString("default", {
+  //   month: "long",
+  // });
 
   const totalPages = Math.ceil(totalCount / pageSize);
 
