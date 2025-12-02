@@ -55,30 +55,47 @@ export async function POST(req) {
       );
 
     // Convert Excel date or dd/mm/yyyy → yyyy-mm-dd
-    const formatDate = (value) => {
+    function formatDate(value) {
       if (!value) return null;
 
-      // Case 1: Excel serial number
-      if (!isNaN(value) && Number(value) > 10000) {
-        const excelDate = XLSX.SSF.parse_date_code(value);
-        if (!excelDate) return null;
+      // YYYY-MM-DD
+      const iso = /^(\d{4})-(\d{2})-(\d{2})$/;
+      let match = value.match(iso);
+      if (match) return value;
 
-        return new Date(excelDate.y, excelDate.m - 1, excelDate.d)
-          .toISOString()
-          .split("T")[0];
-      }
-
-      // Case 2: MM/DD/YYYY string
-      const usFormat = /^(\d{2})\/(\d{2})\/(\d{4})$/;
-      const match = value.match(usFormat);
-
+      // DD/MM/YYYY or MM/DD/YYYY
+      const slash = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+      match = value.match(slash);
       if (match) {
-        const [, month, day, year] = match; // FIXED
-        return `${year}-${month}-${day}`;
+        let [_, a, b, year] = match;
+        a = parseInt(a, 10);
+        b = parseInt(b, 10);
+
+        if (a > 12 && b <= 12) {
+          // must be DD/MM/YYYY
+          return `${year}-${String(b).padStart(2, "0")}-${String(a).padStart(
+            2,
+            "0"
+          )}`;
+        }
+
+        if (b > 12 && a <= 12) {
+          // must be MM/DD/YYYY
+          return `${year}-${String(a).padStart(2, "0")}-${String(b).padStart(
+            2,
+            "0"
+          )}`;
+        }
+
+        // If ambiguous (both <= 12), assume DD/MM/YYYY
+        return `${year}-${String(b).padStart(2, "0")}-${String(a).padStart(
+          2,
+          "0"
+        )}`;
       }
 
       return null;
-    };
+    }
 
     const lower = normalizeKeys(jsonData);
 
@@ -135,11 +152,13 @@ export async function POST(req) {
         { status: 400 }
       );
     }
-
-    // ---------------- INSERT ----------------
-    const { error: insertError } = await supabase
+    // ---------------- INSERT (SKIP DUPLICATES) ----------------
+    const { data: insertedRows, error: insertError } = await supabase
       .from("employees")
-      .insert(formattedData);
+      .upsert(formattedData, {
+        onConflict: "iqama_number",
+        ignoreDuplicates: true, // <-- skip rows where iqama_number already exists
+      });
 
     if (insertError) {
       console.error("Supabase insert error:", insertError);
@@ -149,9 +168,15 @@ export async function POST(req) {
       );
     }
 
+    // Count inserted vs skipped
+    const insertedCount = insertedRows?.length || 0;
+    const skippedCount = formattedData.length - insertedCount;
+
     return NextResponse.json({
       success: true,
       message: "Employees uploaded successfully!",
+      inserted: insertedCount,
+      skipped: skippedCount,
     });
   } catch (error) {
     console.error("Unexpected error:", error);
