@@ -185,7 +185,7 @@ export async function POST(req) {
     // Fetch employee data
     const { data: employees, error: empError } = await supabase
       .from("employees")
-      .select("id, basic_salary, total_salary, client_name, iqama_number")
+      .select("id, name, basic_salary, total_salary, client_name, iqama_number")
       .eq("client_number", clientNumber);
 
     if (empError) {
@@ -220,12 +220,24 @@ export async function POST(req) {
       client_name: emp.client_name,
       penalty: 0,
       iqama_number: emp.iqama_number,
+      employee_name: emp.name,
     }));
+
+    const grouped = timesheetRecords.reduce((acc, r) => {
+      const key =
+        r.iqama_number + "-" + r.client_number + "-" + r.timesheet_month;
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {});
 
     // Insert timesheet records
     const { error: insertError } = await supabase
       .from("generated_timesheet")
-      .insert(timesheetRecords);
+      .insert(timesheetRecords, {
+        upsert: true,
+        // This line is the magic — tells PostgreSQL exactly which columns define uniqueness
+        conflict: "iqama_number,client_number,timesheet_month",
+      });
 
     if (insertError) {
       console.error("Insert error:", insertError);
