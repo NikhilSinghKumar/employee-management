@@ -125,6 +125,38 @@ export async function POST(req) {
 
   let { month, year, clientNumber } = await req.json();
 
+  // -------------------------------
+  // Secure 15-Day Window Rule
+  // -------------------------------
+  const now = new Date();
+  const todayDay = now.getDate();
+
+  let allowedDate = new Date(now);
+
+  // If today is 1–15, only previous month is allowed
+  if (todayDay <= 15) {
+    allowedDate.setMonth(allowedDate.getMonth() - 1);
+  }
+
+  // Backend expected month/year
+  const allowedMonth = String(allowedDate.getMonth() + 1).padStart(2, "0");
+  const allowedYear = allowedDate.getFullYear().toString();
+
+  // Compare user request with allowed values
+  if (month !== allowedMonth || year.toString() !== allowedYear) {
+    return NextResponse.json(
+      {
+        error: `Not allowed! You can only generate timesheet for ${allowedYear}-${allowedMonth}.`,
+        allowed: {
+          month: allowedMonth,
+          year: allowedYear,
+        },
+        received: { month, year },
+      },
+      { status: 403 }
+    );
+  }
+
   if (!month || !year || !clientNumber) {
     return NextResponse.json(
       { error: "Missing required fields: month, year, or clientNumber" },
