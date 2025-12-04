@@ -218,6 +218,7 @@ export async function POST(req) {
     const { data: employees, error: empError } = await supabase
       .from("employees")
       .select("id, name, basic_salary, total_salary, client_name, iqama_number")
+      .eq("is_deleted", false)
       .eq("client_number", clientNumber);
 
     if (empError) {
