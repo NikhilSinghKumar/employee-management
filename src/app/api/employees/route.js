@@ -215,7 +215,7 @@ export async function DELETE(req) {
     // Pre-check if employee exists
     const { data: employee, error: checkError } = await supabase
       .from("employees")
-      .select("id, name, employee_status")
+      .select("id, name, employee_status, is_deleted")
       .eq("id", id)
       .single();
 
@@ -227,41 +227,37 @@ export async function DELETE(req) {
       );
     }
 
-    // Attempt deletion
+    // Already deleted case
+    if (employee.is_deleted === true) {
+      return NextResponse.json(
+        { result: `Employee with ID ${id} is already deleted`, success: false },
+        { status: 400 }
+      );
+    }
+
+    // Soft delete (UPDATE is_deleted = true)
     const { data, error } = await supabase
       .from("employees")
-      .delete()
+      .update({ is_deleted: true })
       .eq("id", id)
       .select("id")
       .single();
 
     if (error) {
-      console.error("Supabase DELETE error:", error);
-      if (error.code === "PGRST116" || error.code === "P0001") {
-        return NextResponse.json(
-          { result: `Employee with ID ${id} not found`, success: false },
-          { status: 404 }
-        );
-      }
+      console.error("Supabase UPDATE error:", error);
       throw error;
     }
 
-    if (!data) {
-      return NextResponse.json(
-        { result: `Employee with ID ${id} not found`, success: false },
-        { status: 404 }
-      );
-    }
     return NextResponse.json(
       {
-        result: `Employee with ID ${id} deleted successfully`,
-        id: data.id,
+        result: `Employee with ID ${id} soft deleted successfully`,
+        id: data?.id,
         success: true,
       },
       { status: 200 }
     );
   } catch (error) {
-    console.error("Supabase DELETE error details:", error);
+    console.error("Supabase soft delete error details:", error);
     return NextResponse.json(
       { result: "Database error", error: error.message, success: false },
       { status: 500 }
