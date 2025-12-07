@@ -2,10 +2,16 @@
 
 import { useState, useEffect, useMemo } from "react";
 import ExcelDownload from "@/component/ExcelDownload";
-import { MdDelete } from "react-icons/md";
-import { FaRegEdit } from "react-icons/fa";
 import { IoSearch } from "react-icons/io5";
-import Link from "next/link";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { MoreHorizontal } from "lucide-react";
+import ChangeStatusModal from "@/component/operations_action/ChangeStatusModal";
 
 // Debounce hook
 const useDebounce = (value, delay = 500) => {
@@ -41,6 +47,8 @@ export default function EmployeeList() {
   const [totalCount, setTotalCount] = useState(0);
   const [uniqueClientCount, setUniqueClientCount] = useState(0);
   const [searchResultCount, setSearchResultCount] = useState(0);
+  const [statusModalOpen, setStatusModalOpen] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
   const pageSize = 10;
 
   const debouncedSearch = useDebounce(searchQuery, 500);
@@ -161,220 +169,227 @@ export default function EmployeeList() {
   };
 
   return (
-    <div className="w-full p-2">
-      <h2 className="text-2xl font-semibold mb-6 text-center text-gray-800">
-        👨🏻‍💻 All Employee Details
-      </h2>
+    <>
+      <div className="w-full p-2">
+        <h2 className="text-2xl font-semibold mb-6 text-center text-gray-800">
+          👨🏻‍💻 All Employee Details
+        </h2>
 
-      {/* Feedback */}
-      {error && (
-        <div className="mx-auto w-fit bg-red-100 text-red-700 px-4 py-2 rounded-lg mb-4 text-sm border border-red-200 shadow-sm">
-          ⚠️ {error}
-        </div>
-      )}
-      {success && (
-        <div className="mx-auto w-fit bg-green-100 text-green-700 px-4 py-2 rounded-lg mb-4 text-sm border border-green-200 shadow-sm">
-          ✅ {success}
-        </div>
-      )}
+        {/* Feedback */}
+        {error && (
+          <div className="mx-auto w-fit bg-red-100 text-red-700 px-4 py-2 rounded-lg mb-4 text-sm border border-red-200 shadow-sm">
+            ⚠️ {error}
+          </div>
+        )}
+        {success && (
+          <div className="mx-auto w-fit bg-green-100 text-green-700 px-4 py-2 rounded-lg mb-4 text-sm border border-green-200 shadow-sm">
+            ✅ {success}
+          </div>
+        )}
 
-      {/* Stats + Search */}
-      <div className="flex flex-wrap justify-center items-center gap-4 mb-6">
-        <div className="flex gap-4 text-sm font-medium text-gray-700 whitespace-nowrap">
-          <span>Total Clients: {uniqueClientCount}</span>
-          <span>Total Employees: {totalCount}</span>
-        </div>
-
-        {/* Search Bar */}
-        <div className="relative w-[85%] sm:w-72 md:w-96">
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 pointer-events-none">
-            <IoSearch className="w-5 h-5" />
+        {/* Stats + Search */}
+        <div className="flex flex-wrap justify-center items-center gap-4 mb-6">
+          <div className="flex gap-4 text-sm font-medium text-gray-700 whitespace-nowrap">
+            <span>Total Clients: {uniqueClientCount}</span>
+            <span>Total Employees: {totalCount}</span>
           </div>
 
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setCurrentPage(1);
-            }}
-            placeholder="Search by Name, ET No., IQAMA, etc."
-            className={`w-full pl-10 pr-10 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 text-sm transition-all ${
-              searching
-                ? "border-blue-400 ring-2 ring-blue-300"
-                : "border-gray-300 focus:ring-[#4A5A6A]/60"
-            }`}
-          />
-
-          {searchQuery && (
-            <button
-              onClick={handleClearSearch}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-            >
-              ✕
-            </button>
-          )}
-
-          {searching && (
-            <div className="absolute right-10 top-1/2 -translate-y-1/2 animate-spin text-gray-400">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                className="w-5 h-5"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                ></path>
-              </svg>
+          {/* Search Bar */}
+          <div className="relative w-[85%] sm:w-72 md:w-96">
+            <div className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 pointer-events-none">
+              <IoSearch className="w-5 h-5" />
             </div>
-          )}
+
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+              placeholder="Search by Name, ET No., IQAMA, etc."
+              className={`w-full pl-10 pr-10 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 text-sm transition-all ${
+                searching
+                  ? "border-blue-400 ring-2 ring-blue-300"
+                  : "border-gray-300 focus:ring-[#4A5A6A]/60"
+              }`}
+            />
+
+            {searchQuery && (
+              <button
+                onClick={handleClearSearch}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            )}
+
+            {searching && (
+              <div className="absolute right-10 top-1/2 -translate-y-1/2 animate-spin text-gray-400">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  className="w-5 h-5"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                  ></path>
+                </svg>
+              </div>
+            )}
+          </div>
+
+          <ExcelDownload
+            data={computedEmployees}
+            searchQuery={debouncedSearch}
+          />
         </div>
 
-        <ExcelDownload data={computedEmployees} searchQuery={debouncedSearch} />
-      </div>
+        {/* Search Feedback Text */}
+        {debouncedSearch && !loading && (
+          <div className="text-center text-gray-500 text-sm mt-1">
+            {searching ? (
+              <span className="animate-pulse">Searching...</span>
+            ) : searchResultCount > 0 ? (
+              <>
+                Found <span className="font-medium">{searchResultCount}</span>{" "}
+                results for{" "}
+                <span className="font-medium">{debouncedSearch}</span>
+              </>
+            ) : (
+              <span className="text-gray-400">
+                No matches found for{" "}
+                <span className="font-medium">{debouncedSearch}</span>
+              </span>
+            )}
+          </div>
+        )}
 
-      {/* Search Feedback Text */}
-      {debouncedSearch && !loading && (
-        <div className="text-center text-gray-500 text-sm mt-1">
-          {searching ? (
-            <span className="animate-pulse">Searching...</span>
-          ) : searchResultCount > 0 ? (
-            <>
-              Found <span className="font-medium">{searchResultCount}</span>{" "}
-              results for <span className="font-medium">{debouncedSearch}</span>
-            </>
-          ) : (
-            <span className="text-gray-400">
-              No matches found for{" "}
-              <span className="font-medium">{debouncedSearch}</span>
-            </span>
-          )}
-        </div>
-      )}
+        {/* Loading / Empty / Table */}
+        {loading ? (
+          <div className="max-w-6xl mx-auto mt-6 p-4 border border-gray-200 rounded-lg">
+            <TableSkeleton />
+          </div>
+        ) : employees.length === 0 ? (
+          <h2 className="text-center mt-12 text-gray-500 text-lg">
+            {debouncedSearch
+              ? "No matching employees found."
+              : "No employees found. Add one to see details here."}
+          </h2>
+        ) : (
+          <>
+            <div className="overflow-x-auto w-full fade-in">
+              <table className="table-auto min-w-full border-collapse border border-gray-200 text-sm">
+                <thead className="bg-gray-100">
+                  <tr>
+                    {[
+                      "S.N.",
+                      "ET No.",
+                      "IQAMA No",
+                      "Name",
+                      "Passport No.",
+                      "Profession",
+                      "Nationality",
+                      "Client No.",
+                      "Client Name",
+                      "Mobile",
+                      "Email",
+                      "Bank Account",
+                      "Basic Salary",
+                      "Allowance",
+                      "Total Salary",
+                      "Medical Type",
+                      "Start Date",
+                      "End Date",
+                      "Status",
+                      "Source",
+                      "Actions",
+                    ].map((header) => (
+                      <th key={header} className="p-2 border font-medium">
+                        {header}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
 
-      {/* Loading / Empty / Table */}
-      {loading ? (
-        <div className="max-w-6xl mx-auto mt-6 p-4 border border-gray-200 rounded-lg">
-          <TableSkeleton />
-        </div>
-      ) : employees.length === 0 ? (
-        <h2 className="text-center mt-12 text-gray-500 text-lg">
-          {debouncedSearch
-            ? "No matching employees found."
-            : "No employees found. Add one to see details here."}
-        </h2>
-      ) : (
-        <>
-          <div className="overflow-x-auto w-full fade-in">
-            <table className="table-auto min-w-full border-collapse border border-gray-200 text-sm">
-              <thead className="bg-gray-100">
-                <tr>
-                  {[
-                    "S.N.",
-                    "ET No.",
-                    "IQAMA No",
-                    "Name",
-                    "Passport No.",
-                    "Profession",
-                    "Nationality",
-                    "Client No.",
-                    "Client Name",
-                    "Mobile",
-                    "Email",
-                    "Bank Account",
-                    "Basic Salary",
-                    "Allowance",
-                    "Total Salary",
-                    "Medical Type",
-                    "Start Date",
-                    "End Date",
-                    "Status",
-                    "Source",
-                    "Actions",
-                  ].map((header) => (
-                    <th key={header} className="p-2 border font-medium">
-                      {header}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-
-              <tbody>
-                {computedEmployees.map((employee, index) => (
-                  <tr
-                    key={employee.id}
-                    className="odd:bg-white even:bg-gray-50 transition-all hover:bg-blue-50/40"
-                  >
-                    <td className="p-2 border text-center  w-16">
-                      {(currentPage - 1) * pageSize + index + 1}
-                    </td>
-                    <td className="p-2 border  w-28 truncate">
-                      {employee.et_number}
-                    </td>
-                    <td className="p-2 border  w-28 truncate">
-                      {employee.iqama_number}
-                    </td>
-                    <td className="p-2 border  break-words max-w-[180px]">
-                      {employee.name}
-                    </td>
-                    <td className="p-2 border  truncate text-center">
-                      {employee.passport_number}
-                    </td>
-                    <td className="p-2 border  truncate text-center">
-                      {employee.profession}
-                    </td>
-                    <td className="p-2 border  truncate text-center">
-                      {employee.nationality}
-                    </td>
-                    <td className="p-2 border  truncate">
-                      {employee.client_number}
-                    </td>
-                    <td className="p-2 border  break-words max-w-[160px]">
-                      {employee.client_name}
-                    </td>
-                    <td className="p-2 border  truncate">{employee.mobile}</td>
-                    <td className="p-2 border  break-words max-w-[200px]">
-                      {employee.email}
-                    </td>
-                    <td className="p-2 border  break-words max-w-[220px]">
-                      {employee.bank_account}
-                    </td>
-                    <td className="p-2 border  truncate text-center">
-                      {employee.basic_salary}
-                    </td>
-                    <td className="p-2 border  truncate text-center">
-                      {employee.totalAllowance}
-                    </td>
-                    <td className="p-2 border  truncate text-center">
-                      {employee.total_salary}
-                    </td>
-                    <td className="p-2 border  truncate text-center">
-                      {employee.medical}
-                    </td>
-                    <td className="p-2 border  truncate">
-                      {formatDate(employee.contract_start_date)}
-                    </td>
-                    <td className="p-2 border  truncate">
-                      {formatDate(employee.contract_end_date)}
-                    </td>
-                    <td className="p-2 border  truncate">
-                      {employee.employee_status}
-                    </td>
-                    <td className="p-2 border  truncate">
-                      {employee.employee_source}
-                    </td>
-                    <td className="p-2 border ">
+                <tbody>
+                  {computedEmployees.map((employee, index) => (
+                    <tr
+                      key={employee.id}
+                      className="odd:bg-white even:bg-gray-50 transition-all hover:bg-blue-50/40"
+                    >
+                      <td className="p-2 border text-center  w-16">
+                        {(currentPage - 1) * pageSize + index + 1}
+                      </td>
+                      <td className="p-2 border  w-28 truncate">
+                        {employee.et_number}
+                      </td>
+                      <td className="p-2 border  w-28 truncate">
+                        {employee.iqama_number}
+                      </td>
+                      <td className="p-2 border  break-words max-w-[180px]">
+                        {employee.name}
+                      </td>
+                      <td className="p-2 border  truncate text-center">
+                        {employee.passport_number}
+                      </td>
+                      <td className="p-2 border  truncate text-center">
+                        {employee.profession}
+                      </td>
+                      <td className="p-2 border  truncate text-center">
+                        {employee.nationality}
+                      </td>
+                      <td className="p-2 border  truncate">
+                        {employee.client_number}
+                      </td>
+                      <td className="p-2 border  break-words max-w-[160px]">
+                        {employee.client_name}
+                      </td>
+                      <td className="p-2 border  truncate">
+                        {employee.mobile}
+                      </td>
+                      <td className="p-2 border  break-words max-w-[200px]">
+                        {employee.email}
+                      </td>
+                      <td className="p-2 border  break-words max-w-[220px]">
+                        {employee.bank_account}
+                      </td>
+                      <td className="p-2 border  truncate text-center">
+                        {employee.basic_salary}
+                      </td>
+                      <td className="p-2 border  truncate text-center">
+                        {employee.totalAllowance}
+                      </td>
+                      <td className="p-2 border  truncate text-center">
+                        {employee.total_salary}
+                      </td>
+                      <td className="p-2 border  truncate text-center">
+                        {employee.medical}
+                      </td>
+                      <td className="p-2 border  truncate">
+                        {formatDate(employee.contract_start_date)}
+                      </td>
+                      <td className="p-2 border  truncate">
+                        {formatDate(employee.contract_end_date)}
+                      </td>
+                      <td className="p-2 border  truncate">
+                        {employee.employee_status}
+                      </td>
+                      <td className="p-2 border  truncate">
+                        {employee.employee_source}
+                      </td>
+                      {/* <td className="p-2 border ">
                       <div className="flex items-center space-x-2">
                         <Link
                           href={`/dashboard/operations/edit_employee/${employee.id}`}
@@ -389,85 +404,137 @@ export default function EmployeeList() {
                           <MdDelete />
                         </button>
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    </td> */}
+                      <td className="p-2 border text-center">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className="h-8 w-8 p-0 flex items-center justify-center"
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
 
-          {/* Pagination */}
-          {totalCount > 0 &&
-            !searchQuery &&
-            (() => {
-              const totalPages = Math.ceil(totalCount / pageSize);
-              const pages = [];
+                          <DropdownMenuContent align="end" className="w-40">
+                            {/* Edit */}
+                            <DropdownMenuItem
+                              onClick={() =>
+                                (window.location.href = `/dashboard/operations/edit_employee/${employee.id}`)
+                              }
+                              className="cursor-pointer"
+                            >
+                              ✏️ Edit
+                            </DropdownMenuItem>
 
-              if (totalPages > 0) pages.push(1);
-              if (currentPage > 4) pages.push("...");
+                            {/* Change Status */}
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setSelectedEmployee(employee);
+                                setStatusModalOpen(true);
+                              }}
+                              className="cursor-pointer"
+                            >
+                              🔄 Change Status
+                            </DropdownMenuItem>
 
-              for (
-                let i = Math.max(2, currentPage - 1);
-                i <= Math.min(totalPages - 1, currentPage + 1);
-                i++
-              ) {
-                pages.push(i);
-              }
+                            {/* Delete */}
+                            <DropdownMenuItem
+                              onClick={() => handleDelete(employee.id)}
+                              className="cursor-pointer text-red-600 focus:text-red-600"
+                            >
+                              🗑️ Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-              if (currentPage + 2 < totalPages) pages.push("...");
-              if (totalPages > 1) pages.push(totalPages);
+            {/* Pagination */}
+            {totalCount > 0 &&
+              !searchQuery &&
+              (() => {
+                const totalPages = Math.ceil(totalCount / pageSize);
+                const pages = [];
 
-              return (
-                <div className="flex justify-center items-center gap-1 mt-6 flex-wrap">
-                  <button
-                    disabled={currentPage === 1}
-                    onClick={() => setCurrentPage((prev) => prev - 1)}
-                    className={`px-3 py-1 rounded ${
-                      currentPage === 1
-                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                        : "bg-gray-200 text-gray-700 hover:bg-blue-100"
-                    }`}
-                  >
-                    Prev
-                  </button>
-                  {pages.map((page, idx) =>
-                    page === "..." ? (
-                      <span
-                        key={`ellipsis-${idx}`}
-                        className="px-2 py-1 text-gray-500"
-                      >
-                        ...
-                      </span>
-                    ) : (
-                      <button
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                        className={`px-3 py-1 rounded cursor-pointer ${
-                          currentPage === page
-                            ? "bg-blue-600 text-white"
-                            : "bg-gray-200 text-gray-700 hover:bg-blue-100"
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    )
-                  )}
-                  <button
-                    disabled={currentPage === Math.ceil(totalCount / pageSize)}
-                    onClick={() => setCurrentPage((prev) => prev + 1)}
-                    className={`px-3 py-1 rounded ${
-                      currentPage === Math.ceil(totalCount / pageSize)
-                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                        : "bg-gray-200 text-gray-700 hover:bg-blue-100"
-                    }`}
-                  >
-                    Next
-                  </button>
-                </div>
-              );
-            })()}
-        </>
-      )}
-    </div>
+                if (totalPages > 0) pages.push(1);
+                if (currentPage > 4) pages.push("...");
+
+                for (
+                  let i = Math.max(2, currentPage - 1);
+                  i <= Math.min(totalPages - 1, currentPage + 1);
+                  i++
+                ) {
+                  pages.push(i);
+                }
+
+                if (currentPage + 2 < totalPages) pages.push("...");
+                if (totalPages > 1) pages.push(totalPages);
+
+                return (
+                  <div className="flex justify-center items-center gap-1 mt-6 flex-wrap">
+                    <button
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage((prev) => prev - 1)}
+                      className={`px-3 py-1 rounded ${
+                        currentPage === 1
+                          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                          : "bg-gray-200 text-gray-700 hover:bg-blue-100"
+                      }`}
+                    >
+                      Prev
+                    </button>
+                    {pages.map((page, idx) =>
+                      page === "..." ? (
+                        <span
+                          key={`ellipsis-${idx}`}
+                          className="px-2 py-1 text-gray-500"
+                        >
+                          ...
+                        </span>
+                      ) : (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={`px-3 py-1 rounded cursor-pointer ${
+                            currentPage === page
+                              ? "bg-blue-600 text-white"
+                              : "bg-gray-200 text-gray-700 hover:bg-blue-100"
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      )
+                    )}
+                    <button
+                      disabled={
+                        currentPage === Math.ceil(totalCount / pageSize)
+                      }
+                      onClick={() => setCurrentPage((prev) => prev + 1)}
+                      className={`px-3 py-1 rounded ${
+                        currentPage === Math.ceil(totalCount / pageSize)
+                          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                          : "bg-gray-200 text-gray-700 hover:bg-blue-100"
+                      }`}
+                    >
+                      Next
+                    </button>
+                  </div>
+                );
+              })()}
+          </>
+        )}
+      </div>
+      <ChangeStatusModal
+        open={statusModalOpen}
+        onClose={() => setStatusModalOpen(false)}
+        employee={selectedEmployee}
+        onSuccess={fetchEmployees}
+      />
+    </>
   );
 }
