@@ -41,7 +41,7 @@ export default function EmployeeList() {
   const [totalCount, setTotalCount] = useState(0);
   const [uniqueClientCount, setUniqueClientCount] = useState(0);
   const [searchResultCount, setSearchResultCount] = useState(0);
-  const pageSize = 20;
+  const pageSize = 10;
 
   const debouncedSearch = useDebounce(searchQuery, 500);
 
