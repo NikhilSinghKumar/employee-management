@@ -190,36 +190,58 @@ export async function POST(req) {
     inactiveDate,
     monthStart
   ) {
-    if (!contractStart || !contractEnd) return 0;
-
-    const ms = new Date(monthStart);
-    const me = new Date(monthStart);
-    me.setDate(30); // fixed 30-day month as per your rule
-
-    const cs = new Date(contractStart);
-    const ce = new Date(contractEnd);
-
-    // If contract ended before month → exclude
-    if (ce < ms) return 0;
-
-    // Determine active start
-    let activeStart = cs > ms ? cs : ms;
-
-    // Determine active end
-    let activeEnd = ce;
-
-    if (empStatus === "inactive" && inactiveDate) {
-      const idate = new Date(inactiveDate);
-      if (idate < activeEnd) activeEnd = idate;
+    // Convert to pure date (UTC)
+    function toUTC(dateStr) {
+      const d = new Date(dateStr);
+      return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
     }
 
-    // Clamp end date to month-end
-    if (activeEnd > me) activeEnd = me;
+    const ms = toUTC(monthStart);
+    const me = new Date(Date.UTC(ms.getUTCFullYear(), ms.getUTCMonth() + 1, 0));
+
+    function dayBefore(dateStr) {
+      const d = toUTC(dateStr);
+      d.setUTCDate(d.getUTCDate() - 1);
+      return d;
+    }
+
+    // -------------------------------------
+    // CASE 1: Missing any contract dates
+    // -------------------------------------
+    if (!contractStart || !contractEnd) {
+      if (empStatus === "inactive" && inactiveDate) {
+        const lastWorking = dayBefore(inactiveDate);
+
+        if (lastWorking < ms) return 0;
+
+        const end = lastWorking < me ? lastWorking : me;
+
+        return Math.floor((end - ms) / (1000 * 60 * 60 * 24)) + 1;
+      }
+
+      return Math.min(Math.floor((me - ms) / (1000 * 60 * 60 * 24)) + 1, 30);
+    }
+
+    // -------------------------------------
+    // CASE 2: Normal case
+    // -------------------------------------
+    const cs = toUTC(contractStart);
+    const ce = toUTC(contractEnd);
+
+    if (ce < ms) return 0;
+
+    let activeStart = cs > ms ? cs : ms;
+    let activeEnd = ce < me ? ce : me;
+
+    if (empStatus === "inactive" && inactiveDate) {
+      const lastWorking = dayBefore(inactiveDate);
+      if (lastWorking < activeEnd) activeEnd = lastWorking;
+    }
 
     if (activeEnd < activeStart) return 0;
 
     const diff =
-      Math.ceil((activeEnd - activeStart) / (1000 * 60 * 60 * 24)) + 1;
+      Math.floor((activeEnd - activeStart) / (1000 * 60 * 60 * 24)) + 1;
 
     return Math.min(diff, 30);
   }
@@ -309,7 +331,10 @@ export async function POST(req) {
 
     if (timesheetRecords.length === 0) {
       return NextResponse.json(
-        { error: "No employees eligible for timesheet generation." },
+        {
+          error: "No employees eligible for timesheet generation.",
+          debug_employees: employees,
+        },
         { status: 400 }
       );
     }
