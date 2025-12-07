@@ -4,7 +4,7 @@ import { authenticateToken } from "@/lib/auth/authenticateToken";
 import { supabase } from "@/utils/supabaseClient";
 
 async function verifyAuth() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
   if (!token)
     return { success: false, error: "Unauthorized: No token provided" };
