@@ -109,7 +109,7 @@ export async function GET(req) {
 
 // POST: Generate timesheets
 export async function POST(req) {
-  // Verify authentication
+  // ---------- AUTH ----------
   const authResult = await verifyAuth();
   if (!authResult.success) {
     return NextResponse.json({ error: authResult.error }, { status: 401 });
@@ -123,52 +123,44 @@ export async function POST(req) {
     );
   }
 
+  // Read request body
   let { month, year, clientNumber } = await req.json();
 
-  // -------------------------------
-  // Secure 15-Day Window Rule
-  // -------------------------------
+  // ---------- SECURE 15-DAY WINDOW ----------
   const now = new Date();
   const todayDay = now.getDate();
-
   let allowedDate = new Date(now);
 
-  // If today is 1–15, only previous month is allowed
   if (todayDay <= 15) {
     allowedDate.setMonth(allowedDate.getMonth() - 1);
   }
 
-  // Backend expected month/year
   const allowedMonth = String(allowedDate.getMonth() + 1).padStart(2, "0");
   const allowedYear = allowedDate.getFullYear().toString();
 
-  // Compare user request with allowed values
   if (month !== allowedMonth || year.toString() !== allowedYear) {
     return NextResponse.json(
       {
         error: `Not allowed! You can only generate timesheet for ${allowedYear}-${allowedMonth}.`,
-        allowed: {
-          month: allowedMonth,
-          year: allowedYear,
-        },
+        allowed: { month: allowedMonth, year: allowedYear },
         received: { month, year },
       },
       { status: 403 }
     );
   }
 
+  // ---------- VALIDATION ----------
   if (!month || !year || !clientNumber) {
     return NextResponse.json(
-      { error: "Missing required fields: month, year, or clientNumber" },
+      { error: "Missing required fields: month, year, clientNumber" },
       { status: 400 }
     );
   }
 
-  // Ensure month is a string and pad it
   month = String(month).padStart(2, "0");
   if (!/^(0[1-9]|1[0-2])$/.test(month)) {
     return NextResponse.json(
-      { error: "Invalid month: Must be 01-12" },
+      { error: "Invalid month (01–12)" },
       { status: 400 }
     );
   }
@@ -188,43 +180,88 @@ export async function POST(req) {
     );
   }
 
+  const monthStart = `${year}-${month}-01`;
+
+  // Utility: Calculate working days
+  function calculateWorkingDays(
+    contractStart,
+    contractEnd,
+    empStatus,
+    inactiveDate,
+    monthStart
+  ) {
+    if (!contractStart || !contractEnd) return 0;
+
+    const ms = new Date(monthStart);
+    const me = new Date(monthStart);
+    me.setDate(30); // fixed 30-day month as per your rule
+
+    const cs = new Date(contractStart);
+    const ce = new Date(contractEnd);
+
+    // If contract ended before month → exclude
+    if (ce < ms) return 0;
+
+    // Determine active start
+    let activeStart = cs > ms ? cs : ms;
+
+    // Determine active end
+    let activeEnd = ce;
+
+    if (empStatus === "inactive" && inactiveDate) {
+      const idate = new Date(inactiveDate);
+      if (idate < activeEnd) activeEnd = idate;
+    }
+
+    // Clamp end date to month-end
+    if (activeEnd > me) activeEnd = me;
+
+    if (activeEnd < activeStart) return 0;
+
+    const diff =
+      Math.ceil((activeEnd - activeStart) / (1000 * 60 * 60 * 24)) + 1;
+
+    return Math.min(diff, 30);
+  }
+
   try {
-    // Check for existing timesheets
+    // ---------- CHECK EXISTING ----------
     const { data: existingTimesheets, error: checkError } = await supabase
       .from("generated_timesheet")
       .select("uid")
-      .eq("timesheet_month", `${year}-${month}-01`)
+      .eq("timesheet_month", monthStart)
       .eq("client_number", clientNumber);
 
     if (checkError) {
-      console.error("Timesheet check error:", checkError);
       return NextResponse.json(
-        { error: `Failed to check existing timesheets: ${checkError.message}` },
+        { error: `Timesheet check error: ${checkError.message}` },
         { status: 500 }
       );
     }
 
-    if (existingTimesheets && existingTimesheets.length > 0) {
+    if (existingTimesheets?.length > 0) {
       return NextResponse.json(
-        {
-          error: "Timesheet already exists. Please check!",
-          exists: true,
-        },
+        { error: "Timesheet already exists.", exists: true },
         { status: 409 }
       );
     }
 
-    // Fetch employee data
+    // ---------- FETCH EMPLOYEES ----------
     const { data: employees, error: empError } = await supabase
       .from("employees")
-      .select("id, name, basic_salary, total_salary, client_name, iqama_number")
+      .select(
+        `
+        id, name, basic_salary, total_salary, client_name, iqama_number,
+        contract_start_date, contract_end_date,
+        employee_status, inactive_date
+      `
+      )
       .eq("is_deleted", false)
       .eq("client_number", clientNumber);
 
     if (empError) {
-      console.error("Employee fetch error:", empError);
       return NextResponse.json(
-        { error: `Failed to fetch employees: ${empError.message}` },
+        { error: `Employee fetch error: ${empError.message}` },
         { status: 500 }
       );
     }
@@ -236,44 +273,56 @@ export async function POST(req) {
       );
     }
 
-    // Prepare timesheet records
-    const timesheetRecords = employees.map((emp) => ({
-      employee_id: emp.id,
-      timesheet_month: `${year}-${month}-01`,
-      working_days: 30,
-      overtime_hrs: 0,
-      absent_hrs: 0,
-      basic_salary: emp.basic_salary,
-      total_salary: emp.total_salary,
-      incentive: 100,
-      etmam_cost: 1000,
-      generated_by: userId,
-      edited_by: userId,
-      client_number: clientNumber,
-      client_name: emp.client_name,
-      penalty: 0,
-      iqama_number: emp.iqama_number,
-      employee_name: emp.name,
-    }));
+    // ---------- GENERATE TIMESHEET RECORDS ----------
+    const timesheetRecords = employees
+      .map((emp) => {
+        const workingDays = calculateWorkingDays(
+          emp.contract_start_date,
+          emp.contract_end_date,
+          emp.employee_status,
+          emp.inactive_date,
+          monthStart
+        );
 
-    const grouped = timesheetRecords.reduce((acc, r) => {
-      const key =
-        r.iqama_number + "-" + r.client_number + "-" + r.timesheet_month;
-      acc[key] = (acc[key] || 0) + 1;
-      return acc;
-    }, {});
+        if (workingDays === 0) return null; // exclude this employee
 
-    // Insert timesheet records
+        return {
+          employee_id: emp.id,
+          timesheet_month: monthStart,
+          working_days: workingDays,
+          overtime_hrs: 0,
+          absent_hrs: 0,
+          basic_salary: emp.basic_salary,
+          total_salary: emp.total_salary,
+          incentive: 100,
+          etmam_cost: 1000,
+          generated_by: userId,
+          edited_by: userId,
+          client_number: clientNumber,
+          client_name: emp.client_name,
+          penalty: 0,
+          iqama_number: emp.iqama_number,
+          employee_name: emp.name,
+        };
+      })
+      .filter(Boolean); // remove excluded employees
+
+    if (timesheetRecords.length === 0) {
+      return NextResponse.json(
+        { error: "No employees eligible for timesheet generation." },
+        { status: 400 }
+      );
+    }
+
+    // ---------- INSERT ----------
     const { error: insertError } = await supabase
       .from("generated_timesheet")
       .insert(timesheetRecords, {
         upsert: true,
-        // This line is the magic — tells PostgreSQL exactly which columns define uniqueness
         conflict: "iqama_number,client_number,timesheet_month",
       });
 
     if (insertError) {
-      console.error("Insert error:", insertError);
       return NextResponse.json(
         {
           error: "Failed to generate timesheet",
@@ -283,17 +332,16 @@ export async function POST(req) {
       );
     }
 
-    // Update timesheet summary
+    // ---------- SUMMARY UPDATE ----------
     const { error: summaryError } = await supabase.rpc(
       "update_timesheet_summary_manual",
       {
-        p_timesheet_month: `${year}-${month}-01`,
+        p_timesheet_month: monthStart,
         p_client_number: clientNumber,
       }
     );
 
     if (summaryError) {
-      console.error("Summary error:", summaryError);
       return NextResponse.json(
         { error: `Failed to update summary: ${summaryError.message}` },
         { status: 500 }
@@ -305,7 +353,6 @@ export async function POST(req) {
       { status: 201 }
     );
   } catch (error) {
-    console.error("Error in generate_timesheet:", error);
     return NextResponse.json(
       { error: `Server error: ${error.message}` },
       { status: 500 }
