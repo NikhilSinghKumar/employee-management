@@ -65,6 +65,9 @@ export async function POST(request) {
       "End Date": employee.contract_end_date
         ? new Date(employee.contract_end_date).toLocaleDateString("en-GB")
         : "",
+      "Inactive Date": employee.inactive_date
+        ? new Date(employee.inactive_date).toLocaleDateString("en-GB")
+        : "",
       Status: employee.employee_status || "",
       Source: employee.employee_source || "",
     }));
@@ -94,6 +97,7 @@ export async function POST(request) {
       { header: "Start Date", key: "Start Date", width: 15 },
       { header: "End Date", key: "End Date", width: 15 },
       { header: "Status", key: "Status", width: 15 },
+      { header: "Inactive Date", key: "Inactive Date", width: 15 },
       { header: "Source", key: "Source", width: 15 },
     ];
 
