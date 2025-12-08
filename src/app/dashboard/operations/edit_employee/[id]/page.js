@@ -96,7 +96,7 @@ export default function EditEmployeePage() {
 
   const validateForm = () => {
     const errors = {};
-    const requiredFields = ["name", "email", "mobile", "dob"];
+    const requiredFields = ["name", "mobile"];
     const dateFields = [
       "dob",
       "iqama_expiry_date",
