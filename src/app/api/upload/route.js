@@ -39,6 +39,9 @@ export async function POST(req) {
     const sheetName = workbook.SheetNames[0];
     const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {
       raw: false,
+      dateNF: "yyyy-mm-dd",
+      defval: null, // ← turns empty cells into null
+      cellDates: true, // ← helps with date detection
     });
 
     // ---------------- HELPERS ----------------
@@ -54,46 +57,72 @@ export async function POST(req) {
         )
       );
 
-    // Convert Excel date or dd/mm/yyyy → yyyy-mm-dd
+    // Convert Excel date or various string formats → yyyy-mm-dd
     function formatDate(value) {
-      if (!value) return null;
-
-      // YYYY-MM-DD
-      const iso = /^(\d{4})-(\d{2})-(\d{2})$/;
-      let match = value.match(iso);
-      if (match) return value;
-
-      // DD/MM/YYYY or MM/DD/YYYY
-      const slash = /^(\d{2})\/(\d{2})\/(\d{4})$/;
-      match = value.match(slash);
-      if (match) {
-        let [_, a, b, year] = match;
-        a = parseInt(a, 10);
-        b = parseInt(b, 10);
-
-        if (a > 12 && b <= 12) {
-          // must be DD/MM/YYYY
-          return `${year}-${String(b).padStart(2, "0")}-${String(a).padStart(
-            2,
-            "0"
-          )}`;
-        }
-
-        if (b > 12 && a <= 12) {
-          // must be MM/DD/YYYY
-          return `${year}-${String(a).padStart(2, "0")}-${String(b).padStart(
-            2,
-            "0"
-          )}`;
-        }
-
-        // If ambiguous (both <= 12), assume DD/MM/YYYY
-        return `${year}-${String(b).padStart(2, "0")}-${String(a).padStart(
-          2,
-          "0"
-        )}`;
+      if (
+        value === null ||
+        value === undefined ||
+        value === "" ||
+        String(value).trim() === "" ||
+        String(value).toUpperCase() === "N/A"
+      ) {
+        return null;
       }
 
+      const val = String(value).trim();
+
+      // 1. Already perfect ISO
+      if (/^\d{4}-\d{2}-\d{2}$/.test(val)) {
+        const year = parseInt(val.substring(0, 4), 10);
+        if (year >= 2010 && year <= 2035) return val;
+        return null;
+      }
+
+      // 2. Excel serial as string: "45816", "46546", etc.
+      if (/^\d{5,6}$/.test(val)) {
+        const num = parseInt(val, 10);
+        if (num >= 40000 && num <= 90000) {
+          // 2010 to 2140 range
+          const days = Math.floor(num - 25569);
+          const date = new Date(Date.UTC(1970, 0, 1 + days));
+          const y = date.getUTCFullYear();
+          if (y >= 2010 && y <= 2035) {
+            return date.toISOString().split("T")[0];
+          }
+        }
+        return null;
+      }
+
+      // 3. All possible manual formats
+      const flexible = val.match(
+        /^(\d{1,2})[\/\-\s]+(\d{1,2})[\/\-\s]+(\d{2,4})$/
+      );
+      if (flexible) {
+        let [_, d, m, y] = flexible;
+        d = parseInt(d, 10);
+        m = parseInt(m, 10);
+        y = y.length === 2 ? 2000 + parseInt(y, 10) : parseInt(y, 10);
+
+        if (y >= 2010 && y <= 2035 && m >= 1 && m <= 12 && d >= 1 && d <= 31) {
+          return `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(
+            2,
+            "0"
+          )}`;
+        }
+      }
+
+      // 4. Fallback: try native JS Date parsing (for weird formats)
+      const jsDate = new Date(val);
+      if (!isNaN(jsDate.getTime())) {
+        const y = jsDate.getFullYear();
+        if (y >= 2010 && y <= 2035) {
+          return jsDate.toISOString().split("T")[0];
+        }
+      }
+
+      console.warn(
+        `[DATE FAILED] Unparseable: "${val}" (type: ${typeof value})`
+      );
       return null;
     }
 
