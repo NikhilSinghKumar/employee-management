@@ -4,47 +4,6 @@ import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 
-// Format ISO date to DD-MM-YYYY for display
-function formatDateToDDMMYYYY(isoDate) {
-  if (!isoDate) return "";
-  try {
-    const date = new Date(isoDate);
-    if (isNaN(date.getTime())) return "";
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    return `${day}-${month}-${year}`;
-  } catch {
-    return "";
-  }
-}
-
-// Convert DD-MM-YYYY back to YYYY-MM-DD
-function formatDateToYYYYMMDD(dateStr) {
-  if (!dateStr) return null;
-  try {
-    const [day, month, year] = dateStr.split("-");
-    const date = new Date(`${year}-${month}-${day}`);
-    if (isNaN(date.getTime())) return null;
-    return `${year}-${month}-${day}`;
-  } catch {
-    return null;
-  }
-}
-
-// Validate DD-MM-YYYY format
-function isValidDateFormat(dateStr) {
-  const regex = /^\d{2}-\d{2}-\d{4}$/;
-  if (!regex.test(dateStr)) return false;
-  const [day, month, year] = dateStr.split("-").map(Number);
-  const date = new Date(year, month - 1, day);
-  return (
-    date.getDate() === day &&
-    date.getMonth() + 1 === month &&
-    date.getFullYear() === year
-  );
-}
-
 export default function EditEmployeePage() {
   const params = useParams();
   const id = params?.id;
@@ -82,11 +41,11 @@ export default function EditEmployeePage() {
 
         setEmployee({
           ...data,
-          dob: formatDateToDDMMYYYY(data.dob),
-          iqama_expiry_date: formatDateToDDMMYYYY(data.iqama_expiry_date),
-          passport_expiry_date: formatDateToDDMMYYYY(data.passport_expiry_date),
-          contract_start_date: formatDateToDDMMYYYY(data.contract_start_date),
-          contract_end_date: formatDateToDDMMYYYY(data.contract_end_date),
+          dob: data.dob?.slice(0, 10) || "",
+          iqama_expiry_date: data.iqama_expiry_date?.slice(0, 10) || "",
+          passport_expiry_date: data.passport_expiry_date?.slice(0, 10) || "",
+          contract_start_date: data.contract_start_date?.slice(0, 10) || "",
+          contract_end_date: data.contract_end_date?.slice(0, 10) || "",
         });
       } catch (err) {
         setError(err.message);
@@ -108,18 +67,36 @@ export default function EditEmployeePage() {
       "contract_end_date",
     ];
 
+    // simple ISO YYYY-MM-DD validator
+    const isValidISODate = (s) => {
+      if (!s) return false;
+      // quick format check
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+      const [y, m, d] = s.split("-").map(Number);
+      const dt = new Date(s);
+      return (
+        dt instanceof Date &&
+        !isNaN(dt.getTime()) &&
+        dt.getFullYear() === y &&
+        dt.getMonth() + 1 === m &&
+        dt.getDate() === d
+      );
+    };
+
     requiredFields.forEach((field) => {
       if (!employee?.[field]) {
         errors[field] = `${field.replace("_", " ")} is required`;
       }
     });
 
+    // validate only if a date field has a value
     dateFields.forEach((field) => {
-      if (employee?.[field] && !isValidDateFormat(employee[field])) {
-        errors[field] = `Invalid date format for ${field.replace(
+      const val = employee?.[field];
+      if (val && val !== "" && !isValidISODate(val)) {
+        errors[field] = `Invalid date for ${field.replace(
           "_",
           " "
-        )}. Use DD-MM-YYYY`;
+        )} (use YYYY-MM-DD)`;
       }
     });
 
@@ -180,13 +157,11 @@ export default function EditEmployeePage() {
     try {
       const updatedEmployee = {
         ...employee,
-        dob: formatDateToYYYYMMDD(employee.dob),
-        iqama_expiry_date: formatDateToYYYYMMDD(employee.iqama_expiry_date),
-        passport_expiry_date: formatDateToYYYYMMDD(
-          employee.passport_expiry_date
-        ),
-        contract_start_date: formatDateToYYYYMMDD(employee.contract_start_date),
-        contract_end_date: formatDateToYYYYMMDD(employee.contract_end_date),
+        dob: employee.dob || null,
+        iqama_expiry_date: employee.iqama_expiry_date || null,
+        passport_expiry_date: employee.passport_expiry_date || null,
+        contract_start_date: employee.contract_start_date || null,
+        contract_end_date: employee.contract_end_date || null,
       };
 
       const response = await fetch(`/api/employees/${id}`, {
@@ -243,17 +218,28 @@ export default function EditEmployeePage() {
           { name: "name", label: "Name", type: "text" },
           { name: "mobile", label: "Mobile", type: "text" },
           { name: "email", label: "Email", type: "text" },
-          { name: "dob", label: "DOB", type: "text" },
+          {
+            name: "dob",
+            label: "DOB",
+            type: "date",
+            isDate: true,
+          },
           { name: "et_number", label: "Et No.", type: "text" },
           { name: "iqama_number", label: "Iqama No.", type: "text" },
-          { name: "iqama_expiry_date", label: "Iqama Exp Date", type: "text" },
+          {
+            name: "iqama_expiry_date",
+            label: "Iqama Exp Date",
+            type: "date",
+            isDate: true,
+          },
           { name: "bank_account", label: "Bank Account", type: "text" },
           { name: "nationality", label: "Nationality", type: "text" },
           { name: "passport_number", label: "Passport Number", type: "text" },
           {
             name: "passport_expiry_date",
             label: "Passport Exp Date",
-            type: "text",
+            type: "date",
+            isDate: true,
           },
           { name: "profession", label: "Profession", type: "text" },
           { name: "client_number", label: "Client No.", type: "text" },
@@ -261,12 +247,14 @@ export default function EditEmployeePage() {
           {
             name: "contract_start_date",
             label: "Contract Start Date",
-            type: "text",
+            type: "date",
+            isDate: true,
           },
           {
             name: "contract_end_date",
             label: "Contract End Date",
-            type: "text",
+            type: "date",
+            isDate: true,
           },
           {
             name: "basic_salary",
@@ -311,10 +299,9 @@ export default function EditEmployeePage() {
               type={field.type}
               name={field.name}
               value={
-                employee[field.name] !== null &&
-                employee[field.name] !== undefined
-                  ? employee[field.name]
-                  : ""
+                field.isDate
+                  ? (employee[field.name] || "").slice(0, 10) // ensure YYYY-MM-DD
+                  : employee[field.name] || ""
               }
               onChange={handleChange}
               disabled={field.disabled}
@@ -323,6 +310,7 @@ export default function EditEmployeePage() {
                 validationErrors[field.name] ? "border-red-500" : ""
               }`}
             />
+
             {validationErrors[field.name] && (
               <span className="text-red-500 text-xs mt-1">
                 {validationErrors[field.name]}
