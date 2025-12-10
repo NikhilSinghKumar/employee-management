@@ -16,7 +16,7 @@ export async function GET(req, { params }) {
   if (!authResult.success)
     return NextResponse.json(authResult, { status: 401 });
 
-  const { id } = params;
+  const { id } = await params;
 
   try {
     const { data, error } = await supabase
