@@ -118,3 +118,43 @@ export async function PUT(req, { params }) {
     );
   }
 }
+
+export async function PATCH(req, { params }) {
+  const authResult = await verifyAuth();
+  if (!authResult.success)
+    return NextResponse.json(authResult, { status: 401 });
+
+  const { id } = params;
+  const payload = await req.json();
+
+  // Convert null/empty string handling automatically
+  const cleanPayload = Object.fromEntries(
+    Object.entries(payload).map(([key, value]) => [
+      key,
+      value === "" ? null : value,
+    ])
+  );
+
+  try {
+    const { error } = await supabase
+      .from("employees")
+      .update({
+        ...cleanPayload,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id);
+
+    if (error) throw new Error(error.message);
+
+    return NextResponse.json(
+      { success: true, message: "Employee updated successfully" },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("PATCH update error:", error.message);
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500 }
+    );
+  }
+}
