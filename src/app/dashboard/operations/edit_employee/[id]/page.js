@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { supabase } from "@/utils/supabaseClient";
+import { toast } from "react-hot-toast";
 
 // Format ISO date to DD-MM-YYYY for display
 function formatDateToDDMMYYYY(isoDate) {
@@ -64,15 +64,17 @@ export default function EditEmployeePage() {
 
     const fetchEmployee = async () => {
       try {
-        const { data, error } = await supabase
-          .from("employees")
-          .select("*")
-          .eq("id", id)
-          .single();
+        const response = await fetch(`/api/employees/${id}`, {
+          method: "GET",
+        });
 
-        if (error) {
-          throw new Error(`Failed to fetch employee: ${error.message}`);
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || "Failed to fetch employee");
         }
+
+        const data = result.data;
 
         if (!data) {
           throw new Error("Employee not found");
@@ -88,6 +90,7 @@ export default function EditEmployeePage() {
         });
       } catch (err) {
         setError(err.message);
+        toast.error(err.message);
       }
     };
 
@@ -167,11 +170,12 @@ export default function EditEmployeePage() {
     const errors = validateForm();
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors);
-      setError("Please correct the form errors");
+      toast.error("Please correct the highlighted fields.");
       return;
     }
 
     setIsUpdating(true);
+    const loadingToast = toast.loading("Updating employee...");
 
     try {
       const updatedEmployee = {
@@ -185,22 +189,29 @@ export default function EditEmployeePage() {
         contract_end_date: formatDateToYYYYMMDD(employee.contract_end_date),
       };
 
-      const { error } = await supabase
-        .from("employees")
-        .update(updatedEmployee)
-        .eq("id", id);
+      const response = await fetch(`/api/employees/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedEmployee),
+      });
 
-      if (error) {
-        throw new Error(`Update failed: ${error.message}`);
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to update employee");
       }
 
-      setSuccessMessage("Employee updated successfully");
-      setTimeout(
-        () => router.push("/dashboard/operations/employee_list"),
-        1500
-      );
+      toast.success("Employee updated successfully!", {
+        id: loadingToast,
+      });
+
+      setTimeout(() => {
+        router.push("/dashboard/operations/employee_list");
+      }, 1000);
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message, { id: loadingToast });
     } finally {
       setIsUpdating(false);
     }
@@ -208,30 +219,24 @@ export default function EditEmployeePage() {
 
   if (error && !employee) {
     return (
-      <div className="max-w-3xl mx-auto p-4">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
-          {error}
-        </div>
+      <div className="flex items-center justify-center h-64">
+        <p className="text-red-500 text-sm">{error}</p>
       </div>
     );
   }
 
   if (!id || !employee) {
-    return <div className="max-w-3xl mx-auto p-4">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="animate-pulse text-[16px]" style={{ color: "#555B69" }}>
+          Loading...
+        </p>
+      </div>
+    );
   }
 
   return (
     <div className="max-w-3xl mx-auto p-4 bg-white shadow rounded-lg mt-18 pb-8 px-4">
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
-          {error}
-        </div>
-      )}
-      {successMessage && (
-        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4">
-          {successMessage}
-        </div>
-      )}
       <h2 className="text-xl font-semibold mb-4">Edit Employee</h2>
       <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
         {[
