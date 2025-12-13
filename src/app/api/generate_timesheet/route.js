@@ -273,7 +273,7 @@ export async function POST(req) {
       .from("employees")
       .select(
         `
-        id, name, basic_salary, total_salary, client_name, iqama_number,
+        id, name, nationality, profession, basic_salary, total_salary, client_name, iqama_number,
         contract_start_date, contract_end_date,
         employee_status, inactive_date
       `
@@ -294,6 +294,35 @@ export async function POST(req) {
         { status: 404 }
       );
     }
+    /* Fetch quotations for the client */
+
+    const { data: quotations, error: quotationError } = await supabase
+      .from("quotation_list")
+      .select(`client_number,client_name,nationality,profession,etmam_cost`)
+      .eq("client_number", clientNumber)
+      .eq("is_deleted", false);
+
+    if (quotationError) {
+      return NextResponse.json(
+        { error: `Quotation fetch failed: ${quotationError.message}` },
+        { status: 500 }
+      );
+    }
+
+    if (!quotations || quotations.length === 0) {
+      return NextResponse.json(
+        { error: "No quotation configured for this client" },
+        { status: 400 }
+      );
+    }
+
+    /* lookup map */
+    const quotationMap = new Map();
+
+    quotations.forEach((q) => {
+      const key = `${q.client_number}|${q.nationality}|${q.profession}`;
+      quotationMap.set(key, q);
+    });
 
     // ---------- GENERATE TIMESHEET RECORDS ----------
     const timesheetRecords = employees
@@ -306,7 +335,16 @@ export async function POST(req) {
           monthStart
         );
 
-        if (workingDays === 0) return null; // exclude this employee
+        if (workingDays === 0) return null;
+
+        const quotationKey = `${clientNumber}|${emp.nationality}|${emp.profession}`;
+        const quotation = quotationMap.get(quotationKey);
+
+        if (!quotation) {
+          throw new Error(
+            `Missing quotation for employee ${emp.name} (${emp.nationality}, ${emp.profession})`
+          );
+        }
 
         return {
           employee_id: emp.id,
@@ -314,20 +352,25 @@ export async function POST(req) {
           working_days: workingDays,
           overtime_hrs: 0,
           absent_hrs: 0,
+
           basic_salary: emp.basic_salary,
           total_salary: emp.total_salary,
-          incentive: 100,
-          etmam_cost: 1000,
+
+          incentive: 0,
+          etmam_cost: quotation.etmam_cost, // ✅ FROM QUOTATION
+          penalty: 0,
+
           generated_by: userId,
           edited_by: userId,
-          client_number: clientNumber,
-          client_name: emp.client_name,
-          penalty: 0,
+
+          client_number: emp.client_number,
+          client_name: quotation.client_name,
+
           iqama_number: emp.iqama_number,
           employee_name: emp.name,
         };
       })
-      .filter(Boolean); // remove excluded employees
+      .filter(Boolean);
 
     if (timesheetRecords.length === 0) {
       return NextResponse.json(
