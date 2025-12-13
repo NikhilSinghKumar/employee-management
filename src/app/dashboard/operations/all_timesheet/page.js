@@ -185,14 +185,19 @@ export default function TimesheetPage() {
 
   return (
     <>
-      <div className="container mx-auto p-6 mt-16 max-w-5xl">
-        <h1 className="text-3xl font-bold text-gray-800 text-center mb-8">
-          All Client Timesheet
-        </h1>
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="mb-6">
+          <h1 className="text-2xl font-semibold text-gray-800">
+            Client Timesheets
+          </h1>
+          <p className="text-sm text-gray-500">
+            Generate and manage monthly client payroll timesheets
+          </p>
+        </div>
 
         <form
           onSubmit={handleGenerateTimesheet}
-          className="flex flex-col sm:flex-row items-end justify-center gap-4 bg-gradient-to-br from-white via-gray-50 to-gray-100 p-6 rounded-2xl shadow-2xl ring-1 ring-gray-300"
+          className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm flex flex-wrap gap-4 items-end"
         >
           {/* Month and Year Display */}
           <div className="flex flex-col h-full justify-end w-full sm:w-auto">
@@ -246,155 +251,156 @@ export default function TimesheetPage() {
             <div className="h-full"></div>
           )}
         </div>
-      </div>
-
-      {/* Table */}
-      <div className="overflow-x-auto w-full">
-        <div className="mx-auto max-w-7xl">
-          {loading ? (
-            <div className="text-center text-gray-500 py-10">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-500"></div>
-              <p className="mt-2">Loading...</p>
-            </div>
-          ) : timesheetSummary.length === 0 ? (
-            <p className="text-center text-gray-500 text-lg py-10">
-              No timesheet data available.
-            </p>
-          ) : (
-            <table className="table-auto w-max border-collapse border border-gray-300 text-sm">
-              <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
-                <tr className="border border-gray-300">
-                  <th className="px-4 py-3 border">S.No</th>
-                  <th className="px-4 py-3 border">Client Number</th>
-                  <th className="px-4 py-3 border">Client Name</th>
-                  <th className="px-4 py-3 border">Month</th>
-                  <th className="px-4 py-3 border">Year</th>
-                  <th className="px-4 py-3 border">Total Employees</th>
-                  <th className="px-4 py-3 border">Net Salary</th>
-                  <th className="px-4 py-3 border">Net Adjusted Salary</th>
-                  <th className="px-4 py-3 border">Grand Total</th>
-                  <th className="px-4 py-3 border">Action</th>
-                  <th className="px-4 py-3 border">Status</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white">
-                {timesheetSummary.map((entry, index) => {
-                  const { month, year } = formatMonthYear(
-                    entry.timesheet_month
-                  );
-                  return (
-                    <tr key={entry.uid} className="border border-gray-300">
-                      <td className="px-4 py-2 border text-center">
-                        {(currentPage - 1) * pageSize + index + 1}
-                      </td>
-                      <td className="px-4 py-2 border">
-                        {entry.client_number}
-                      </td>
-                      <td className="px-4 py-2 border">{entry.client_name}</td>
-                      <td className="px-4 py-2 border">{month}</td>
-                      <td className="px-4 py-2 border">{year}</td>
-                      <td className="px-4 py-2 border text-center">
-                        {entry.employee_count}
-                      </td>
-                      <td className="px-4 py-2 border">
-                        {entry.total_salary_sum.toFixed(2)}
-                      </td>
-                      <td className="px-4 py-2 border">
-                        {entry.adjusted_salary_sum.toFixed(2)}
-                      </td>
-                      <td className="px-4 py-2 font-semibold border">
-                        {entry.grand_total.toFixed(2)}
-                      </td>
-                      <td className="px-4 py-2 space-x-2 border">
-                        <button
-                          onClick={() =>
-                            router.push(
-                              `/dashboard/operations/timesheet/${
-                                entry.client_number
-                              }/${year}/${entry.timesheet_month.slice(5, 7)}`
-                            )
-                          }
-                          className="px-3 py-1 text-gray rounded hover:bg-indigo-600 hover:text-white text-xs cursor-pointer"
-                        >
-                          View
-                        </button>
-                        <button
-                          onClick={() =>
-                            router.push(
-                              `/dashboard/operations/edit_timesheet/${
-                                entry.client_number
-                              }/${year}/${entry.timesheet_month.slice(5, 7)}`
-                            )
-                          }
-                          className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-xs cursor-pointer"
-                        >
-                          Edit
-                        </button>
-                      </td>
-                      <td className="px-4 py-2 space-x-2 border">
-                        <button className="px-3 py-1 text-green hover:bg-green-600 hover:text-white text-xs cursor-pointer">
-                          Submit
-                        </button>
-                        <button className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs cursor-pointer">
-                          Closed
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </div>
-
-      {/* Pagination */}
-      {timesheetSummary.length > 0 && !loading && (
-        <div className="flex justify-center mt-4 space-x-2">
-          <button
-            className={`px-4 py-2 border rounded ${
-              currentPage === 1
-                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                : "bg-white text-gray-700 hover:bg-gray-100"
-            }`}
-            onClick={() => setCurrentPage(currentPage - 1)}
-            disabled={currentPage === 1}
-          >
-            Prev
-          </button>
-
-          {getPaginationPages().map((page, idx) =>
-            page === "..." ? (
-              <span key={idx} className="px-4 py-2 text-gray-500">
-                ...
-              </span>
+        {/* Table */}
+        <div className="overflow-x-auto w-full">
+          <div className="mx-auto max-w-7xl">
+            {loading ? (
+              <div className="text-center text-gray-500 py-10">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-500"></div>
+                <p className="mt-2">Loading...</p>
+              </div>
+            ) : timesheetSummary.length === 0 ? (
+              <p className="text-center text-gray-500 text-lg py-10">
+                No timesheet data available.
+              </p>
             ) : (
-              <button
-                key={idx}
-                className={`px-4 py-2 border rounded ${
-                  currentPage === page
-                    ? "bg-indigo-600 text-white"
-                    : "bg-white text-gray-700 hover:bg-gray-100"
-                }`}
-                onClick={() => setCurrentPage(page)}
-              >
-                {page}
-              </button>
-            )
-          )}
-          <button
-            className={`px-4 py-2 border rounded ${
-              currentPage === totalPages || totalPages === 0
-                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                : "bg-white text-gray-700 hover:bg-gray-100"
-            }`}
-            onClick={() => setCurrentPage(currentPage + 1)}
-            disabled={currentPage === totalPages || totalPages === 0}
-          >
-            Next
-          </button>
+              <table className="table-auto w-max border-collapse border border-gray-300 text-sm">
+                <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
+                  <tr className="border border-gray-300">
+                    <th className="px-4 py-3 border">S.No</th>
+                    <th className="px-4 py-3 border">Client Number</th>
+                    <th className="px-4 py-3 border">Client Name</th>
+                    <th className="px-4 py-3 border">Month</th>
+                    <th className="px-4 py-3 border">Year</th>
+                    <th className="px-4 py-3 border">Total Employees</th>
+                    <th className="px-4 py-3 border">Net Salary</th>
+                    <th className="px-4 py-3 border">Net Adjusted Salary</th>
+                    <th className="px-4 py-3 border">Grand Total</th>
+                    <th className="px-4 py-3 border">Action</th>
+                    <th className="px-4 py-3 border">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white">
+                  {timesheetSummary.map((entry, index) => {
+                    const { month, year } = formatMonthYear(
+                      entry.timesheet_month
+                    );
+                    return (
+                      <tr key={entry.uid} className="border border-gray-300">
+                        <td className="px-4 py-2 border text-center">
+                          {(currentPage - 1) * pageSize + index + 1}
+                        </td>
+                        <td className="px-4 py-2 border">
+                          {entry.client_number}
+                        </td>
+                        <td className="px-4 py-2 border">
+                          {entry.client_name}
+                        </td>
+                        <td className="px-4 py-2 border">{month}</td>
+                        <td className="px-4 py-2 border">{year}</td>
+                        <td className="px-4 py-2 border text-center">
+                          {entry.employee_count}
+                        </td>
+                        <td className="px-4 py-2 border">
+                          {entry.total_salary_sum.toFixed(2)}
+                        </td>
+                        <td className="px-4 py-2 border">
+                          {entry.adjusted_salary_sum.toFixed(2)}
+                        </td>
+                        <td className="px-4 py-2 font-semibold border">
+                          {entry.grand_total.toFixed(2)}
+                        </td>
+                        <td className="px-4 py-2 space-x-2 border">
+                          <button
+                            onClick={() =>
+                              router.push(
+                                `/dashboard/operations/timesheet/${
+                                  entry.client_number
+                                }/${year}/${entry.timesheet_month.slice(5, 7)}`
+                              )
+                            }
+                            className="px-3 py-1 text-gray rounded hover:bg-indigo-600 hover:text-white text-xs cursor-pointer"
+                          >
+                            View
+                          </button>
+                          <button
+                            onClick={() =>
+                              router.push(
+                                `/dashboard/operations/edit_timesheet/${
+                                  entry.client_number
+                                }/${year}/${entry.timesheet_month.slice(5, 7)}`
+                              )
+                            }
+                            className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-xs cursor-pointer"
+                          >
+                            Edit
+                          </button>
+                        </td>
+                        <td className="px-4 py-2 space-x-2 border">
+                          <button className="px-3 py-1 text-green hover:bg-green-600 hover:text-white text-xs cursor-pointer">
+                            Submit
+                          </button>
+                          <button className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs cursor-pointer">
+                            Closed
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+          </div>
         </div>
-      )}
+
+        {/* Pagination */}
+        {timesheetSummary.length > 0 && !loading && (
+          <div className="flex justify-center mt-4 space-x-2">
+            <button
+              className={`px-4 py-2 border rounded ${
+                currentPage === 1
+                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                  : "bg-white text-gray-700 hover:bg-gray-100"
+              }`}
+              onClick={() => setCurrentPage(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              Prev
+            </button>
+
+            {getPaginationPages().map((page, idx) =>
+              page === "..." ? (
+                <span key={idx} className="px-4 py-2 text-gray-500">
+                  ...
+                </span>
+              ) : (
+                <button
+                  key={idx}
+                  className={`px-4 py-2 border rounded ${
+                    currentPage === page
+                      ? "bg-indigo-600 text-white"
+                      : "bg-white text-gray-700 hover:bg-gray-100"
+                  }`}
+                  onClick={() => setCurrentPage(page)}
+                >
+                  {page}
+                </button>
+              )
+            )}
+            <button
+              className={`px-4 py-2 border rounded ${
+                currentPage === totalPages || totalPages === 0
+                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                  : "bg-white text-gray-700 hover:bg-gray-100"
+              }`}
+              onClick={() => setCurrentPage(currentPage + 1)}
+              disabled={currentPage === totalPages || totalPages === 0}
+            >
+              Next
+            </button>
+          </div>
+        )}
+      </div>
     </>
   );
 }
