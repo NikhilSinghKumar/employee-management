@@ -324,6 +324,25 @@ export async function POST(req) {
       quotationMap.set(key, q);
     });
 
+    const invalidEmployees = employees.filter(
+      (e) => !e.nationality || !e.profession
+    );
+
+    /* check availability of nationality & profession in employees */
+    if (invalidEmployees.length > 0) {
+      return NextResponse.json(
+        {
+          error: "Some employees are missing nationality or profession",
+          employees: invalidEmployees.map((e) => ({
+            id: e.id,
+            name: e.name,
+            nationality: e.nationality,
+            profession: e.profession,
+          })),
+        },
+        { status: 400 }
+      );
+    }
     // ---------- GENERATE TIMESHEET RECORDS ----------
     const timesheetRecords = employees
       .map((emp) => {
