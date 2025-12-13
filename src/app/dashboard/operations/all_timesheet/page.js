@@ -201,12 +201,12 @@ export default function TimesheetPage() {
         >
           {/* Month and Year Display */}
           <div className="flex flex-col h-full justify-end w-full sm:w-auto">
-            <div className="block w-full flex items-center justify-center sm:w-40 h-[42px] px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-700">
+            <div className="block w-full flex items-center justify-center sm:w-40 h-[40px] border border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-700">
               {formattedMonth}
             </div>
           </div>
           <div className="flex flex-col h-full justify-end w-full sm:w-auto">
-            <div className="block w-full flex items-center justify-center sm:w-40 h-[42px] px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-700">
+            <div className="block w-full flex items-center justify-center sm:w-40 h-[40px] border border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-700">
               {currentYear}
             </div>
           </div>
@@ -218,7 +218,7 @@ export default function TimesheetPage() {
               value={clientNumber}
               onChange={(e) => setClientNumber(e.target.value)}
               required
-              className="block w-full sm:w-40 h-[42px] px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-black"
+              className="block w-full sm:w-40 h-[40px] px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-black"
             >
               <option value="">Select Client</option>
               {clientNumbers.map((number) => (
@@ -234,7 +234,7 @@ export default function TimesheetPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full sm:w-auto h-[42px] px-6 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-semibold rounded-md cursor-pointer hover:from-indigo-700 hover:to-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              className="w-full sm:w-auto h-[40px] px-6 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-semibold rounded-md cursor-pointer hover:from-indigo-700 hover:to-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
               {loading ? "Generating..." : "Generate"}
             </button>
