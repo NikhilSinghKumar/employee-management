@@ -21,22 +21,24 @@ export default function QuotationList() {
   const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
 
-  // -----------------------------
-  // Fetch unique dropdown filters
-  // -----------------------------
+  const fetchFilters = async () => {
+    const params = new URLSearchParams({
+      client_number: filters.client_number,
+      nationality: filters.nationality,
+      profession: filters.profession,
+    });
+
+    const res = await fetch(`/api/sales/quotation_list/filters?${params}`);
+    const data = await res.json();
+
+    setClients(data.clients || []);
+    setNationalities(data.nationalities || []);
+    setProfessions(data.professions || []);
+  };
+
   useEffect(() => {
-    fetch("/api/sales/quotation_list/unique_clients")
-      .then((res) => res.json())
-      .then(setClients);
-
-    fetch("/api/sales/quotation_list/unique_nationalities")
-      .then((res) => res.json())
-      .then(setNationalities);
-
-    fetch("/api/sales/quotation_list/unique_professions")
-      .then((res) => res.json())
-      .then(setProfessions);
-  }, []);
+    fetchFilters();
+  }, [filters.client_number, filters.nationality, filters.profession]);
 
   // -----------------------------
   // Debounce Search (300ms delay)
@@ -88,10 +90,25 @@ export default function QuotationList() {
   // Handle filter changes
   // -----------------------------
   const handleFilterChange = (e) => {
-    setFilters((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
+    const { name, value } = e.target;
+
+    setFilters((prev) => {
+      let updated = { ...prev, [name]: value };
+
+      // Reset logically inconsistent filters
+      if (name === "client_number") {
+        updated.nationality = "";
+        updated.profession = "";
+        updated.search = "";
+      }
+
+      if (name === "nationality") {
+        updated.profession = "";
+      }
+
+      return updated;
+    });
+
     setPage(1);
   };
 
@@ -148,8 +165,8 @@ export default function QuotationList() {
             className="border p-2 rounded"
           >
             <option value="">All Nationalities</option>
-            {nationalities.map((n) => (
-              <option key={n.nationality} value={n.nationality}>
+            {nationalities.map((n, index) => (
+              <option key={`${n.nationality}-${index}`} value={n.nationality}>
                 {n.nationality}
               </option>
             ))}
@@ -163,8 +180,8 @@ export default function QuotationList() {
             className="border p-2 rounded"
           >
             <option value="">All Professions</option>
-            {professions.map((p) => (
-              <option key={p.profession} value={p.profession}>
+            {professions.map((p, index) => (
+              <option key={`${p.profession} -${index}`} value={p.profession}>
                 {p.profession}
               </option>
             ))}
@@ -196,6 +213,7 @@ export default function QuotationList() {
             <table className="w-full border-collapse border border-gray-300">
               <thead>
                 <tr className="bg-gray-100">
+                  <th className="border p-2">S.N.</th>
                   <th className="border p-2">Client Number</th>
                   <th className="border p-2">Client Name</th>
                   <th className="border p-2">Nationality</th>
@@ -211,10 +229,13 @@ export default function QuotationList() {
                     </td>
                   </tr>
                 ) : (
-                  quotations.map((q) => (
+                  quotations.map((q, index) => (
                     <tr
                       key={`${q.id}-${q.client_number}-${q.profession}-${q.nationality}`}
                     >
+                      <td className="border p-2">
+                        {(page - 1) * limit + index + 1}
+                      </td>
                       <td className="border p-2">{q.client_number}</td>
                       <td className="border p-2">{q.client_name}</td>
                       <td className="border p-2">{q.nationality}</td>
