@@ -137,140 +137,159 @@ export default function QuotationList() {
         }
       `}</style>
 
-      <div className="p-4">
-        <h1 className="text-xl font-bold mb-4">Quotation List</h1>
-
-        {/* Filters */}
-        <div className="flex flex-wrap gap-4 mb-4">
-          {/* Client Dropdown */}
-          <select
-            name="client_number"
-            value={filters.client_number}
-            onChange={handleFilterChange}
-            className="border p-2 rounded"
-          >
-            <option value="">All Clients</option>
-            {clients.map((c) => (
-              <option key={c.client_number} value={c.client_number}>
-                {c.client_number} ({c.client_name})
-              </option>
-            ))}
-          </select>
-
-          {/* Nationality */}
-          <select
-            name="nationality"
-            value={filters.nationality}
-            onChange={handleFilterChange}
-            className="border p-2 rounded"
-          >
-            <option value="">All Nationalities</option>
-            {nationalities.map((n, index) => (
-              <option key={`${n.nationality}-${index}`} value={n.nationality}>
-                {n.nationality}
-              </option>
-            ))}
-          </select>
-
-          {/* Profession */}
-          <select
-            name="profession"
-            value={filters.profession}
-            onChange={handleFilterChange}
-            className="border p-2 rounded"
-          >
-            <option value="">All Professions</option>
-            {professions.map((p, index) => (
-              <option key={`${p.profession} -${index}`} value={p.profession}>
-                {p.profession}
-              </option>
-            ))}
-          </select>
-
-          {/* Debounced Search */}
-          <input
-            type="text"
-            name="search"
-            value={filters.search}
-            onChange={handleFilterChange}
-            placeholder="Search..."
-            className="border p-2 rounded flex-1 min-w-[200px]"
-          />
-        </div>
-
-        {loading && (
-          <div className="flex justify-center items-center py-10 text-xl font-semibold">
-            Loading
-            <span className="dot mx-1">.</span>
-            <span className="dot mx-1">.</span>
-            <span className="dot mx-1">.</span>
-          </div>
-        )}
-
-        {!loading && (
-          <>
-            {/* Table */}
-            <table className="w-full border-collapse border border-gray-300">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="border p-2">S.N.</th>
-                  <th className="border p-2">Client Number</th>
-                  <th className="border p-2">Client Name</th>
-                  <th className="border p-2">Nationality</th>
-                  <th className="border p-2">Profession</th>
-                  <th className="border p-2">ETMAM Cost</th>
-                </tr>
-              </thead>
-              <tbody>
-                {quotations.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="text-center p-4">
-                      No records found
-                    </td>
-                  </tr>
-                ) : (
-                  quotations.map((q, index) => (
-                    <tr
-                      key={`${q.id}-${q.client_number}-${q.profession}-${q.nationality}`}
-                    >
-                      <td className="border p-2">
-                        {(page - 1) * limit + index + 1}
-                      </td>
-                      <td className="border p-2">{q.client_number}</td>
-                      <td className="border p-2">{q.client_name}</td>
-                      <td className="border p-2">{q.nationality}</td>
-                      <td className="border p-2">{q.profession}</td>
-                      <td className="border p-2">{q.etmam_cost}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-
-            {/* Pagination */}
-            <div className="flex justify-center gap-2 mt-4">
-              <button
-                onClick={() => setPage((p) => Math.max(p - 1, 1))}
-                disabled={page === 1}
-                className="border px-3 py-1 rounded disabled:opacity-50"
-              >
-                Prev
-              </button>
-
-              <span className="px-2 py-1">
-                {page} / {totalPages}
-              </span>
-
-              <button
-                onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-                disabled={page === totalPages}
-                className="border px-3 py-1 rounded disabled:opacity-50"
-              >
-                Next
-              </button>
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-7xl mx-auto bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-2xl font-semibold text-gray-800">
+                Quotation List
+              </h1>
+              <p className="text-sm text-gray-500">
+                View and manage client quotations
+              </p>
             </div>
-          </>
-        )}
+          </div>
+
+          {/* Filters */}
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+              {/* Client Dropdown */}
+              <select
+                name="client_number"
+                value={filters.client_number}
+                onChange={handleFilterChange}
+                className="border p-2 rounded"
+              >
+                <option value="">All Clients</option>
+                {clients.map((c) => (
+                  <option key={c.client_number} value={c.client_number}>
+                    {c.client_number} ({c.client_name})
+                  </option>
+                ))}
+              </select>
+
+              {/* Nationality */}
+              <select
+                name="nationality"
+                value={filters.nationality}
+                onChange={handleFilterChange}
+                className="border p-2 rounded"
+              >
+                <option value="">All Nationalities</option>
+                {nationalities.map((n, index) => (
+                  <option
+                    key={`${n.nationality}-${index}`}
+                    value={n.nationality}
+                  >
+                    {n.nationality}
+                  </option>
+                ))}
+              </select>
+
+              {/* Profession */}
+              <select
+                name="profession"
+                value={filters.profession}
+                onChange={handleFilterChange}
+                className="border p-2 rounded"
+              >
+                <option value="">All Professions</option>
+                {professions.map((p, index) => (
+                  <option
+                    key={`${p.profession} -${index}`}
+                    value={p.profession}
+                  >
+                    {p.profession}
+                  </option>
+                ))}
+              </select>
+
+              {/* Debounced Search */}
+              <input
+                type="text"
+                name="search"
+                value={filters.search}
+                onChange={handleFilterChange}
+                placeholder="Search client, profession..."
+                className="border p-2 rounded flex-1 min-w-[200px]"
+              />
+            </div>
+          </div>
+
+          {loading && (
+            <div className="flex justify-center items-center py-10 text-xl font-semibold">
+              Loading
+              <span className="dot mx-1">.</span>
+              <span className="dot mx-1">.</span>
+              <span className="dot mx-1">.</span>
+            </div>
+          )}
+
+          {!loading && (
+            <>
+              {/* Table */}
+              <table className="w-full border-collapse border border-gray-300">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="border p-2">S.N.</th>
+                    <th className="border p-2">Client Number</th>
+                    <th className="border p-2">Client Name</th>
+                    <th className="border p-2">Nationality</th>
+                    <th className="border p-2">Profession</th>
+                    <th className="border p-2">ETMAM Cost</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {quotations.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="text-center p-4">
+                        No records found
+                      </td>
+                    </tr>
+                  ) : (
+                    quotations.map((q, index) => (
+                      <tr
+                        key={`${q.id}-${q.client_number}-${q.profession}-${q.nationality}`}
+                      >
+                        <td className="border p-2">
+                          {(page - 1) * limit + index + 1}
+                        </td>
+                        <td className="border p-2">{q.client_number}</td>
+                        <td className="border p-2">{q.client_name}</td>
+                        <td className="border p-2">{q.nationality}</td>
+                        <td className="border p-2">{q.profession}</td>
+                        <td className="border p-2">{q.etmam_cost}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+
+              {/* Pagination */}
+              <div className="flex justify-center gap-2 mt-4">
+                <button
+                  onClick={() => setPage((p) => Math.max(p - 1, 1))}
+                  disabled={page === 1}
+                  className="border px-3 py-1 rounded disabled:opacity-50"
+                >
+                  Prev
+                </button>
+
+                <span className="px-2 py-1">
+                  {page} / {totalPages}
+                </span>
+
+                <button
+                  onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+                  disabled={page === totalPages}
+                  className="border px-3 py-1 rounded disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </>
   );
