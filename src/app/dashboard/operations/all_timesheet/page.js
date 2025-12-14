@@ -200,15 +200,15 @@ export default function TimesheetPage() {
           className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm flex flex-wrap gap-4 items-end"
         >
           {/* Month and Year Display */}
-          <div className="flex flex-col h-full justify-end w-full sm:w-auto">
-            <div className="block w-full flex items-center justify-center sm:w-40 h-[40px] border border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-700">
+          <div className="flex flex-col">
+            <span className="px-4 h-[42px] flex items-center justify-center rounded-md bg-gray-100 text-gray-700">
               {formattedMonth}
-            </div>
+            </span>
           </div>
-          <div className="flex flex-col h-full justify-end w-full sm:w-auto">
-            <div className="block w-full flex items-center justify-center sm:w-40 h-[40px] border border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-700">
+          <div className="flex flex-col">
+            <span className="px-4 h-[42px] flex items-center justify-center rounded-md bg-gray-100 text-gray-700">
               {currentYear}
-            </div>
+            </span>
           </div>
 
           {/* Client Number */}
