@@ -273,7 +273,7 @@ export async function POST(req) {
       .from("employees")
       .select(
         `
-        id, name, nationality, profession, basic_salary, total_salary, client_name, iqama_number,
+        id, name, nationality, profession, basic_salary, total_salary, client_number, client_name, iqama_number,
         contract_start_date, contract_end_date,
         employee_status, inactive_date
       `
