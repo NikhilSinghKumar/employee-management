@@ -3,16 +3,16 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/utils/supabaseClient";
 import { useRouter } from "next/navigation";
+import { toast } from "react-hot-toast";
 
 export default function TimesheetPage() {
   const [clientNumber, setClientNumber] = useState("");
   const [clientNumbers, setClientNumbers] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [pageLoading, setPageLoading] = useState(true); // table skeleton
+  const [actionLoading, setActionLoading] = useState(false); // generate button
   const [timesheetSummary, setTimesheetSummary] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const [successMessage, setSuccessMessage] = useState("");
   const [currentDate, setCurrentDate] = useState(new Date());
   const pageSize = 10;
   const router = useRouter();
@@ -63,7 +63,6 @@ export default function TimesheetPage() {
   // Fetch client numbers
   useEffect(() => {
     async function fetchClientNumbers() {
-      setLoading(true);
       try {
         const res = await fetch("/api/client_numbers", {
           credentials: "include",
@@ -72,13 +71,11 @@ export default function TimesheetPage() {
         if (res.ok) {
           setClientNumbers(data);
         } else {
-          setError(data.error || "Failed to fetch client numbers");
+          toast.error(data.error || "Failed to fetch client numbers");
         }
       } catch (err) {
-        setError(err.message || "Unexpected error fetching client numbers");
+        toast.error(err.message || "Unexpected error fetching client numbers");
         console.error(err);
-      } finally {
-        setLoading(false);
       }
     }
     fetchClientNumbers();
@@ -87,8 +84,7 @@ export default function TimesheetPage() {
   // Handle Generate Timesheet
   const handleGenerateTimesheet = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
+    setActionLoading(true);
     try {
       const res = await fetch("/api/generate_timesheet", {
         method: "POST",
@@ -104,17 +100,16 @@ export default function TimesheetPage() {
       if (!res.ok) {
         throw new Error(result.error || "Failed to generate timesheet");
       }
-      setSuccessMessage("Timesheet generated successfully!");
-      setTimeout(() => setSuccessMessage(""), 3000);
+      toast.success("Timesheet generated successfully");
 
       // Refetch summary after successful generation
       await fetchTimesheetSummary(1);
       setCurrentPage(1);
     } catch (err) {
-      setError(err.message || "Unexpected error");
+      toast.error(err.message || "Unexpected error");
       console.error(err);
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
@@ -125,7 +120,7 @@ export default function TimesheetPage() {
   }, [currentPage]);
 
   async function fetchTimesheetSummary(page = currentPage) {
-    setLoading(true);
+    setPageLoading(true);
     try {
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
@@ -140,12 +135,11 @@ export default function TimesheetPage() {
       }
       setTimesheetSummary(data || []);
       setTotalCount(count || 0);
-      setError(null);
     } catch (err) {
-      setError(err.message || "Failed to fetch timesheet summary");
+      toast.error(err.message || "Failed to fetch timesheet summary");
       console.error(err);
     } finally {
-      setLoading(false);
+      setPageLoading(false);
     }
   }
 
@@ -173,16 +167,6 @@ export default function TimesheetPage() {
     return pages;
   };
 
-  // Auto-hide error message after 3 seconds
-  useEffect(() => {
-    if (error) {
-      const timer = setTimeout(() => {
-        setError(null);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [error]);
-
   return (
     <>
       <div className="min-h-screen bg-gray-50 p-6">
@@ -197,7 +181,7 @@ export default function TimesheetPage() {
 
         <form
           onSubmit={handleGenerateTimesheet}
-          className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm flex flex-wrap gap-4 items-end"
+          className="p-4 flex flex-wrap gap-4 items-end"
         >
           {/* Month and Year Display */}
           <div className="flex flex-col">
@@ -233,31 +217,30 @@ export default function TimesheetPage() {
           <div className="flex h-full items-end w-full sm:w-auto">
             <button
               type="submit"
-              disabled={loading}
+              disabled={actionLoading}
               className="w-full sm:w-auto h-[40px] px-6 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-semibold rounded-md cursor-pointer hover:from-indigo-700 hover:to-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
-              {loading ? "Generating..." : "Generate"}
+              {actionLoading ? "Generating..." : "Generate"}
             </button>
           </div>
         </form>
-        <div className="h-12 mb-4 mt-1">
-          {error ? (
-            <p className="text-red-600 text-center transition-opacity duration-300 ease-in-out opacity-100">
-              {error}
-            </p>
-          ) : successMessage ? (
-            <p className="text-green-600 text-center">{successMessage}</p>
-          ) : (
-            <div className="h-full"></div>
-          )}
-        </div>
+        <hr className="my-4 border-t border-gray-300" />
+
         {/* Table */}
         <div className="overflow-x-auto w-full">
-          <div className="mx-auto max-w-7xl">
-            {loading ? (
-              <div className="text-center text-gray-500 py-10">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-500"></div>
-                <p className="mt-2">Loading...</p>
+          <div className="mx-auto mt-4 max-w-7xl">
+            {pageLoading ? (
+              <div className="space-y-2">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="grid grid-cols-11 gap-4">
+                    {[...Array(11)].map((__, j) => (
+                      <div
+                        key={j}
+                        className="h-6 bg-gray-100 rounded animate-pulse"
+                      />
+                    ))}
+                  </div>
+                ))}
               </div>
             ) : timesheetSummary.length === 0 ? (
               <p className="text-center text-gray-500 text-lg py-10">
@@ -354,7 +337,7 @@ export default function TimesheetPage() {
         </div>
 
         {/* Pagination */}
-        {timesheetSummary.length > 0 && !loading && (
+        {timesheetSummary.length > 0 && !pageLoading && (
           <div className="flex justify-center mt-4 space-x-2">
             <button
               className={`px-4 py-2 border rounded ${
