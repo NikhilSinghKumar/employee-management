@@ -572,7 +572,7 @@ export default function EditTimesheetPage() {
         <button
           onClick={handleSaveClick}
           disabled={loading}
-          className={`bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 ${
+          className={`bg-green-500 text-white px-4 py-2 cursor-pointer rounded hover:bg-green-600 ${
             loading ? "bg-gray-400 cursor-not-allowed" : ""
           }`}
         >
@@ -581,7 +581,7 @@ export default function EditTimesheetPage() {
         <button
           onClick={handleCancelClick}
           disabled={loading}
-          className={`bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 ${
+          className={`bg-red-500 text-white px-4 py-2 cursor-pointer rounded hover:bg-red-600 ${
             loading ? "bg-gray-400 cursor-not-allowed" : ""
           }`}
         >
@@ -590,7 +590,7 @@ export default function EditTimesheetPage() {
         <button
           onClick={() => router.push("/dashboard/operations/all_timesheet")}
           disabled={loading}
-          className={`bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 ${
+          className={`bg-blue-500 text-white px-4 py-2 cursor-pointer rounded hover:bg-blue-600 ${
             loading ? "bg-gray-400 cursor-not-allowed" : ""
           }`}
         >
