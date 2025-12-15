@@ -98,7 +98,7 @@ export default function ClientTimesheetPage() {
       const { data, error } = await supabase
         .from("generated_timesheet_summary")
         .select(
-          "working_days_count, total_salary_sum, total_cost_sum, vat_sum, grand_total"
+          "working_days_count, total_salary_sum, total_cost_sum,etmam_cost_sum, vat_sum, grand_total"
         )
         .eq("client_number", client_number)
         .eq("timesheet_month", fromDate)
@@ -232,6 +232,9 @@ export default function ClientTimesheetPage() {
                 <th className="table-cell-style table-cell-center">
                   Etmam Cost
                 </th>
+                <th className="table-cell-style table-cell-center">
+                  Adj. Etmam Cost
+                </th>
                 <th className="table-cell-style table-cell-center font-bold">
                   Total Cost
                 </th>
@@ -293,6 +296,9 @@ export default function ClientTimesheetPage() {
                     </td>
                     <td className="table-cell-style table-cell-center">
                       {(item.etmam_cost ?? 0).toFixed(2)}
+                    </td>
+                    <td className="table-cell-style table-cell-center">
+                      {(item.adjusted_etmam_cost ?? 0).toFixed(2)}
                     </td>
                     <td className="table-cell-style table-cell-center font-bold">
                       {(item.total_cost ?? 0).toFixed(2)}
@@ -365,7 +371,7 @@ export default function ClientTimesheetPage() {
               `/dashboard/operations/edit_timesheet/${client_number}/${year}/${month}`
             )
           }
-          className="bg-fuchsia-700 text-white px-4 py-2 rounded hover:bg-fuchsia-800"
+          className="bg-fuchsia-700 text-white px-4 py-2 cursor-pointer rounded hover:bg-fuchsia-800"
         >
           Go to Edit Timesheet
         </button>
