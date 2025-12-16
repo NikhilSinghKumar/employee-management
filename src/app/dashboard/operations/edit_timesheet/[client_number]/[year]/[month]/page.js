@@ -522,7 +522,8 @@ export default function EditTimesheetPage() {
         )}
       </div>
 
-      {!isSearching && timesheetData.length > 0 && !loading && (
+      {/* Pagination */}
+      {!isSearching && totalCount > pageSize && !loading && (
         <div className="flex justify-center mt-4 space-x-2">
           <button
             className={`px-4 py-2 border rounded ${
@@ -535,6 +536,7 @@ export default function EditTimesheetPage() {
           >
             Prev
           </button>
+
           {getPaginationPages().map((page, idx) =>
             page === "..." ? (
               <span key={idx} className="px-4 py-2 text-gray-500">
@@ -554,14 +556,15 @@ export default function EditTimesheetPage() {
               </button>
             )
           )}
+
           <button
             className={`px-4 py-2 border rounded ${
-              currentPage === totalPages || totalPages === 0
+              currentPage === totalPages
                 ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                 : "bg-white text-gray-700 hover:bg-gray-100"
             }`}
             onClick={() => setCurrentPage(currentPage + 1)}
-            disabled={currentPage === totalPages || totalPages === 0}
+            disabled={currentPage === totalPages}
           >
             Next
           </button>
