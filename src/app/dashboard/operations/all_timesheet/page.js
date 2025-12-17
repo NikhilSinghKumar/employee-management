@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/utils/supabaseClient";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
+import TimesheetActions from "@/component/AllTimesheetActions";
 
 export default function TimesheetPage() {
   const [clientNumber, setClientNumber] = useState("");
@@ -259,8 +260,8 @@ export default function TimesheetPage() {
                     <th className="px-4 py-3 border">Net Salary</th>
                     <th className="px-4 py-3 border">Net Adjusted Salary</th>
                     <th className="px-4 py-3 border">Grand Total</th>
-                    <th className="px-4 py-3 border">Action</th>
                     <th className="px-4 py-3 border">Status</th>
+                    <th className="px-4 py-3 border">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white">
@@ -293,39 +294,17 @@ export default function TimesheetPage() {
                         <td className="px-4 py-2 font-semibold border">
                           {entry.grand_total.toFixed(2)}
                         </td>
-                        <td className="px-4 py-2 space-x-2 border">
-                          <button
-                            onClick={() =>
-                              router.push(
-                                `/dashboard/operations/timesheet/${
-                                  entry.client_number
-                                }/${year}/${entry.timesheet_month.slice(5, 7)}`
-                              )
-                            }
-                            className="px-3 py-1 text-gray rounded hover:bg-indigo-600 hover:text-white text-xs cursor-pointer"
-                          >
-                            View
-                          </button>
-                          <button
-                            onClick={() =>
-                              router.push(
-                                `/dashboard/operations/edit_timesheet/${
-                                  entry.client_number
-                                }/${year}/${entry.timesheet_month.slice(5, 7)}`
-                              )
-                            }
-                            className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-xs cursor-pointer"
-                          >
-                            Edit
-                          </button>
+                        <td className="px-4 py-2 space-x-2 border capitalize">
+                          {entry.status}
                         </td>
-                        <td className="px-4 py-2 space-x-2 border">
-                          <button className="px-3 py-1 text-green hover:bg-green-600 hover:text-white text-xs cursor-pointer">
-                            Submit
-                          </button>
-                          <button className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs cursor-pointer">
-                            Closed
-                          </button>
+                        <td className="px-4 py-2 border text-center">
+                          <TimesheetActions
+                            clientNumber={entry.client_number}
+                            year={year}
+                            month={entry.timesheet_month.slice(5, 7)}
+                            status={entry.status}
+                            onSubmit={() => handleSubmitTimesheet(entry)}
+                          />
                         </td>
                       </tr>
                     );
