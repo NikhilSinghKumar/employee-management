@@ -2,28 +2,33 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/utils/supabaseClient";
-import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
-import TimesheetActions from "@/component/AllTimesheetActions";
+import TimesheetActions from "@/component/TimesheetActions";
+
+const STATUS_STYLES = {
+  draft: "bg-gray-200 text-gray-700",
+  pending: "bg-yellow-100 text-yellow-700",
+  approved: "bg-green-100 text-green-700",
+  revision_required: "bg-orange-100 text-orange-700",
+};
 
 export default function TimesheetPage() {
   const [clientNumber, setClientNumber] = useState("");
   const [clientNumbers, setClientNumbers] = useState([]);
   const [pageLoading, setPageLoading] = useState(true); // table skeleton
-  const [actionLoading, setActionLoading] = useState(false); // generate button
+  const [generateLoading, setGenerateLoading] = useState(false); // generate button
+  const [submittingId, setSubmittingId] = useState(null);
   const [timesheetSummary, setTimesheetSummary] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const [currentDate, setCurrentDate] = useState(new Date());
   const pageSize = 10;
-  const router = useRouter();
 
   // Month/Year based on 15-day window rule
   const today = new Date();
   const dayOfMonth = today.getDate();
 
   // If today <= 15 → show previous month
-  let displayDate = new Date(today);
+  const displayDate = new Date(today);
 
   if (dayOfMonth <= 15) {
     displayDate.setMonth(displayDate.getMonth() - 1);
@@ -44,22 +49,6 @@ export default function TimesheetPage() {
   // });
 
   const totalPages = Math.ceil(totalCount / pageSize);
-
-  // Automatic update for month/year
-  useEffect(() => {
-    const checkDate = () => {
-      const now = new Date();
-      if (
-        now.getMonth() !== currentDate.getMonth() ||
-        now.getFullYear() !== currentDate.getFullYear()
-      ) {
-        setCurrentDate(new Date());
-      }
-    };
-
-    const timer = setInterval(checkDate, 60 * 1000);
-    return () => clearInterval(timer);
-  }, [currentDate]);
 
   // Fetch client numbers
   useEffect(() => {
@@ -85,7 +74,7 @@ export default function TimesheetPage() {
   // Handle Generate Timesheet
   const handleGenerateTimesheet = async (e) => {
     e.preventDefault();
-    setActionLoading(true);
+    setGenerateLoading(true);
     try {
       const res = await fetch("/api/generate_timesheet", {
         method: "POST",
@@ -110,14 +99,14 @@ export default function TimesheetPage() {
       toast.error(err.message || "Unexpected error");
       console.error(err);
     } finally {
-      setActionLoading(false);
+      setGenerateLoading(false);
     }
   };
 
   // Fetch paginated timesheet summary
   useEffect(() => {
     document.title = "All Client Timesheet";
-    fetchTimesheetSummary();
+    fetchTimesheetSummary(currentPage);
   }, [currentPage]);
 
   async function fetchTimesheetSummary(page = currentPage) {
@@ -166,6 +155,33 @@ export default function TimesheetPage() {
       pages.push(totalPages);
     }
     return pages;
+  };
+
+  const handleSubmitTimesheet = async (entry) => {
+    if (!["draft", "revision_required"].includes(entry.status)) return;
+    setSubmittingId(entry.uid);
+    try {
+      const res = await fetch("/api/timesheet/send-to-finance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          clientNumber: entry.client_number,
+          month: entry.timesheet_month.slice(5, 7),
+          year: entry.timesheet_month.slice(0, 4),
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      toast.success("Timesheet sent to finance");
+      fetchTimesheetSummary(currentPage);
+    } catch (err) {
+      toast.error(err.message || "Failed to send timesheet");
+    } finally {
+      setSubmittingId(null);
+    }
   };
 
   return (
@@ -218,10 +234,10 @@ export default function TimesheetPage() {
           <div className="flex h-full items-end w-full sm:w-auto">
             <button
               type="submit"
-              disabled={actionLoading}
+              disabled={generateLoading}
               className="w-full sm:w-auto h-[40px] px-6 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-semibold rounded-md cursor-pointer hover:from-indigo-700 hover:to-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
-              {actionLoading ? "Generating..." : "Generate"}
+              {generateLoading ? "Generating..." : "Generate"}
             </button>
           </div>
         </form>
@@ -266,9 +282,13 @@ export default function TimesheetPage() {
                 </thead>
                 <tbody className="bg-white">
                   {timesheetSummary.map((entry, index) => {
-                    const { month, year } = formatMonthYear(
-                      entry.timesheet_month
-                    );
+                    const date = new Date(entry.timesheet_month);
+                    const monthLabel = date.toLocaleString("default", {
+                      month: "long",
+                    });
+                    const yearLabel = date.getFullYear();
+                    const monthNum = entry.timesheet_month.slice(5, 7);
+                    const yearStr = entry.timesheet_month.slice(0, 4);
                     return (
                       <tr key={entry.uid} className="border border-gray-300">
                         <td className="px-4 py-2 border text-center">
@@ -280,8 +300,8 @@ export default function TimesheetPage() {
                         <td className="px-4 py-2 border">
                           {entry.client_name}
                         </td>
-                        <td className="px-4 py-2 border">{month}</td>
-                        <td className="px-4 py-2 border">{year}</td>
+                        <td className="px-4 py-2 border">{monthLabel}</td>
+                        <td className="px-4 py-2 border">{yearLabel}</td>
                         <td className="px-4 py-2 border text-center">
                           {entry.employee_count}
                         </td>
@@ -296,22 +316,8 @@ export default function TimesheetPage() {
                         </td>
                         <td className="px-4 py-2 border text-center capitalize">
                           <span
-                            className={`px-2 py-1 rounded text-xs font-semibold 
-                            ${
-                              entry.status === "draft" &&
-                              "bg-gray-200 text-gray-700"
-                            }
-                            ${
-                              entry.status === "pending" &&
-                              "bg-yellow-100 text-yellow-700"
-                            }
-                            ${
-                              entry.status === "approved" &&
-                              "bg-green-100 text-green-700"
-                            }
-                            ${
-                              entry.status === "revision_required" &&
-                              "bg-orange-100 text-orange-700"
+                            className={`px-2 py-1 rounded text-xs font-semibold ${
+                              STATUS_STYLES[entry.status]
                             }`}
                           >
                             {entry.status.replace("_", " ")}
@@ -320,9 +326,10 @@ export default function TimesheetPage() {
 
                         <td className="px-4 py-2 border text-center">
                           <TimesheetActions
+                            submitting={submittingId === entry.uid}
                             clientNumber={entry.client_number}
-                            year={year}
-                            month={entry.timesheet_month.slice(5, 7)}
+                            year={yearStr}
+                            month={monthNum}
                             status={entry.status}
                             onSubmit={() => handleSubmitTimesheet(entry)}
                           />
