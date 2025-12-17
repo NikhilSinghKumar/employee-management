@@ -335,6 +335,7 @@ export default function TimesheetPage() {
             )}
           </div>
         </div>
+
         {/* Pagination */}
         {totalCount > pageSize && !pageLoading && (
           <div className="flex justify-center mt-4 space-x-2">
@@ -369,15 +370,14 @@ export default function TimesheetPage() {
                 </button>
               )
             )}
-
             <button
               className={`px-4 py-2 border rounded ${
-                currentPage === totalPages
+                currentPage === totalPages || totalPages === 0
                   ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                   : "bg-white text-gray-700 hover:bg-gray-100"
               }`}
               onClick={() => setCurrentPage(currentPage + 1)}
-              disabled={currentPage === totalPages}
+              disabled={currentPage === totalPages || totalPages === 0}
             >
               Next
             </button>
