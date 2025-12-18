@@ -31,6 +31,7 @@ export default function FinanceTimesheetActions({
 
       <DropdownMenuContent align="end">
         <DropdownMenuItem
+          className="cursor-pointer"
           onClick={() =>
             router.push(
               `/finance/timesheet/view/${clientNumber}/${year}/${month}`
@@ -43,12 +44,20 @@ export default function FinanceTimesheetActions({
 
         {status === "pending" && (
           <>
-            <DropdownMenuItem disabled={submitting} onClick={onApprove}>
+            <DropdownMenuItem
+              className="cursor-pointer"
+              disabled={submitting}
+              onClick={onApprove}
+            >
               <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
               Approve
             </DropdownMenuItem>
 
-            <DropdownMenuItem disabled={submitting} onClick={onRevision}>
+            <DropdownMenuItem
+              className="cursor-pointer"
+              disabled={submitting}
+              onClick={onRevision}
+            >
               <RotateCcw className="mr-2 h-4 w-4 text-orange-600" />
               Send for Revision
             </DropdownMenuItem>
