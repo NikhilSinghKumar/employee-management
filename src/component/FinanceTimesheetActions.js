@@ -34,7 +34,7 @@ export default function FinanceTimesheetActions({
           className="cursor-pointer"
           onClick={() =>
             router.push(
-              `/finance/timesheet/view/${clientNumber}/${year}/${month}`
+              `/dashboard/finance/timesheets/view/${clientNumber}/${year}/${month}`
             )
           }
         >
