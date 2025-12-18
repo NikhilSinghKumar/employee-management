@@ -83,7 +83,7 @@ export default function TimesheetActions({
           }}
         >
           <Send className="mr-2 h-4 w-4" />
-          {submitting ? "Submitting..." : "Submit"}
+          {submitting ? "Submitting..." : "Send to Finance"}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
