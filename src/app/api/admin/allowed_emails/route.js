@@ -32,7 +32,7 @@ export async function GET(req) {
     }
 
     // Only allow super_admin or admin
-    if (!["super_admin", "Admin"].includes(user.role)) {
+    if (!["super_admin", "admin"].includes(user.role)) {
       return NextResponse.json(
         { message: "Access denied. Admins only." },
         { status: 403 }
@@ -47,7 +47,7 @@ export async function GET(req) {
       .order("id", { ascending: true });
 
     // If user is admin, exclude super_admin emails
-    if (user.role === "Admin") {
+    if (user.role === "admin") {
       query = query.neq("role", "super_admin");
     }
 
@@ -80,7 +80,7 @@ export async function POST(req) {
     const auth = await authenticateToken(token);
     const userRole = auth.user.role || "";
     const ROLE_SUPER = "super_admin";
-    const ROLE_ADMIN = "Admin";
+    const ROLE_ADMIN = "admin";
 
     // ✅ Allow only super_admin or admin
     if (!auth.success || (userRole !== ROLE_SUPER && userRole !== ROLE_ADMIN)) {
@@ -178,7 +178,7 @@ export async function PATCH(req) {
 
     const userRole = auth.user.role;
     const ROLE_SUPER = "super_admin";
-    const ROLE_ADMIN = "Admin";
+    const ROLE_ADMIN = "admin";
 
     // 3) parse body
     const { email, role, allowed_sections, is_active } = await req.json();
@@ -298,7 +298,7 @@ export async function DELETE(req) {
     const auth = await authenticateToken(token);
     const userRole = auth?.user?.role || "";
     const ROLE_SUPER = "super_admin";
-    const ROLE_ADMIN = "Admin";
+    const ROLE_ADMIN = "admin";
 
     if (!auth.success || !userRole) {
       return NextResponse.json(
