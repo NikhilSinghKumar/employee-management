@@ -161,7 +161,7 @@ export default function TimesheetPage() {
     if (!["draft", "revision_required"].includes(entry.status)) return;
     setSubmittingId(entry.uid);
     try {
-      const res = await fetch("/api/timesheet/send-to-finance", {
+      const res = await fetch("/api/operation_timesheet/send_to_finance", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
