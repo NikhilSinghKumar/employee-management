@@ -26,10 +26,14 @@ export async function POST(req) {
       );
     }
 
-    // 2️⃣ Authorize (Finance only)
-    if (auth.user.role !== "finance") {
+    // 2️⃣ Authorize (Finance, Admin, SUper Admin only)
+    const allowedRoles = ["finance", "admin", "super_admin"];
+
+    if (!allowedRoles.includes(auth.user.role)) {
       return NextResponse.json(
-        { error: "Forbidden: Finance only" },
+        {
+          error: "Forbidden: You are not allowed to approve timesheet",
+        },
         { status: 403 }
       );
     }
@@ -45,7 +49,7 @@ export async function POST(req) {
     }
 
     // 4️⃣ Approve safely (pending → approved)
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("generated_timesheet_summary")
       .update({
         status: "approved",
@@ -54,9 +58,17 @@ export async function POST(req) {
       })
       .eq("client_number", clientNumber)
       .eq("timesheet_month", `${year}-${month}-01`)
-      .eq("status", "pending");
+      .eq("status", "pending")
+      .select("uid");
 
     if (error) throw error;
+
+    if (!data || data.length === 0) {
+      return NextResponse.json(
+        { error: "Timesheet not in pending state or not found" },
+        { status: 409 }
+      );
+    }
 
     return NextResponse.json({ success: true });
   } catch (err) {
