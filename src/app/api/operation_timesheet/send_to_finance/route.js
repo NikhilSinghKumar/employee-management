@@ -26,10 +26,14 @@ export async function POST(req) {
       );
     }
 
-    // 2️⃣ Authorize (Operations only)
-    if (auth.user.role !== "operations") {
+    // 2️⃣ Authorize (Operations, Admin, Super Admin only)
+    const allowedRoles = ["operations", "admin", "super_admin"];
+
+    if (!allowedRoles.includes(auth.user.role)) {
       return NextResponse.json(
-        { error: "Forbidden: Operations only" },
+        {
+          error: "Forbidden: You are not allowed to send timesheet to finance",
+        },
         { status: 403 }
       );
     }
