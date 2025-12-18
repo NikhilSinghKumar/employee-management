@@ -51,7 +51,10 @@ export default function Sidebar({ isOpen, onClose }) {
       title: "Finance",
       icon: <BadgeDollarSign className="w-5 h-5" />,
       key: "Finance",
-      items: [{ name: "Invoices", href: "/dashboard/finance/invoices" }],
+      items: [
+        { name: "Invoices", href: "/dashboard/finance/invoices" },
+        { name: "Timesheets", href: "/dashboard/finance/timesheets" },
+      ],
     },
     {
       title: "Operations",
