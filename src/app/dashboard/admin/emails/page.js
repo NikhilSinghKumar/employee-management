@@ -26,6 +26,19 @@ export default function AdminEmails() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editModal, setEditModal] = useState(null);
 
+  const ROLE_LABELS = {
+    admin: "Admin",
+    hr: "HR",
+    operations: "Operations",
+    "a&t": "A&T",
+    "t&a": "T&A",
+    sales: "Sales",
+    finance: "Finance",
+    user: "User",
+  };
+
+  const getRoleLabel = (role) => ROLE_LABELS[role] || role;
+
   const fetchEmails = async () => {
     try {
       setLoading(true);
@@ -230,8 +243,10 @@ export default function AdminEmails() {
                       <Mail className="text-gray-400" size={16} />
                       {email.email}
                     </td>
-                    <td className="px-6 py-3 text-gray-600">
-                      <span className="font-medium">{email.role || "-"}</span>
+                    <td className="px-6 py-3 text-gray-600 capitalize">
+                      <span className="font-medium">
+                        {getRoleLabel(email.role)}
+                      </span>
                       <br />
                       <span className="text-sm text-gray-500">
                         {email.allowed_sections?.length
@@ -333,7 +348,7 @@ export default function AdminEmails() {
                 <div>
                   <p className="text-xs text-gray-500 uppercase mb-1">Role</p>
                   <p className="text-sm text-gray-800 font-medium">
-                    {email.role || "-"}
+                    {getRoleLabel(email.role) || "-"}
                   </p>
                 </div>
 
