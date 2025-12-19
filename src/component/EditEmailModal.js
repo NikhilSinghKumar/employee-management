@@ -11,14 +11,14 @@ export default function EditEmailModal({ onClose, emailData, onSuccess }) {
   const [loading, setLoading] = useState(false);
 
   const roles = [
-    "Admin",
-    "HR",
-    "Operations",
-    "A&T",
-    "T&A",
-    "Sales",
-    "Finance",
-    "User",
+    { value: "admin", label: "Admin" },
+    { value: "hr", label: "HR" },
+    { value: "operations", label: "Operations" },
+    { value: "a&t", label: "A&T" },
+    { value: "t&a", label: "T&A" },
+    { value: "sales", label: "Sales" },
+    { value: "finance", label: "Finance" },
+    { value: "user", label: "User" },
   ];
   const sectionOptions = [
     "Dashboard",
@@ -105,8 +105,8 @@ export default function EditEmailModal({ onClose, emailData, onSuccess }) {
         >
           <option value="">-- Select Role --</option>
           {roles.map((r) => (
-            <option key={r} value={r}>
-              {r}
+            <option key={r.value} value={r.value}>
+              {r.label}
             </option>
           ))}
         </select>
