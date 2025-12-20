@@ -277,6 +277,7 @@ export default function TimesheetPage() {
                     <th className="px-4 py-3 border">Net Adjusted Salary</th>
                     <th className="px-4 py-3 border">Grand Total</th>
                     <th className="px-4 py-3 border">Status</th>
+                    <th className="px-4 py-3 border">Remarks</th>
                     <th className="px-4 py-3 border">Actions</th>
                   </tr>
                 </thead>
@@ -323,7 +324,9 @@ export default function TimesheetPage() {
                             {entry.status.replace("_", " ")}
                           </span>
                         </td>
-
+                        <td className="px-4 py-2 font-semibold border">
+                          {entry.revision_reason}
+                        </td>
                         <td className="px-4 py-2 border text-center">
                           <TimesheetActions
                             submitting={submittingId === entry.uid}
